@@ -19,7 +19,7 @@ Status: **approved blueprint**. Local-first; user code is untrusted; execution i
 ## 2. Translation path (no execution)
 
 - Parsing uses: CPython stdlib `ast`/`symtable`/`tokenize` (syntax only — the bridge never imports user modules) and oxc/tsc (in-process, memory-safe, no eval).
-- The Python bridge subprocess receives the file path + interpreter version; it does not execute project code. A malicious `.py` cannot escalate through parsing.
+- The Python bridge (`packages/parser-py/python/bridge.py`) is spawned one-shot per parse as `python3 -I -B` with a whitelisted environment: source arrives as raw bytes on stdin, results leave as one JSON envelope on stdout. `-I` (isolated mode) keeps `PYTHON*` env, user site-packages, and the caller's cwd off the import path, so a malicious `.py` cannot escalate through parsing — verified by hostile-input tests that prove module-level side effects, decorators, and default values never execute (packages/parser-py/README.md).
 - Installed dependency of the tool = trusted code; user project = untrusted data. The two never share a process except through the sandbox runner.
 
 ## 3. Sandbox design (`@ctrans/sandbox`)

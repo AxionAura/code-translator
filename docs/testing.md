@@ -43,6 +43,7 @@ Machine-readable index (`tests/constructs/index.json`) enumerating every constru
 ## 4. Determinism & hermeticity
 
 - No network, no live AI, no wall-clock assertions, no parallel-unsafe shared state. Sandbox-dependent tests use capability detection and skip-with-reason only when the optional tool is genuinely absent (skip list is reported in CI output — AGENTS.md §4 forbids silent skips).
+- Bridge failure modes (timeout, crash, malformed protocol, unsupported runtime) are tested by injecting POSIX stub interpreter scripts through the client's `pythonPath` option — no shell-out from production code; the stub tests are skipped only on Windows where shebang execution does not apply.
 - The Python bridge tests run against the local interpreter and assert grammar-range behavior (3.12–3.14).
 - Parser error-recovery tests feed mutated/truncated sources and assert graceful diagnostics.
 

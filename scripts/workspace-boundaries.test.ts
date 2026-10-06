@@ -1,7 +1,7 @@
-// Mechanical enforcement of the package dependency direction from docs/architecture.md §3:
-// layers may only depend on strictly lower layers, which makes the graph acyclic by
-// construction. When M1+ wires the first real cross-package dependency, this test is what
-// keeps the direction honest.
+// Mechanical enforcement of the package dependency direction from docs/architecture.md §3
+// and ADR D-017: @ctrans/core is the base layer that owns all cross-package types and
+// interfaces; implementation packages depend on core and strictly lower layers only, which
+// makes the graph acyclic by construction. Update LAYERS when packages or edges change.
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -10,17 +10,17 @@ const REPO_ROOT = new URL("..", import.meta.url).pathname;
 
 // Higher number = higher layer. A package may depend only on strictly lower layers.
 const LAYERS: Record<string, number> = {
-  "@ctrans/cli": 4,
-  "@ctrans/repair": 3,
+  "@ctrans/core": 0,
+  "@ctrans/parser-py": 1,
+  "@ctrans/parser-js": 1,
+  "@ctrans/codegen-js": 1,
+  "@ctrans/codegen-py": 1,
+  "@ctrans/registry": 1,
+  "@ctrans/sandbox": 1,
   "@ctrans/validator": 2,
   "@ctrans/ai": 2,
-  "@ctrans/core": 1,
-  "@ctrans/parser-py": 0,
-  "@ctrans/parser-js": 0,
-  "@ctrans/codegen-js": 0,
-  "@ctrans/codegen-py": 0,
-  "@ctrans/registry": 0,
-  "@ctrans/sandbox": 0,
+  "@ctrans/repair": 3,
+  "@ctrans/cli": 4,
 };
 
 interface Manifest {

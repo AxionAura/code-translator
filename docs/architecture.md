@@ -62,7 +62,13 @@ apps/
   cli/           ctrans              — CLI (commander-style, zero framework religion)
 ```
 
-Dependency direction (acyclic): `cli → repair → {validator, ai} → core → {parser-*, codegen-*, registry, sandbox}`. `sandbox` and `ai` depend only on `core`. Package internals are private; cross-package data flows through types defined in `core`.
+Dependency direction (acyclic, one-way for types; ADR D-017): `@ctrans/core` is the **base layer** — it owns every cross-package type (`ParseResult`, spans, diagnostics, token/scope shapes, the error base) and the engine interfaces (e.g. `PythonParser`), and orchestrates through those interfaces instead of importing implementations. Implementation packages depend on core; `apps/cli` wires the concrete implementations:
+
+```
+cli(4) → repair(3) → {validator(2), ai(2)} → {parser-*, codegen-*, registry, sandbox}(1) → core(0)
+```
+
+Numbers are layers; a package may depend only on strictly lower layers, enforced mechanically by `scripts/workspace-boundaries.test.ts`. Package internals are private.
 
 Not a package on purpose: the **Python bridge parser script** (`parser-py/python/bridge.py`) — a dependency-free Python 3.12+ script that the TS side spawns; it is shipped inside the `parser-py` package and version-gated against the interpreter found at runtime.
 
