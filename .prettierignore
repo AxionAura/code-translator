@@ -1,0 +1,12 @@
+# Markdown is hand-written documentation; mechanical reformatting churns tables and prose.
+# Link integrity is enforced separately by scripts/check-doc-links.mjs.
+*.md
+
+# Fixture expected-output files are golden data compared after their own canonical
+# formatting pipeline (docs/decisions.md D-012), not repo source code.
+tests/fixtures/
+
+node_modules
+dist
+coverage
+pnpm-lock.yaml

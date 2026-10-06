@@ -6,9 +6,9 @@
 ## 1. Project Identity
 
 - **Project name:** Code Translator
-- **Current version:** 0.0.0 (design phase — no engine code exists yet)
-- **Current milestone:** Phase 1 (research + architecture blueprint) **complete**. Next: **M0 — Repository foundation & toolchain** (first implementation milestone).
-- **Overall status:** Blueprint approved and documented; repository scaffolded; implementation not started.
+- **Current version:** 0.0.0 (no release yet)
+- **Current milestone:** **M0 — Repository foundation & toolchain: complete** (2026-10-06, verified via fresh-clone `pnpm i && pnpm verify`). Next: **M1 — Python front-end**.
+- **Overall status:** Blueprint approved; toolchain foundation verified green; engine implementation not started.
 
 ## 2. Product Goal
 
@@ -52,7 +52,7 @@ Monorepo layout (planned, created in M0/M1+): `packages/{core,parser-py,parser-j
 | Area | Decision | Status |
 | --- | --- | --- |
 | Frontend | **None in V1** — CLI only (D-013); UI deferred to V2 | Decision made; nothing built |
-| Engine | TypeScript (strict) on Node ≥22.12, pnpm 10 monorepo (D-001) | Config scaffolded; packages not yet created |
+| Engine | TypeScript (strict) on Node ≥22.18, pnpm 10.26.0 monorepo (D-001) | Implemented: 12 workspace projects, `tsc --noEmit` green (TS 6.0.3) |
 | Python parser | `python3` subprocess bridge over stdlib `ast`/`symtable`/`tokenize` → JSON; `web-tree-sitter` fallback (D-003) | Not implemented |
 | JS/TS parser | `oxc-parser` (primary), `@babel/parser` (fallback), `typescript@6` compiler API as semantic oracle (D-004) | Not implemented |
 | IR | **No universal AST IR**; Semantic Layer = CommonType + symbols + ModuleGraph + TransformationLedger (D-002) | Spec written in `docs/architecture.md` §4 |
@@ -60,7 +60,7 @@ Monorepo layout (planned, created in M0/M1+): `packages/{core,parser-py,parser-j
 | Database | None (file/JSON artifacts under `.ctrans/`) | — |
 | Sandbox | Hardened `spawn` + `prlimit` + auto-detected bubblewrap; Docker/Podman strict mode opt-in (D-009) | Not implemented |
 | AI | Provider-agnostic `ChatModel` interface; OpenAI-compatible/Anthropic/custom adapters; 3 escalation ports only; offline default (D-010) | Not implemented |
-| Testing | Vitest 5; golden fixtures (`tests/fixtures/`), ConstructMatrix, benchmarks (D-012) | Framework chosen; not installed yet |
+| Testing | Vitest 5; golden fixtures (`tests/fixtures/`), ConstructMatrix, benchmarks (D-012) | Implemented: Vitest 5.0.3, 18/18 tests green in `pnpm verify` |
 
 **Critical version fact (verified 2026-10-06):** TypeScript 7.0 (native Go) ships **no JS API**; all compiler-API use must pin `typescript@6` / `@typescript/typescript6` behind an adapter until TS 7.1's new API lands.
 
@@ -72,6 +72,15 @@ PROJECT_STATE.md              # this file — the handoff contract
 README.md                     # product overview + doc index
 LICENSE                       # MIT
 package.json / pnpm-workspace.yaml / tsconfig.base.json   # monorepo scaffolding (strict TS)
+pnpm-lock.yaml                # committed lockfile (exact dependency resolution)
+tsconfig.json                 # root typecheck scope (scripts/ + tool configs); each package has its own
+eslint.config.js              # ESLint 10 flat config (no-any, no-default-export, unused-vars)
+vitest.config.ts              # single root Vitest config (packages, apps, scripts)
+.prettierrc.json / .prettierignore   # code only; *.md and tests/fixtures/ deliberately excluded
+scripts/check-doc-links.mjs   # dependency-free Markdown link checker (`pnpm docs:check`) + .d.mts + tests
+scripts/workspace-boundaries.test.ts  # enforces the architecture's package layer rules
+packages/<10 packages>/       # skeletons: identity export + smoke test; resolve via exports -> src/index.ts
+apps/cli/                     # CLI foundation: runCli + executable bin/ctrans.mjs (Node type stripping)
 .gitignore
 human-style-code.md           # engineering-judgment style guide (provided by human; AGENTS.md defers to it where compatible)
 docs/
@@ -97,7 +106,10 @@ benchmarks/README.md          # benchmark scaffold (populated from M4/M11)
 | --- | --- | --- | --- |
 | Engineering blueprint (13 docs) | Implemented | `docs/` | Research source-verified 2026-10-06 |
 | Engineering rules (AGENTS.md) | Implemented | `AGENTS.md` | — |
-| Monorepo scaffolding configs | Implemented | `package.json`, `pnpm-workspace.yaml`, `tsconfig.base.json`, `.gitignore` | JSON/YAML validated; **toolchain not yet installed/run** |
+| Monorepo toolchain (pnpm 10.26.0, TS 6.0.3, ESLint 10.12.0, Prettier 3.9.9, Vitest 5.0.3) | Implemented | root `package.json`, `eslint.config.js`, `vitest.config.ts`, `.prettierrc.json`, per-package `tsconfig.json` | Verified: `pnpm i && pnpm verify` green |
+| Package skeletons (10 packages + CLI app) | Implemented | `packages/*/`, `apps/cli/` | Typecheck + smoke test per package; workspace layer rules test-enforced |
+| CLI foundation (`--help`, `--version`, honest rejection of unimplemented commands) | Implemented | `apps/cli/src/main.ts`, `apps/cli/bin/ctrans.mjs` | 3 unit tests + direct executable run verified; no fake commands |
+| Documentation-link checker | Implemented | `scripts/check-doc-links.mjs` (+ tests) | Caught and fixed one real broken Phase-1 link on first run |
 | Fixture format contract + sample | Implemented | `tests/fixtures/` | Sample input parses (verified via `ast`); expected output is illustrative until M4 goldens exist |
 | Python→TS translation | Not implemented | — | — |
 | All translation directions | Not implemented | — | — |
@@ -107,16 +119,14 @@ benchmarks/README.md          # benchmark scaffold (populated from M4/M11)
 | Validation pipeline | Not implemented | — | — |
 | AI layer / repair loop | Not implemented | — | — |
 | Sandbox | Not implemented | — | — |
-| CLI | Not implemented | — | — |
 
 ## 8. Current Milestone
 
-**Milestone objective (next): M0 — Repository foundation & toolchain** (`docs/roadmap.md`).
-- **Status:** not started.
-- **Completed:** all Phase-1 prerequisites (docs, decisions, roadmap, scaffolding configs).
+**Milestone objective: M1 — Python front-end (`@ctrans/parser-py`)** (`docs/roadmap.md`).
+- **Status:** not started (M0 completed 2026-10-06).
+- **M0 completed:** pnpm 10.26.0 workspace (12 projects, lockfile committed); strict TS 6.0.3 (`tsc --noEmit` everywhere); ESLint 10 flat config (no-any / no-default-export / unused-vars); Prettier 3 (code only — md/fixtures excluded); Vitest 5 (18/18 green); `pnpm verify` (typecheck → lint → format:check → test → docs:check); dependency-free doc-link checker; workspace layer-boundary test; 10 package skeletons + CLI app; executable CLI foundation.
 - **In progress:** nothing.
-- **Remaining:** pnpm workspace install (`corepack enable && pnpm i` — pnpm not yet installed locally); ESLint 10 flat config; Prettier 3; Vitest 5 wiring; `pnpm verify` script (typecheck+lint+test+docs-link-lint); empty package skeletons for `packages/*` + `apps/cli`; smoke test per package.
-- **M0 DoD:** fresh clone → one command (`pnpm i && pnpm verify`) passes; lint rules mechanically enforce AGENTS.md §2 basics (no `any` outside boundaries, no default exports).
+- **Remaining for M1:** stdlib-only `bridge.py` (AST + symtable + tokens/comments → JSON, version handshake, recursion caps), TS bridge client (spawn lifecycle, timeouts, typed error taxonomy), AST normalization to `core` shapes, tree-sitter fallback behind the same interface, span/symtable/hostile-input tests.
 
 ## 9. Important Technical Decisions
 
@@ -150,9 +160,9 @@ Full log: `docs/decisions.md` (16 ADRs). The ones another AI must not accidental
 
 ## 12. Testing
 
-- **Framework:** Vitest 5 (chosen, not yet installed).
-- **Number of tests: 0** (no engine code exists; M0 wires the runner).
-- **Passing / Failing / Skipped:** n/a.
+- **Framework:** Vitest 5.0.3 (installed; single root `vitest.config.ts`).
+- **Number of tests:** 18 (13 files: 10 package smoke tests, 3 CLI tests, 3 doc-link tests, 2 workspace-boundary tests).
+- **Passing / Failing / Skipped:** 18 / 0 / 0 (verified 2026-10-06 via `pnpm verify`).
 - **Planned strategy** (`docs/testing.md`): ConstructMatrix (every entry of `language-support.md` §2 × direction, incl. negative tests for `unsupported`), golden fixtures with canonical-formatter normalization + review-required acceptance, registry usage tests in CI, validation/repair tests with FakeChatModel, e2e CLI tests, license-clean corpus. Coverage floors from M4: core ≥85%, parser/codegen ≥90%. Regression rule: every bug fix lands with a fixture.
 
 ## 13. Benchmark Results
@@ -172,6 +182,11 @@ Intentional, documented V1 limitations (all produce loud warnings, never silent 
 - JS→TS emits honest `unknown`s, not invented types (ts-migrate's `any`-flooding rejected as a failure mode).
 - Registry v1 covers a fixed module list; unmapped third-party deps are reported, never guessed.
 - Full-fidelity int arithmetic requires `intMode=bigint`; default `number` mode warns on precision-risky patterns.
+- CLI executable runs from TS sources via Node type stripping (`apps/cli/bin/ctrans.mjs`), hence `engines >= 22.18`; replaced by a compiled dist entry in M4.
+- No build/dist emission yet (deliberate — nothing consumes compiled output before M1); packages resolve via `exports -> src/index.ts` under `tsc --noEmit`.
+- No cross-package dependencies declared yet (wired when real imports appear; layer rules already enforced by `scripts/workspace-boundaries.test.ts`).
+- ESLint is non-type-aware for now (recommended set); type-aware linting is a candidate from M1.
+- Prettier deliberately excludes `*.md` and `tests/fixtures/**` (hand-written docs; golden data with its own formatting pipeline).
 
 ## 16. Failed Approaches (researched and rejected, with reasons)
 
@@ -192,28 +207,29 @@ Model (`docs/security.md`): local-first; user code is untrusted data; parsing ne
 
 ## 18. Dependencies
 
-**Currently installed: none** (scaffolding only). Planned (all to be recorded per AGENTS.md §5 with license check): `oxc-parser`, `typescript@6` (+ `@typescript/typescript6`), `@babel/parser` (fallback), `web-tree-sitter` + `tree-sitter-python` (fallback), `pyright` (pinned CLI), `prettier`, `ruff` (external binary, Python output formatting), `secretlint` (or its rules), `vitest`, `eslint@10`, `typescript` (build). Runtime deps of *generated output*: **zero by policy (D-007)**. License allowlist: MIT/Apache-2.0/BSD only; GPL/AGPL/CC-BY-NC = learn-only (D-014).
+**Installed (root devDependencies, lockfile committed):** `@types/node` 24.19.1, `eslint` 10.12.0, `prettier` 3.9.9, `typescript` 6.0.3, `typescript-eslint` 8.71.1, `vitest` 5.0.3. Workspace packages are dependency-free by design. `pnpm.onlyBuiltDependencies: ["esbuild"]` (transitive vitest dep; explicit allowlist — pnpm 10 blocks other build scripts). Licenses checked per AGENTS.md §5 (MIT/BSD/Apache). Planned for later milestones: `oxc-parser`, `@typescript/typescript6` (or `typescript@~6` API), `@babel/parser`, `web-tree-sitter` + `tree-sitter-python`, `pyright` (pinned CLI), `ruff` (external binary). Runtime deps of *generated output*: **zero by policy (D-007)**.
 
 ## 19. Recent Changes
 
 - **2026-10-06 (Phase 1):** created repository; ran 4-track verified research (parsers, prior art, semantics/deps, security/toolchain) → `docs/research.md`; wrote 12 design docs + 16 ADRs; scaffolded monorepo configs; created `AGENTS.md`; created fixture-format contract + sample; referenced human-provided `human-style-code.md` from AGENTS.md; created this `PROJECT_STATE.md`.
+- **2026-10-06 (M0):** git initialized (commits: Phase-1 blueprint, then M0 foundation); pnpm 10.26.0 workspace installed via corepack (registry throttling slowed install — retried with patient fetch settings); strict TS 6.0.3 + ESLint 10 flat config + Prettier 3 + Vitest 5 wired; 10 package skeletons + CLI app with executable `bin/ctrans.mjs` (Node type stripping); `pnpm verify` composed (typecheck → lint → format:check → test → docs:check); doc-link checker caught and fixed one real broken link in `tests/fixtures/README.md`; fresh-clone flow verified (`git clone` → `pnpm i` → `pnpm verify` green).
 
 ## 20. Current Blockers
 
-None. Minor environmental note: `pnpm` is not installed on the dev machine yet (Node 24.15 and corepack are available) — that is the first M0 task, not a blocker. No git history yet (repo not initialized; make `git init` + initial commit the first M0 action).
+None. Environmental note: the npm registry was heavily throttled during M0 (install retried with patient fetch settings; ~17 min) — transient, no repo impact. Corepack is enabled locally; the pinned pnpm 10.26.0 downloads automatically on fresh machines (first use may prompt).
 
 ## 21. Next Recommended Actions
 
 Ordered (detail in `docs/roadmap.md` M0, then M1):
-1. `git init`, initial commit of the blueprint state.
-2. M0: install/enable pnpm (corepack), `pnpm i`; add ESLint 10 flat config, Prettier 3, Vitest 5; create `pnpm verify` (typecheck + lint + test + docs-link lint); create empty package skeletons per `docs/architecture.md` §3; one smoke test per package.
-3. M1 (`@ctrans/parser-py`): stdlib-only `bridge.py` (AST + symtable + tokens/comments → JSON, version handshake, recursion caps), TS bridge client with typed errors, AST normalization, tree-sitter fallback behind the same interface; span-fidelity/symtable/hostile-input tests.
-4. M2 (`@ctrans/parser-js`): oxc wrapper + typescript@6 oracle adapter (CI grep-gate: no TS7 API usage).
-5. M3 (`@ctrans/core`): CommonType, scope/symbol resolution, ModuleGraph + SCC ordering, ModuleContracts, ledger/report JSON schemas.
+1. M1 (`@ctrans/parser-py`): stdlib-only `bridge.py` (AST + symtable + tokens/comments → JSON, version handshake, recursion caps), TS bridge client (spawn lifecycle, timeouts, typed error taxonomy), AST normalization to `core` node shapes, tree-sitter fallback behind the same interface; span-fidelity/symtable/hostile-input tests. This is the first milestone that wires a real cross-package dependency (see next bullet).
+2. When the first cross-package import appears: add it to `dependencies` and extend the layer map in `scripts/workspace-boundaries.test.ts` if needed (core layer 1 → parser-py layer 0 is the approved edge).
+3. M2 (`@ctrans/parser-js`): oxc wrapper + typescript@6 oracle adapter; add a CI grep-gate forbidding TS 7 compiler-API usage.
+4. M3 (`@ctrans/core`): CommonType, scope/symbol resolution, ModuleGraph + SCC ordering, ModuleContracts, ledger/report JSON schemas.
+5. Build/dist strategy stays deferred until a runtime consumer needs compiled output (the CLI currently runs via Node type stripping).
 
 ## 22. Definition of Done (current milestone, M0)
 
-Per `docs/roadmap.md` M0 + AGENTS.md §12: fresh-clone `pnpm i && pnpm verify` passes in one command; strict TS compiles; lint/format configured and clean; Vitest runs one smoke test per package skeleton; docs-link lint passes; no engine logic pretended into existence; `PROJECT_STATE.md` updated to reflect M0 completion with verified claims.
+Per `docs/roadmap.md` M1 + AGENTS.md §12: `ParseResult` (source-shaped AST + tokens/comments + exact spans + symtable) produced by the bridge across the Python 3.12–3.14 range; lossless JSON round-trip; span fidelity (byte offsets + line/col incl. multibyte) under test; hostile-input fixture proving the bridge never imports user modules; typed error taxonomy for malformed input; tree-sitter fallback behind the same interface with parity smoke tests; all `pnpm verify` gates stay green; `PROJECT_STATE.md` updated with verified claims.
 
 ## 23. Handoff Notes
 
@@ -222,4 +238,5 @@ Per `docs/roadmap.md` M0 + AGENTS.md §12: fresh-clone `pnpm i && pnpm verify` p
 - **Verified facts that must not drift:** TypeScript 7.0 has no JS API (pin typescript@6); TC39 decorators are Stage 2.7; Temporal is Stage 4 (Node ≥26 ships it); `fetch` has no sync variant; `int`/`%`/truthiness/string divergences are source-verified in `docs/research.md` §3. Re-verify pinned versions when installing dependencies (research date: 2026-10-06).
 - **Honesty invariant:** every emitted construct needs a ledger entry (`deterministic|semantic|ambiguous|unsupported`); validation reports `skipped(reason)` rather than assuming capabilities; the claim ladder (`docs/validation.md` §2) caps what a run may assert — "Generated ≠ Validated".
 - Where to look: roadmap = `docs/roadmap.md`; per-construct mapping rules = `docs/language-support.md`; ledger/JSON schemas = `docs/translation-pipeline.md` + `docs/architecture.md` §4; ADRs = `docs/decisions.md`.
+- **M0 mechanics the next implementer must keep:** `pnpm verify` = root `tsc -p tsconfig.json` (scripts/configs) + `pnpm -r typecheck` + ESLint + `prettier --check` + `vitest run` + `node scripts/check-doc-links.mjs`. Packages are `noEmit` and will resolve future cross-package imports via `exports -> src/index.ts`; dist emission is deliberately deferred. Workspace layer rules live in `scripts/workspace-boundaries.test.ts` (`LAYERS` map). `bin/ctrans.mjs` relies on Node type stripping (Node ≥22.18) until M4's build step. Never run Prettier over `*.md` or `tests/fixtures/**` (ignored on purpose); ESLint likewise ignores fixture data.
 - Environment: Node 24.15 (LTS), Python 3.14.7, Docker 29.8.1 + Podman 5.8.7 available locally; Rust toolchain present (unused by design). `ctrans doctor` (M10) will formalize capability reporting.

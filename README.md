@@ -30,3 +30,13 @@ A behavior-preserving source-code translator for **Python ↔ JavaScript ↔ Typ
 3. **Every emitted construct carries provenance** via a decision ledger: deterministic, semantic, ambiguous, or unsupported.
 4. **Local-first.** Source code never leaves the machine unless the user explicitly enables an AI provider.
 5. **Zero runtime dependencies in generated output.** Translated projects are self-contained.
+
+## Development
+
+Prerequisites: Node.js ≥ 22.12 with Corepack (the pnpm version is pinned via the `packageManager` field).
+
+```bash
+corepack enable        # first use of pnpm may ask to download the pinned version
+pnpm install
+pnpm verify            # typecheck → lint → format check → tests → documentation links
+```

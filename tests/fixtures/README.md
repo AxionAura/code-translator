@@ -1,6 +1,6 @@
 # Fixtures
 
-Golden-fixture system per [docs/testing.md](../docs/testing.md). Layout:
+Golden-fixture system per [docs/testing.md](../../docs/testing.md). Layout:
 
 ```
 tests/fixtures/<name>/
