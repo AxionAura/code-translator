@@ -1,0 +1,99 @@
+# Architecture Decision Records
+
+Format: Context → Decision → Consequences → Status. Superseded ADRs stay for history.
+
+## D-001 — Engine language: TypeScript on Node.js (pnpm monorepo)
+**Context.** Engine could be Python, Rust, or TypeScript. Both runtimes are needed at *validation* time regardless (run Python tests on source, JS tests on target). Decisive factors: in-process access to oxc (JS/TS parsing) and typescript@6 Checker (semantic oracle for JS/TS); mature CLI/testing/lint tooling; autonomous-agent maintainability.
+**Decision.** TypeScript (strict) monorepo, Node ≥22.12, pnpm 10 workspaces. Python appears only as the dependency-free bridge script.
+**Consequences.** Single language for engine code; Python semantics sourced via subprocess bridge instead of native imports; Rust possible later for hot paths (out of scope V1).
+**Status.** Accepted (2026-10-06).
+
+## D-002 — No universal AST IR; Semantic Layer instead
+**Context.** Prompt-level assumption favors "AST → IR → translation". Prior art (Transcrypt, metapensiero.pj, Babel ecosystem) translates AST→AST with a thin semantic layer; a universal IR loses source idiom, complicates comment/provenance preservation, and saves nothing at N=3 languages.
+**Decision.** Keep per-language source-shaped ASTs. Cross-language reasoning via a shared Semantic Layer: `CommonType` algebra, symbol/scope tables, ModuleGraph, ModuleContracts, TransformationLedger. Revisit if a non-JS/non-Python language family is added.
+**Consequences.** Two lowering implementations instead of N back-ends off one IR; higher per-pair fidelity; IR-free design must still serialize analysis artifacts (ParseResult/SemanticModel JSON) for tests.
+**Status.** Accepted (2026-10-06).
+
+## D-003 — Python front-end: CPython stdlib bridge (primary), web-tree-sitter (fallback)
+**Context.** CPython's `ast`+`symtable`+`tokenize` are the reference implementation of Python syntax/scopes, always matching the running interpreter (3.12–3.14 verified range); re-implementing Python parsing in JS is prior-art-proven dead weight. tree-sitter gives tolerance for broken input but a CST, no scopes, grammar lag.
+**Decision.** Spawn a stdlib-only `bridge.py` → JSON (AST + symtable + tokens/comments + interpreter version). Fallback parser (no `python3` present): `web-tree-sitter` + `tree-sitter-python`, explicitly flagged lower-fidelity in reports.
+**Consequences.** Requires `python3` for full fidelity (acceptable: also needed to run source tests); JSON serialization is ours (singletons, recursion caps); bridge version-gates grammar.
+**Status.** Accepted (2026-10-06).
+
+## D-004 — JS/TS front-end: oxc-parser + typescript@6 oracle; TS 7 pinned out of API paths
+**Context.** Verified 2026-10-06: TypeScript 7.0 (Go) ships **no JS API**; the classic `Program`/`Checker` API is complete only in 5.x/6.x; `@typescript/typescript6` 6.0.2 exists for the side-by-side pattern. oxc-parser: ESTree-conformant, error recovery, comments, ranges, module map, MIT, prebuilt. Babel: fine but no type info; SWC: non-ESTree AST; Esprima dormant; Acorn no TS.
+**Decision.** oxc-parser primary for parsing JS/TS (fallback @babel/parser); typescript@6 compiler API as the semantic oracle (mandatory for TS input, best-effort checkJs for JS). All compiler-API use behind an adapter (`@ctrans/parser-js`) so the TS 7.1 API can slot in later. tsgo/TS7 allowed only for repo-internal build/check speed.
+**Consequences.** Dependency on TS 6.x line until 7.1 API stabilizes; adapter is a mandatory abstraction (the only place we accept an unstable upstream).
+**Status.** Accepted (2026-10-06).
+
+## D-005 — Output checkers: tsc 6 for TS output; pyright CLI (pinned) + optional mypy for Python output
+**Context.** pyright internals are unstable to embed (basedpyright fork-and-pin is the only proven pattern); CLI `--outputjson` is de-facto stable, zero-based ranges, MIT, weekly releases. mypy 2.4.0 added `--output json`.
+**Decision.** Validate TS output with typescript@6 (same adapter as D-004) via `--noEmit`; validate Python output with pinned pyright CLI JSON (primary) and mypy JSON (secondary/optional). Never embed pyright internals.
+**Consequences.** Checker output shapes are pinned + tolerantly parsed; a checker-format change is a contained fix in one adapter module.
+**Status.** Accepted (2026-10-06).
+
+## D-006 — Integer policy: `number` default with precision diagnostics; `bigint` opt-in
+**Context.** Verified: Python `int` is arbitrary precision; JS `Number` is float64; `BigInt` can't mix with `Number` (TypeError) and changes JSON/serialization ergonomics. Transcrypt precedent maps int→number.
+**Decision.** Default `intMode=number`: emit `number`, and statically detect precision-risky patterns (literals >2^53, bitwise ops, `//`, `%`, int-typed arithmetic on unbounded inputs) emitting precision warnings (`CTW-NUM-*`). `intMode=bigint` emits semantically exact `bigint` with explicit boundary conversions. Revisit trigger: differential benchmarks showing silent precision bugs at scale → flip default with an ADR.
+**Consequences.** Default is fast/idiomatic but flagged; exact mode available; neither mode is silent.
+**Status.** Accepted (2026-10-06).
+
+## D-007 — Zero runtime dependencies in generated output; helpers are codegen'd
+**Context.** Generated projects must be inspectable, auditable, and free of our supply chain. Truthiness/NaN, slice-step, floor-div/mod, exception hierarchy all need helpers.
+**Decision.** Emit only-referenced helpers into the output project (`__ctrans_runtime.ts` / `__ctrans_runtime.py`), small enough to read in one sitting, with provenance header.
+**Consequences.** Slight output duplication across files is avoided by one helper module per project; helper evolution is versioned with the generator.
+**Status.** Accepted (2026-10-06).
+
+## D-008 — Datetime: Temporal primary (runtime-gated), Date-helpers fallback
+**Context.** Verified: TC39 Temporal is Stage 4; shipped Firefox 139 (2025-05), Chrome 144 (2026-01), **Node 26 (2026-05)**; Safari pending. `Date` is mutable, 0-indexed months — a bug farm.
+**Decision.** `datetimeMode=temporal` (default when target runtime ≥ Node 26 / evergreen), else `date-helpers` fallback with explicit warnings. Registry entries encode the choice.
+**Consequences.** Version-gated fidelity; both paths tested in ConstructMatrix.
+**Status.** Accepted (2026-10-06).
+
+## D-009 — Sandboxing: hardened spawn baseline; bwrap auto-detect; Docker/Podman strict mode
+**Context.** Verified: Node has no rlimits; firejail is suid-root (CVE history); systemd-run non-root can't isolate network; bwrap is unprivileged and maintained but needs user namespaces; containers raise the install floor.
+**Decision.** V1 baseline = hardened spawn (argv, env whitelist, temp cwd, timeout+kill, stdio caps) + `prlimit` wrapper when present + bubblewrap auto-detected layer (`--unshare-net` etc.). `sandbox: "strict"` requires Docker/Podman (gVisor if configured) and *errors* rather than downgrades if unavailable.
+**Consequences.** Works cross-distro without root; strongest isolation optional; capability report always states what actually ran.
+**Status.** Accepted (2026-10-06).
+
+## D-010 — AI: optional, provider-agnostic, escalation-only
+**Context.** Verified: naive LLM translation ~26.65% correctness; every credible modern system wraps generation in test-driven validation; OWASP LLM v2 risks apply.
+**Decision.** Three ports only (`resolveAmbiguity`, `proposeRepairPatch`, opt-in `polishIdioms`); `ChatModel` interface with OpenAI-compatible/Anthropic/custom adapters; offline default; caps in code; AI output always re-validated deterministically.
+**Consequences.** The product works with no keys; provider churn is contained in adapters.
+**Status.** Accepted (2026-10-06).
+
+## D-011 — Dependency mapping: registry (authoritative) + heuristics + AI proposals
+**Context.** Verified: no public machine-readable stdlib→Node mapping exists; pure-AI mapping is unverifiable; pure-registry can't cover long tail.
+**Decision.** In-repo versioned JSON registry with schema + per-entry usage tests (CI-enforced); deterministic heuristics as fallback; AI only proposes registry-shaped entries for unknown third-party libs (validated before use).
+**Consequences.** Registry authoring is a recurring cost (V1 scope fixed in dependency-mapping.md §4); mapping claims are test-backed.
+**Status.** Accepted (2026-10-06).
+
+## D-012 — Golden stability via canonical formatters
+**Context.** Emitter formatting churn makes goldens unreviewable; hand-formatting is non-deterministic.
+**Decision.** All emitted code passes `prettier` (TS/JS) or `ruff format` (Python) as the final codegen stage; fixtures diff canonical forms; `fixtures:accept` requires review rationale.
+**Consequences.** Goldens are stable and reviewable; formatter pinning matters (recorded per lockfile).
+**Status.** Accepted (2026-10-06).
+
+## D-013 — CLI-first; no UI in V1
+**Context.** Frontend options (React/Electron/Tauri) add build+security surface without validating the core value.
+**Decision.** V1 is a CLI (`ctrans`) + JSON artifacts. Web UI/VS Code extension deferred to V2/V3.
+**Consequences.** Faster path to a trustworthy engine; UI later rides the same core.
+**Status.** Accepted (2026-10-06).
+
+## D-014 — Licensing: MIT (ours); MIT/Apache/BSD-only dependencies; GPL family = learn-only
+**Context.** Reuse candidates span Apache-2.0 (Transcrypt — learn-from), GPL-3 (metapensiero.pj — learn-only), AGPL (trufflehog — excluded), CC-BY-NC (TransCoder — non-commercial).
+**Decision.** Our code: MIT. Dependencies and copied snippets: MIT/Apache-2.0/BSD only, each recorded in ADRs. Learning from copyleft/non-commercial sources is allowed; copying is not.
+**Consequences.** Clean distribution story; registry data written from scratch (informed by, not copied from, Transcrypt's module list).
+**Status.** Accepted (2026-10-06).
+
+## D-015 — Exception model: generated Error-subclass hierarchy mirroring Python builtins
+**Context.** Verified: Python allows only BaseException subclasses; JS allows throwing anything and lacks `else` clauses; `except*` has no JS equivalent.
+**Decision.** JS output throws only `Error` subclasses from a generated `__ctrans` hierarchy (ValueError, TypeError, …) preserving `instanceof`-style matching; `try/except/else` restructured deterministically; `except*` unsupported.
+**Consequences.** `catch` blocks map cleanly; cross-boundary exception handling has defined behavior.
+**Status.** Accepted (2026-10-06).
+
+## D-016 — int-mode/precision, truthiness, strings: explicit helpers over implicit coercion
+**Context.** Verified divergences: NaN truthiness, `[]`/`{}` truthiness, UTF-16 vs code points, slice step, floor-div/mod signs.
+**Decision.** Boolean contexts emit `truthy()` unless statically provable equivalent; string index/len/iteration/slice-with-step use code-point helpers; numeric helpers per D-006. Helper use is minimized by static provability analysis (no blanket wrapping).
+**Consequences.** Correct-by-default output; provability analysis keeps idiomatic cases clean.
+**Status.** Accepted (2026-10-06).

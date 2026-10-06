@@ -1,0 +1,20 @@
+{
+  "name": "format-sample",
+  "description": "Pins the fixture format contract (layout, manifest schema, naming). Not yet an engine-generated golden - see tests/fixtures/README.md.",
+  "from": "python",
+  "to": "typescript",
+  "config": {
+    "intMode": "number",
+    "nullMode": "undefined",
+    "datetimeMode": "auto"
+  },
+  "entry": ["input/math_utils.py"],
+  "expectedClaimLevel": 2,
+  "expectedDecisionCounts": {
+    "deterministic": ">=18",
+    "semantic": ">=3",
+    "ambiguous": 0,
+    "unsupported": 0
+  },
+  "expectedWarnings": ["CTW-NUM-INT-ARBITRARY-PRECISION"]
+}

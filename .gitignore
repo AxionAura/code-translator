@@ -1,0 +1,24 @@
+# Node
+node_modules/
+dist/
+coverage/
+*.log
+.eslintcache
+
+# Tool artifacts
+.ctrans/
+*.tsbuildinfo
+
+# Environment & secrets
+.env
+.env.*
+*.pem
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python (parse bridge dev / test venvs)
+__pycache__/
+.venv/
+*.pyc

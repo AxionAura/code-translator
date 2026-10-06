@@ -1,0 +1,106 @@
+# Language Support
+
+Status: **approved blueprint**. Semantic facts are source-verified (see [research.md](research.md) §3). This document defines *what maps, how, and how honestly* for each direction. It is the contract that `codegen-js` and `codegen-py` implement and that the ConstructMatrix fixtures test.
+
+## 1. Decision classes recap
+
+`deterministic` — provably equivalent. `semantic` — adapted with documented deviation. `ambiguous` — heuristic default + alternatives documented (AI may resolve). `unsupported` — marker + warning, counts as failure. A construct's class can differ **per direction** (e.g., TS types → Python annotations is `semantic`; Python metaclasses → TS is `unsupported`).
+
+## 2. Verified semantic divergences and the mapping policy
+
+### 2.1 Values, numbers, strings
+
+| Divergence (verified) | Py → TS/JS policy | TS/JS → Py policy |
+| --- | --- | --- |
+| `int` arbitrary precision vs `Number` float64 | Default: `number` + **precision diagnostics** (constants >2^53, bitwise ops, `//`, `%`, `int`-typed params) — D-006. `intMode=bigint` emits `bigint` with explicit boundary conversions | `number` → `float` annotation; `bigint` → `int`; integral-valued literals annotated `int` when inferable |
+| `//` floor division (toward −∞) vs truncation | `semantic`: helper `__ctrans.floorDiv` (correct for negatives; bigint-correct in bigint mode) | deterministic (Python `//` is the target semantics) |
+| `%` sign (divisor vs dividend) | `semantic`: helper `__ctrans.mod` = `((a % b) + b) % b` | deterministic |
+| `NaN` truthy (Py) vs falsy (JS) | covered by truthiness helper below | n/a (Python keeps NaN truthy) |
+| Strings: code points (Py) vs UTF-16 units (JS); slice step | `semantic`: code-point helpers for `len`/index/iterate when the value may be astral; `s[i:j:k]` → `__ctrans.strSlice` (step expansion); plain ASCII-safe cases may compile to native ops when provable | deterministic (Python str is the target semantics) |
+| `is` / `===` | deterministic (`is` → `===` on primitives; object identity → helper note) | deterministic (`is` on None → `is None` stays) |
+| `==` overloading vs `===` | `==` between primitives → `===`; when either operand has `__eq__` (user class) → `semantic`: `.equals()` method emitted + call-site rewrite | `==` → `==` (Python semantics superset); `===` → `==` with class note |
+
+### 2.2 Truthiness — always explicit
+
+Boolean contexts (`if`, `while`, `!x`, `&&`, ternaries) never rely on JS coercion for values that can diverge (`NaN`, `[]`, `{}` — verified divergence). Policy: emit `__ctrans.truthy(x)` unless the static type proves the coercion equivalent (e.g., `boolean`, `string`, `null|undefined` checks). TS/JS→Py: truthiness maps to Python semantics (which is a superset here); `undefined`/`null` → `None` normalization is `semantic` (tri-state collapse documented).
+
+### 2.3 None / null / undefined
+
+`None` → `undefined` by default (`--null-mode=null` optional); `undefined` in JS input collapses to `None` — `semantic` (tri-state → one state; recorded when the distinction was observable). `Optional[T]` ↔ `T | undefined`/`T | null` per null-mode. `noUncheckedIndexedAccess`-style guards are emitted rather than assumed.
+
+### 2.4 Control flow & functions
+
+| Construct | Py → TS/JS | TS/JS → Py |
+| --- | --- | --- |
+| Chained comparisons (`a < b < c`) | `deterministic` (single-eval temp) | deterministic (emit chain) |
+| Walrus `:=` | `deterministic` (expression → statement + temp; or inline where legal) | n/a (Python native) |
+| f-strings / template literals, f-string `=` spec | deterministic (`=` spec expands to `name=${name}` literally) | deterministic |
+| Comprehensions | list/set/dict comp → `.map/.filter/…`, `Object.fromEntries`, `new Set`; nested/multi-loop comps → emitted loops when clearer (`semantic`) | `deterministic` (comprehensions are the target idiom) |
+| Slices (lists/strings) | `__ctrans.slice` helper (negatives + step) | deterministic (`[i:j:k]`) |
+| `for…else` / `while…else` | `semantic` (flag-variable rewrite, documented) | n/a |
+| `try/except/else/finally` | `else` → inlined into `try` tail after last fallible stmt (`semantic`, documented); `except` order preserved | deterministic (`else` clause regenerated) |
+| Exception types | generated `__ctrans` hierarchy mirroring Python builtins (ValueError, TypeError, …); only `Error` subclasses thrown; `except*`/ExceptionGroups → `unsupported` (V1) | JS `Error` family → mapped hierarchy; non-Error throwables → `RuntimeError` wrap (`semantic`) |
+| `*args/**kwargs` | rest/spread (`semantic`: kwargs typing via `Record<string, unknown>` or typed options object when inferable) | `*args` → `*args: object`; `**kwargs` → `**kwargs: object` (`semantic`) |
+| Default mutable args (`def f(x=[])`) | `semantic`: None-sentinel rewrite (also fixes a Python footgun) | n/a |
+| `global`/`nonlocal` | `deterministic` mostly (module-level `let` + closure mutation); escapes analysis → `ambiguous` | n/a |
+| `match` (PEP 634) | `ambiguous`: if/else-chain codegen for literal/capture cases; sequence/mapping/class patterns → `unsupported` (V1) with precise span | n/a |
+| Generators (`yield`, `yield from`, send/throw/close) | `deterministic` core (`yield`→`yield`, `yield from`→`yield*`); `GeneratorExit`-dependent logic → `semantic` warning | `deterministic` core; `next(value)` injection → `send` (`semantic`) |
+| Decorators (functions/classes/methods) | `deterministic` in principle: Python decorators are higher-order application — emit `f = deco(f)` composition; descriptor/`__set_name__` subtleties → `semantic`. TS 5 decorators are **not** used as the mapping (TC39 stage 2.7, semantics differ) | decorator syntax emitted for function decorators; parameter decorators (JS frameworks) → `unsupported` |
+| `async def`/`await` ↔ `async`/`await` | deterministic at syntax level; **event-loop semantics differ** — concurrency constructs (locks, queues, gather≠asyncio.gather nuances) → `semantic`/`ambiguous` | deterministic syntax; `asyncio.run` at entry → IIFE/documentable runner |
+| **Sync I/O → async boundary** | `requests`/`open`-over-network → **async chain propagation** (documented algorithm: dependency map marks sync-only APIs; callers are transitively asyncified; every changed signature gets a warning). Where a sync JS equivalent exists (`node:fs` readFileSync), it is chosen first | JS promises → Python: `await` maps to `await`; top-level event-loop bridging flagged |
+
+### 2.5 Objects, classes, protocols
+
+| Construct | Py → TS/JS | TS/JS → Py |
+| --- | --- | --- |
+| Classes, inheritance | `deterministic` single inheritance; constructors, `super` | deterministic |
+| **Multiple inheritance** | `semantic`: C3 linearization computed at translation time → mixin-chain emission; conflicting layouts → `ambiguous` | n/a |
+| Dunders: `__str__`, `__repr__` | `semantic`: `toString()` override (documented distinction repr/str collapses) | `semantic`: `__str__` from `toString` |
+| `__eq__`/`__hash__` | `semantic`: `.equals()` method (no JS operator overloading — proposal withdrawn 2025); `__hash__` → `unsupported` unless unused | `semantic`: `__eq__` from `equals` |
+| `__iter__`/`__next__`/`__getitem__` | `semantic`: `Symbol.iterator` / index-method emission; negative indices → helper | deterministic (Python protocol is richer; emitted as dunders) |
+| `__call__` | `semantic`: `.call()` method (not callable) | n/a (JS has no callable objects) |
+| Context managers (`with`) | `semantic`: `try/finally` for cleanup-only; resource protocol → `using` (TS 5.2 `Symbol.dispose`) where target allows, else helper `.close()` | `deterministic`: `with` from context-manager pattern where detectable |
+| Descriptors, `__slots__`, `__getattr__`/`__setattr__`, metaclasses | `unsupported` (V1): detected, warned, preserved as comments. `__getattr__` partial case → `ambiguous` (Proxy-based, opt-in) | `unsupported` (Proxy → descriptor emulation) |
+| Private (`__name` mangling, `#field`) | name-mangling → TS `private` + rename (NOT `#private`: not proxyable — verified); `#field` → `_name` convention (`semantic`) | mirrored |
+| `@property`/`@staticmethod`/`@classmethod` | deterministic (`get`/`static`; `classmethod` → static taking cls-like param, `semantic`) | `@property` from getter; `classmethod` `semantic` |
+
+### 2.6 Modules & project
+
+- `__init__.py` → `index.ts` re-export barrel; package-relative imports rewritten via ModuleGraph (`deterministic`).
+- Circular imports: per-cycle classification — safe (deferred access) `deterministic`; function-scoped import fix `semantic`; else `ambiguous` with explanation (TDZ divergence verified).
+- Dynamic import (`importlib`, `await import()`) — `semantic`, graph edge approximate.
+- `if __name__ == "__main__"` → entry-point guard emission (`semantic`).
+- `sys.argv`, `os.environ`, `os.path`/`pathlib`, `json`, `re`, `math`, `random`, `time`, `datetime`, `logging`, `itertools`, `functools`, `collections`, `enum`, `dataclasses`, `typing`, `abc`, `io`, `string` — V1 registry scope (see dependency-mapping.md for per-module fidelity).
+
+### 2.7 Typing (TS ↔ Python annotations)
+
+- TS annotations → Python annotations: `deterministic` for the shared subset (primitives, arrays/tuples, unions, generics, literal types, interfaces→`Protocol`/`TypedDict` choice `ambiguous`); TS-specific (conditional types, mapped types, `infer`, template literal types, `unique symbol`) → `unsupported` (erased with warning).
+- Python annotations → TS: `deterministic` for the shared subset; `Protocol` → structural interface (`deterministic`); `TypedDict` → interface with index signature nuances (`semantic`); runtime-checked typing (`isinstance` on generics, `TypeVar` bounds at runtime) → `semantic`/`ambiguous`.
+- Type-directed improvements are **out of scope for the deterministic engine** (that's ts-migrate's failure mode); JS→TS emits valid TS with `unknown`/inferred types + diagnostics, not blanket `any`.
+
+### 2.8 Regex
+
+Source-level rewrite with verification: `(?P<n>…)`→`(?<n>…)`, `(?P=n)`→`\k<n>` (`deterministic`); atomic groups/possessive quantifiers → `unsupported` (no JS equivalent — verified); flags audited (`re.S`→`s` etc.); Python-only methods (`re.split` with captures, `scanning`) → helper (`semantic`).
+
+### 2.9 Datetime
+
+`datetime` → **Temporal** when target runtime supports it (Node ≥26 verified to ship Temporal), else `Date`-helper layer; both paths `semantic` with an explicit `datetimeMode` config (D-008). `timedelta` arithmetic → Temporal `Duration` / helper.
+
+## 3. Direction support matrix (V1 target)
+
+| Direction | Status target at V1 | Notes |
+| --- | --- | --- |
+| Python → TypeScript | **Full** core matrix (§2) | flagship direction |
+| Python → JavaScript | Full core matrix (TS emitted then erased+validated) | |
+| TypeScript → JavaScript | Full (types erased by our pipeline; enum/namespace lowering) | competes with esbuild/Amaro; included for pipeline uniformity |
+| JavaScript → TypeScript | Good (valid TS, honest `unknown`s, no fake types) | deliberately not "invent types" |
+| TypeScript → Python | Core matrix minus TS-specific type system (erased w/ warnings) | |
+| JavaScript → Python | Core matrix | |
+
+"Full core matrix" = everything classified `deterministic`/`semantic` in §2; `unsupported` classes (metaclasses, descriptors, `except*`, class-pattern `match`, `__hash__`) remain unsupported **in all directions** until explicitly promoted.
+
+## 4. Explicit V1 non-supports (always loud)
+
+Metaclasses; descriptors (`__get__`/`__set__` data protocol); `except*` / exception groups; class/sequence/mapping patterns in `match`; operator overloading semantics (incl. `__hash__`-dependent dict keying of user objects); threads/`multiprocessing`; `asyncio` synchronization primitives beyond `gather`/`sleep`; `eval`/`exec`/`compile`; C-extension stdlib modules; PEP 750 t-strings (3.14); `__getattr__` by default (opt-in Proxy experiment).
+
+Each entry here lists: detection span, warning code (`CTW-UNSUPPORTED-*`), comment preservation strategy, and report accounting. Promoting any of them is a roadmap event, never a silent fallback.

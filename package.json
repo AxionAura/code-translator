@@ -1,0 +1,12 @@
+{
+  "name": "code-translator",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Behavior-preserving source code translator for Python, JavaScript and TypeScript. Design phase - implementation tracked in docs/roadmap.md.",
+  "license": "MIT",
+  "type": "module",
+  "packageManager": "pnpm@10.26.0",
+  "engines": {
+    "node": ">=22.12"
+  }
+}
