@@ -17,7 +17,7 @@ import type {
   TokenInfo,
 } from "@ctrans/core";
 import { TreeSitterParseError } from "./errors.js";
-import { byteColumn, scanSourceLines } from "./lines.js";
+import { byteColumn, scanSourceLines } from "@ctrans/core";
 
 type WebTreeSitter = typeof import("web-tree-sitter");
 type TSParser = InstanceType<WebTreeSitter["Parser"]>;
@@ -122,6 +122,8 @@ export class TreeSitterPythonParser implements PythonParser {
       },
       ast,
       tokens,
+      comments: tokens.filter((token) => token.kind === "comment"),
+      module: null, // JS-style module info does not apply to Python sources
       scopes: null,
       diagnostics,
     };

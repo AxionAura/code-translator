@@ -41,6 +41,7 @@ python3 -I -B bridge.py --mode parse [--max-source-bytes N]   # source bytes on 
   tokenize's 1-based rows / code-point columns into this one grid; the tree-sitter
   front-end converts its code-point columns the same way.
 - **AST:** generic envelope `{kind, span, fields}` — `kind` is the CPython node class
+- **Comments and module info** (contract fields shared with parser-js, D-019): `comments` mirrors the COMMENT tokens with exact source slices; `module` is `null` until the M3 ModuleGraph work adds Python import extraction.
   name ("Module", "FunctionDef", ...); operator/context nodes have `span: null`.
 - **Scalars JSON cannot hold** are tagged: `{"tag": "int", "decimal"}` (beyond 2^53),
   `{"tag": "float", "value": "inf"|"−inf"|"nan"}` (e.g. `1e999`), `{"tag": "bytes",

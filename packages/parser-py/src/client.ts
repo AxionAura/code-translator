@@ -24,7 +24,7 @@ import {
   PythonSourceLimitError,
   PythonSyntaxError,
 } from "./errors.js";
-import { byteColumn, scanSourceLines } from "./lines.js";
+import { byteColumn, scanSourceLines } from "@ctrans/core";
 import {
   BRIDGE_PROTOCOL_VERSION,
   validateEnvelope,
@@ -355,6 +355,8 @@ export class PythonBridgeParser implements PythonParser {
       },
       ast: envelope.result.ast,
       tokens: envelope.result.tokens,
+      comments: envelope.result.tokens.filter((token) => token.kind === "COMMENT"),
+      module: null, // Python import extraction lands with the M3 ModuleGraph
       scopes: envelope.result.scopes,
       diagnostics: envelope.diagnostics,
     };

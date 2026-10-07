@@ -21,3 +21,19 @@ export interface ParserDescription {
   readonly protocolVersion: number | null;
   readonly unavailableReason: string | null;
 }
+
+// Contract every JS/TS front-end implements (D-004: oxc primary, Babel fallback).
+// Implementations live in @ctrans/parser-js. The language is explicit per parse —
+// front-ends never guess grammar mode from file extensions.
+export interface JsParser {
+  parse(source: string, options: JsParseOptions): Promise<ParseResult>;
+  describe(): Promise<ParserDescription>;
+}
+
+export interface JsParseOptions {
+  // Label used in diagnostics and error messages only. Parsers never read from disk.
+  readonly filename?: string;
+  readonly language: "javascript" | "typescript";
+  // Enables JSX/TSX grammar on top of the selected language.
+  readonly jsx?: boolean;
+}

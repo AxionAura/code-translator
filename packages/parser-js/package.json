@@ -8,5 +8,11 @@
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@babel/parser": "^8.0.6",
+    "@ctrans/core": "workspace:*",
+    "oxc-parser": "^0.153.0",
+    "typescript": "~6.0.3"
   }
 }
