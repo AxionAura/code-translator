@@ -80,7 +80,10 @@ Not a package on purpose: the **Python bridge parser script** (`parser-py/python
 | `SemanticModel` | scopes, symbol tables, resolved references, `CommonType` annotations (best effort; `unknown` when absent) | built per module from ParseResult + front-end-specific resolvers |
 | `ModuleGraph` | nodes = modules, edges = imports (static + dynamic), SCCs, topological order, entry points, test modules | drives translation order and context packing |
 | `ModuleContract` | export surface: symbol name → signature summary + `CommonType` | the "header" of a module; what dependents are allowed to know |
-| `TransformationLedger` | per-construct entries: `DecisionKind`, mapping id, span, rationale, warnings, AI escalation ref (if any) | serialized to `.ctrans/ledger.json` |
+| `TransformationLedger` | per-construct entries: `DecisionKind`, mapping id, span, rationale, warnings, AI escalation ref (if any) | schema + validation live in `@ctrans/core` (`src/ledger.ts`); M4's lowering produces entries; serialized to `.ctrans/ledger.json` |
+| `SemanticModel` (M3) | per-module scopes, symbols (declarations + references), conservative `AnnotatedType`s, unresolved references, semantic diagnostics | built by `analyzeModule` (core) from a ParseResult; Python is symtable-driven, JS/TS is built from the normalized AST (language differences modeled explicitly — D-002) |
+| `ModuleGraph` (M3) | modules, resolved/unresolved/external imports, dynamic-import edges, entry/test flags, iterative-Tarjan SCCs, deterministic dependency-first ordering | built by `buildModuleGraph` from parsed inputs; resolution is against the analyzed file set only — never the filesystem, never guessed |
+| `ModuleContract` (M3) | export surface with `CommonType`s, oracle type displays as separate provenance | `extractModuleContract`; Python honors `__all__` else the public-name convention |
 | `TranslationResult` | emitted files, helper files used, source↔target map, ledger, warnings | input to validation |
 | `ValidationReport` | per-stage `pass \| fail \| skipped(reason) \| warn` + details | never a boolean "correct" |
 | `RunReport` | aggregate: files, decisions histogram, validation summary, repair history, timing | final CLI output |

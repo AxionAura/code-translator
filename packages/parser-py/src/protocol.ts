@@ -32,11 +32,27 @@ export interface BridgeHeader {
   readonly python: { readonly version: string; readonly full: string };
 }
 
+export interface BridgeModuleImport {
+  readonly kind: string;
+  readonly moduleSpecifier: string;
+  readonly importedName: string | null;
+  readonly localName: string | null;
+  readonly span: SourceSpan;
+}
+
+export interface BridgeModuleInfo {
+  readonly hasModuleSyntax: boolean;
+  readonly imports: readonly BridgeModuleImport[];
+  readonly exports: readonly unknown[];
+  readonly dynamicImports: readonly unknown[];
+}
+
 export interface BridgeParseResult {
   readonly sourceEncoding: string;
   readonly ast: AstNode;
   readonly tokens: readonly TokenInfo[];
   readonly scopes: ScopeInfo | null;
+  readonly module: BridgeModuleInfo | null;
 }
 
 export interface BridgeParseEnvelope {
@@ -314,7 +330,55 @@ export function validateParseResult(value: unknown): BridgeParseResult {
     };
   });
   const scopes = value["scopes"] === null ? null : validateScope(value["scopes"]);
-  return { sourceEncoding, ast, tokens, scopes };
+  const moduleValue = value["module"];
+  const module =
+    moduleValue === null || moduleValue === undefined ? null : validateModule(moduleValue);
+  return { sourceEncoding, ast, tokens, scopes, module };
+}
+
+// Kinds the Python bridge emits ("namespace" for module-object bindings incl.
+// `import *`, "named" for from-imports) — a subset of the core ImportKind union.
+const BRIDGE_IMPORT_KINDS = new Set(["namespace", "named"]);
+
+function validateModule(value: unknown): BridgeModuleInfo {
+  if (!isRecord(value) || typeof value["hasModuleSyntax"] !== "boolean") {
+    throw new ValidationError("module must be an object with hasModuleSyntax");
+  }
+  if (!Array.isArray(value["imports"])) {
+    throw new ValidationError("module imports must be an array");
+  }
+  const imports = value["imports"].map((entry) => {
+    if (!isRecord(entry) || typeof entry["kind"] !== "string") {
+      throw new ValidationError("module import must be an object with a kind");
+    }
+    if (!BRIDGE_IMPORT_KINDS.has(entry["kind"])) {
+      throw new ValidationError(`unknown bridge import kind "${entry["kind"]}"`);
+    }
+    const importedName = entry["importedName"];
+    const localName = entry["localName"];
+    for (const [name, fieldValue] of [
+      ["moduleSpecifier", entry["moduleSpecifier"]],
+      ["importedName", importedName],
+      ["localName", localName],
+    ] as const) {
+      if (fieldValue !== null && typeof fieldValue !== "string") {
+        throw new ValidationError(`module import "${name}" must be a string or null`);
+      }
+    }
+    return {
+      kind: entry["kind"],
+      moduleSpecifier: entry["moduleSpecifier"] as string,
+      importedName: importedName as string | null,
+      localName: localName as string | null,
+      span: validateSpan(entry["span"]),
+    };
+  });
+  return {
+    hasModuleSyntax: value["hasModuleSyntax"],
+    imports,
+    exports: Array.isArray(value["exports"]) ? value["exports"] : [],
+    dynamicImports: Array.isArray(value["dynamicImports"]) ? value["dynamicImports"] : [],
+  };
 }
 
 function validateScope(value: unknown): ScopeInfo {

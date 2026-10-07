@@ -229,9 +229,12 @@ function toExportSummary(
   let type: TsTypeSummary | null = null;
   if (declaration !== undefined) {
     try {
-      // For type-only symbols (interfaces, aliases) the compiler yields the declared
-      // type; for values it yields their type at the declaration site.
-      const symbolType = checker.getTypeOfSymbolAtLocation(symbol, declaration);
+      // Type-namespace symbols (interfaces, aliases) need their DECLARED type; the
+      // type-at-declaration of an interface is `any`. Values use the declaration site.
+      const symbolType =
+        exportKindOf(symbol.flags) === "type"
+          ? checker.getDeclaredTypeOfSymbol(symbol)
+          : checker.getTypeOfSymbolAtLocation(symbol, declaration);
       type = {
         display: checker.typeToString(symbolType, undefined, ts.TypeFormatFlags.NoTruncation),
         flags: flagNames(ts.TypeFlags as unknown as Record<string, unknown>, symbolType.flags),

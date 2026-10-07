@@ -4,6 +4,48 @@
 export const packageName = "@ctrans/core";
 
 export { CTransError } from "./errors.js";
+export { analyzeModule } from "./semantic.js";
+export { buildModuleGraph } from "./module-graph.js";
+export type {
+  GraphImport,
+  GraphImportStatus,
+  GraphModuleInput,
+  ModuleGraphModel,
+  ModuleGraphNode,
+} from "./module-graph.js";
+export { extractModuleContract } from "./module-contract.js";
+export type { ContractEntry, ContractEntryKind, ModuleContract } from "./module-contract.js";
+export {
+  DECISION_KINDS,
+  serializeLedger,
+  validateLedgerEntries,
+  validateLedgerEntry,
+  LedgerValidationError,
+} from "./ledger.js";
+export type { DecisionKind, LedgerEntry, LedgerEscalation } from "./ledger.js";
+export { validateTranslationReport, ReportValidationError } from "./report.js";
+export type {
+  ClaimLevel,
+  FileTranslationStatus,
+  ReportFileEntry,
+  ReportValidationStage,
+  StageStatus,
+  TranslationReport,
+} from "./report.js";
+export { UNKNOWN, annotate, unknownType } from "./common-type.js";
+export type { AnnotatedType, CommonType, TypeConfidence, TypeOrigin } from "./common-type.js";
+export type {
+  DeclarationNamespace,
+  ReferenceContext,
+  ScopeKind,
+  ScopeNode,
+  SemanticDiagnostic,
+  SemanticModel,
+  SemanticSeverity,
+  SymbolEntry,
+  SymbolKind,
+  SymbolReference,
+} from "./semantic.js";
 export { byteColumn, lineIndexOf, scanSourceLines } from "./source-lines.js";
 export type { SourceLines } from "./source-lines.js";
 export type { AstNode, AstValue, TaggedValue } from "./ast-node.js";

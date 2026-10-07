@@ -313,6 +313,59 @@ def encode_scope(table):
     }
 
 
+def encode_module(tree, line_texts, line_starts):
+    """Extract import/export-shaped module information (M3 ModuleGraph input).
+
+    Python module specifiers keep their dotted form; relative imports appear with
+    their leading dots (".mod", "..pkg.mod") so the resolver can read the level.
+    `import a.b` binds a module object -> kind "namespace"; `from m import n` ->
+    kind "named" with the imported name; `from m import *` -> namespace with
+    importedName "*". importlib/dynamic imports are not tracked here."""
+    imports = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                imports.append(
+                    {
+                        "kind": "namespace",
+                        "moduleSpecifier": alias.name,
+                        "importedName": None,
+                        "localName": alias.asname or alias.name.split(".")[0],
+                        "span": node_span(node, line_texts, line_starts),
+                    }
+                )
+        elif isinstance(node, ast.ImportFrom):
+            module = node.module or ""
+            specifier = "." * node.level + module
+            for alias in node.names:
+                if alias.name == "*":
+                    imports.append(
+                        {
+                            "kind": "namespace",
+                            "moduleSpecifier": specifier,
+                            "importedName": "*",
+                            "localName": None,
+                            "span": node_span(node, line_texts, line_starts),
+                        }
+                    )
+                else:
+                    imports.append(
+                        {
+                            "kind": "named",
+                            "moduleSpecifier": specifier,
+                            "importedName": alias.name,
+                            "localName": alias.asname or alias.name,
+                            "span": node_span(node, line_texts, line_starts),
+                        }
+                    )
+    return {
+        "hasModuleSyntax": len(imports) > 0,
+        "imports": imports,
+        "exports": [],
+        "dynamicImports": [],
+    }
+
+
 def run_parse(max_source_bytes):
     raw = sys.stdin.buffer.read(max_source_bytes + 1)
     if len(raw) > max_source_bytes:
@@ -372,6 +425,7 @@ def run_parse(max_source_bytes):
                 "ast": encode_ast(tree, line_texts, line_starts),
                 "tokens": tokens,
                 "scopes": scopes,
+                "module": encode_module(tree, line_texts, line_starts),
             },
             "diagnostics": diagnostics,
         }

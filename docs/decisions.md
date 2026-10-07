@@ -120,3 +120,9 @@ Format: Context → Decision → Consequences → Status. Superseded ADRs stay f
 **Decision.** Every input passes a linear bracket-depth scan (a resource-limit prefilter, not parsing — no syntax claims, so AGENTS.md §11 is not violated). Inputs above `MAX_SAFE_NESTING_DEPTH` (2000) are measured exactly via the pure-JS Babel parser (catchable RangeError) or our normalized-tree walk; true depth beyond the limit yields a typed `JsSourceLimitError` and oxc is never called. 2000 sits far above real-world code and far below the verified crash window.
 **Consequences.** Pathological inputs produce structured errors instead of dead workers; the rare bracket-heavy-but-shallow source pays one extra Babel parse; thresholds and the crash window are test-covered. Revisit if oxc ships a depth option or fixes the native recursion.
 **Status.** Accepted (2026-10-06).
+
+## D-021 — Python bridge emits module info (protocol v1, additive)
+**Context.** The ModuleGraph (M3) needs import edges for both language families; M2 gave JS a parser-level module map, but the Python bridge did not extract imports (they lived only in the AST).
+**Decision.** `bridge.py` extracts `result.module` from Import/ImportFrom nodes (dotted specifiers preserved; relative imports carry their leading dots as the level, e.g. ".mod", "..pkg.mod"; `import a.b` binds a module object → kind "namespace"; `from m import n` → kind "named"; `from m import *` → namespace with importedName "*"). Protocol stays v1: the field is additive and the client validates it tolerantly (absent → null). Kinds are a documented subset of the core ImportKind union.
+**Consequences.** Both front-ends now feed the ModuleGraph through the same `ParseResult.module` shape; the graph resolver reads leading dots as relative levels. Dynamic `importlib` usage is not tracked (documented approximation).
+**Status.** Accepted (2026-10-07).

@@ -6,6 +6,8 @@ import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import type {
   CTransError,
+  ImportKind,
+  ModuleInfo,
   ParseResult,
   ParserDescription,
   PythonParseOptions,
@@ -32,6 +34,7 @@ import {
   type BridgeErrorEnvelope,
   type BridgeEnvelope,
   type BridgeHeader,
+  type BridgeModuleInfo,
 } from "./protocol.js";
 
 const BRIDGE_PATH = fileURLToPath(new URL("../python/bridge.py", import.meta.url));
@@ -267,6 +270,24 @@ function validateResponseHeader(header: BridgeHeader): void {
   validateSupportedPython(header.python.version);
 }
 
+// The bridge encodes Python imports in the shared ModuleInfo shape; kinds are already
+// validated against the bridge vocabulary in protocol.ts.
+function toModuleInfo(module: BridgeModuleInfo | null): ModuleInfo | null {
+  if (module === null) return null;
+  return {
+    hasModuleSyntax: module.hasModuleSyntax,
+    imports: module.imports.map((entry) => ({
+      kind: entry.kind as ImportKind,
+      moduleSpecifier: entry.moduleSpecifier,
+      importedName: entry.importedName,
+      localName: entry.localName,
+      span: entry.span,
+    })),
+    exports: [],
+    dynamicImports: [],
+  };
+}
+
 function errorFromEnvelope(envelope: BridgeErrorEnvelope, source: string): CTransError {
   const error = envelope.error;
   switch (error.kind) {
@@ -356,7 +377,7 @@ export class PythonBridgeParser implements PythonParser {
       ast: envelope.result.ast,
       tokens: envelope.result.tokens,
       comments: envelope.result.tokens.filter((token) => token.kind === "COMMENT"),
-      module: null, // Python import extraction lands with the M3 ModuleGraph
+      module: toModuleInfo(envelope.result.module),
       scopes: envelope.result.scopes,
       diagnostics: envelope.diagnostics,
     };
