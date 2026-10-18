@@ -25,10 +25,13 @@ interface BabelErrorLike {
 }
 
 export class BabelJsParser implements JsParser {
-  private constructor(
-    private readonly babel: BabelModule,
-    private readonly version: string,
-  ) {}
+  private readonly babel: BabelModule;
+  private readonly version: string;
+
+  private constructor(babel: BabelModule, version: string) {
+    this.babel = babel;
+    this.version = version;
+  }
 
   static async create(): Promise<BabelJsParser> {
     let babel: BabelModule;
@@ -66,6 +69,10 @@ export class BabelJsParser implements JsParser {
       } as unknown as Parameters<BabelModule["parse"]>[1];
       file = this.babel.parse(source, parseOptions);
     } catch (error) {
+      // Stack exhaustion (hostile deep inputs, D-020) must keep its RangeError
+      // identity: the oxc front-end's probe maps it to JsSourceLimitError. Wrapping
+      // it as a syntax error would misreport a resource limit as user error.
+      if (error instanceof RangeError) throw error;
       const babelError = error as BabelErrorLike;
       const index = babelError.loc?.index;
       throw new JsSyntaxError(

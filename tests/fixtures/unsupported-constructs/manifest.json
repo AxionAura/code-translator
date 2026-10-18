@@ -1,0 +1,20 @@
+{
+  "name": "unsupported-constructs",
+  "from": "python",
+  "to": "typescript",
+  "expectedClaimLevel": 2,
+  "expectedDecisionCounts": {
+    "deterministic": 7,
+    "semantic": 2,
+    "ambiguous": 0,
+    "unsupported": 6
+  },
+  "expectedWarnings": [
+    "CTW-UNSUPPORTED-MATCH",
+    "CTW-UNSUPPORTED-FUNCTIONDEF-DECORATOR",
+    "CTW-UNSUPPORTED-ASYNCFUNCTIONDEF-GENERATOR",
+    "CTW-UNSUPPORTED-CLASSDEF",
+    "CTW-UNSUPPORTED-DELETE"
+  ],
+  "description": "Negative fixture: each unsupported construct produces a marker comment, an `unsupported` ledger decision and its CTW-UNSUPPORTED-* warning; never invented behavior."
+}

@@ -1,0 +1,16 @@
+{
+  "name": "control-flow",
+  "from": "python",
+  "to": "typescript",
+  "expectedClaimLevel": 2,
+  "expectedDecisionCounts": {
+    "deterministic": 63,
+    "semantic": 24,
+    "ambiguous": 0,
+    "unsupported": 0
+  },
+  "expectedWarnings": [
+    "CTW-NUM-INT-ARBITRARY-PRECISION"
+  ],
+  "description": "Pins if/elif, range loops (C-style + materialized), while with break, continue, concatenation accumulation."
+}

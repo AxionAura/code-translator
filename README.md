@@ -2,7 +2,22 @@
 
 A behavior-preserving source-code translator for **Python ↔ JavaScript ↔ TypeScript**, designed to translate whole projects — not just snippets — with explicit, honest reporting of what was translated deterministically, what was adapted semantically, what was ambiguous, and what was not supported.
 
-**Status: design phase.** This repository currently contains the engineering blueprint (research, architecture, roadmap). Implementation has deliberately not started; see [docs/roadmap.md](docs/roadmap.md).
+**Status: M4 complete — Python → JavaScript/TypeScript translation works end-to-end** for the core language subset (expressions, control flow, functions and classes, exceptions, comprehensions, f-strings, slicing, generators/async syntax), with a per-construct decision ledger, S1/S2 validation, and CLI `check`/`translate` commands. Reverse directions and the dependency-mapping registry are later milestones; see [docs/roadmap.md](docs/roadmap.md) and [PROJECT_STATE.md](PROJECT_STATE.md).
+
+## Quickstart
+
+```bash
+corepack enable && pnpm install
+
+# Analyze + validate a Python file without writing output (exit 0 = translated)
+node apps/cli/bin/ctrans.mjs check sample.py --to ts
+
+# Translate a file or a whole project directory (writes target files + .ctrans/ artifacts)
+node apps/cli/bin/ctrans.mjs translate sample.py --to ts -o out/
+node apps/cli/bin/ctrans.mjs translate my-project/ --to js -o out-js/
+```
+
+The CLI prints the claim-ladder level (what validation actually proved), per-file status, and decision counts. Translated output is finalized through Prettier; runtime helpers land in a generated `__ctrans_runtime.ts|js` that carries **zero** dependencies.
 
 ## Documentation index
 

@@ -1,0 +1,14 @@
+{
+  "name": "iteration-builtins-js",
+  "from": "python",
+  "to": "javascript",
+  "expectedClaimLevel": 1,
+  "expectedDecisionCounts": {
+    "deterministic": 32,
+    "semantic": 9,
+    "ambiguous": 0,
+    "unsupported": 0
+  },
+  "expectedWarnings": [],
+  "description": "JavaScript direction: iteration via __ctrans_iter (code points), builtins, JS claims level 1 by design (S2 reported skipped)."
+}

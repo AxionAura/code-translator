@@ -315,10 +315,13 @@ function errorFromEnvelope(envelope: BridgeErrorEnvelope, source: string): CTran
 }
 
 export class PythonBridgeParser implements PythonParser {
-  private constructor(
-    private readonly options: ResolvedOptions,
-    private readonly handshakeHeader: BridgeHeader,
-  ) {}
+  private readonly options: ResolvedOptions;
+  private readonly handshakeHeader: BridgeHeader;
+
+  private constructor(options: ResolvedOptions, handshakeHeader: BridgeHeader) {
+    this.options = options;
+    this.handshakeHeader = handshakeHeader;
+  }
 
   static async create(options: PythonBridgeParserOptions = {}): Promise<PythonBridgeParser> {
     const resolved = resolveOptions(options);

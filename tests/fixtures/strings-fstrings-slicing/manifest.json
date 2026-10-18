@@ -1,0 +1,16 @@
+{
+  "name": "strings-fstrings-slicing",
+  "from": "python",
+  "to": "typescript",
+  "expectedClaimLevel": 2,
+  "expectedDecisionCounts": {
+    "deterministic": 23,
+    "semantic": 6,
+    "ambiguous": 0,
+    "unsupported": 0
+  },
+  "expectedWarnings": [
+    "CTW-NUM-INT-ARBITRARY-PRECISION"
+  ],
+  "description": "Pins f-string templates, positive/negative/stepped slices (native vs helper), string equality."
+}

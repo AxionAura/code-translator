@@ -5,7 +5,7 @@ export const packageName = "@ctrans/core";
 
 export { CTransError } from "./errors.js";
 export { analyzeModule } from "./semantic.js";
-export { buildModuleGraph } from "./module-graph.js";
+export { buildModuleGraph, normalizeModuleId } from "./module-graph.js";
 export type {
   GraphImport,
   GraphImportStatus,
@@ -13,7 +13,7 @@ export type {
   ModuleGraphModel,
   ModuleGraphNode,
 } from "./module-graph.js";
-export { extractModuleContract } from "./module-contract.js";
+export { extractModuleContract, pythonExportNames } from "./module-contract.js";
 export type { ContractEntry, ContractEntryKind, ModuleContract } from "./module-contract.js";
 export {
   DECISION_KINDS,
@@ -32,6 +32,21 @@ export type {
   StageStatus,
   TranslationReport,
 } from "./report.js";
+export { computeClaimLevel, runPipeline, targetModulePath } from "./pipeline.js";
+export type {
+  AnalyzedUnit,
+  EmittedFile,
+  PipelineInput,
+  PipelineResult,
+  StageResult,
+  SyntaxValidator,
+  TargetLanguage,
+  TranslateOptions,
+  UnitTranslationContext,
+  TypeValidator,
+  UnitEmission,
+  UnitTranslator,
+} from "./pipeline.js";
 export { UNKNOWN, annotate, unknownType } from "./common-type.js";
 export type { AnnotatedType, CommonType, TypeConfidence, TypeOrigin } from "./common-type.js";
 export type {

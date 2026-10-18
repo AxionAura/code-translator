@@ -1,0 +1,16 @@
+{
+  "name": "classes-inheritance",
+  "from": "python",
+  "to": "typescript",
+  "expectedClaimLevel": 2,
+  "expectedDecisionCounts": {
+    "deterministic": 34,
+    "semantic": 8,
+    "ambiguous": 0,
+    "unsupported": 0
+  },
+  "expectedWarnings": [
+    "CTW-CLASS-ATTR-STATIC"
+  ],
+  "description": "Pins class translation: single inheritance, super-constructor, static class attributes, instance fields, typed self arithmetic."
+}

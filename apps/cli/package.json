@@ -8,5 +8,11 @@
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@ctrans/codegen-js": "workspace:*",
+    "@ctrans/core": "workspace:*",
+    "@ctrans/parser-js": "workspace:*",
+    "@ctrans/parser-py": "workspace:*"
   }
 }

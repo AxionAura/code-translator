@@ -59,7 +59,7 @@ function contractKind(symbolKind: SymbolKind): ContractEntryKind {
 
 // Python's export convention: `__all__` when present, otherwise all top-level public
 // bindings (no leading underscore).
-function pythonExportNames(parseResult: ParseResult, model: SemanticModel): string[] {
+export function pythonExportNames(parseResult: ParseResult, model: SemanticModel): string[] {
   const allNames: string[] | null = extractDuAll(parseResult);
   if (allNames !== null) return allNames;
   const rootScope = model.scopes[model.rootScopeId];

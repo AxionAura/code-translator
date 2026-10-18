@@ -1,0 +1,16 @@
+{
+  "name": "functions-and-defaults",
+  "from": "python",
+  "to": "typescript",
+  "expectedClaimLevel": 2,
+  "expectedDecisionCounts": {
+    "deterministic": 34,
+    "semantic": 9,
+    "ambiguous": 0,
+    "unsupported": 0
+  },
+  "expectedWarnings": [
+    "CTW-NUM-INT-ARBITRARY-PRECISION"
+  ],
+  "description": "Pins default parameters (constant/mutable/None), closures, nested defs, nonlocal-free accumulation."
+}

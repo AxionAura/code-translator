@@ -9,6 +9,7 @@ export type { OxcJsParserOptions } from "./oxc-parser.js";
 export { createJsParser } from "./select.js";
 export type { JsParserSelection } from "./select.js";
 export { TypeScriptSemanticOracle } from "./ts-oracle.js";
+export { OxcSyntaxValidator, createOxcSyntaxValidator, OracleTypeValidator } from "./validators.js";
 export {
   JS_PARSER_INTERNAL,
   JS_PARSER_UNAVAILABLE,

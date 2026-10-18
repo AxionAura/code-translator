@@ -1,0 +1,16 @@
+{
+  "name": "exceptions-handling",
+  "from": "python",
+  "to": "typescript",
+  "expectedClaimLevel": 2,
+  "expectedDecisionCounts": {
+    "deterministic": 31,
+    "semantic": 11,
+    "ambiguous": 0,
+    "unsupported": 0
+  },
+  "expectedWarnings": [
+    "CTW-NUM-INT-ARBITRARY-PRECISION"
+  ],
+  "description": "Pins try/except/else/finally structure, isinstance dispatch, custom exception hierarchy (Exception -> PythonException)."
+}

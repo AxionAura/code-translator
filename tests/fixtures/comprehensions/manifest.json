@@ -1,0 +1,14 @@
+{
+  "name": "comprehensions",
+  "from": "python",
+  "to": "typescript",
+  "expectedClaimLevel": 2,
+  "expectedDecisionCounts": {
+    "deterministic": 22,
+    "semantic": 4,
+    "ambiguous": 0,
+    "unsupported": 0
+  },
+  "expectedWarnings": [],
+  "description": "Pins single-for list/set/dict comprehensions and filtered forms (map/filter/fromEntries chains)."
+}

@@ -16,18 +16,22 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
-    "docs:check": "node scripts/check-doc-links.mjs"
+    "test:coverage": "vitest run --coverage",
+    "docs:check": "node scripts/check-doc-links.mjs",
+    "fixtures:accept": "FIXTURES_ACCEPT=1 vitest run tests/golden-fixtures.test.ts"
   },
   "devDependencies": {
+    "@ctrans/codegen-js": "workspace:*",
+    "@ctrans/core": "workspace:*",
+    "@ctrans/parser-js": "workspace:*",
+    "@ctrans/parser-py": "workspace:*",
     "@types/node": "^24.19.1",
+    "@vitest/coverage-v8": "5.0.5",
     "eslint": "^10.12.0",
     "prettier": "^3.9.9",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.71.1",
-    "vitest": "^5.0.3",
-    "@ctrans/parser-py": "workspace:*",
-    "@ctrans/parser-js": "workspace:*",
-    "@ctrans/core": "workspace:*"
+    "vitest": "^5.0.3"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

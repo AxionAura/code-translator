@@ -1,0 +1,14 @@
+{
+  "name": "external-imports",
+  "from": "python",
+  "to": "typescript",
+  "expectedClaimLevel": 1,
+  "expectedDecisionCounts": {
+    "deterministic": 5,
+    "semantic": 0,
+    "ambiguous": 0,
+    "unsupported": 0
+  },
+  "expectedWarnings": [],
+  "description": "Emissions stay honest for unmapped external imports: `import json` is emitted verbatim; S2 reports the unresolved module (2307) and the claim is capped at level 1. Registry mapping is M5."
+}

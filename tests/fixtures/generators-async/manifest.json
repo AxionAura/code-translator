@@ -1,0 +1,16 @@
+{
+  "name": "generators-async",
+  "from": "python",
+  "to": "typescript",
+  "expectedClaimLevel": 2,
+  "expectedDecisionCounts": {
+    "deterministic": 28,
+    "semantic": 2,
+    "ambiguous": 0,
+    "unsupported": 0
+  },
+  "expectedWarnings": [
+    "CTW-NUM-INT-ARBITRARY-PRECISION"
+  ],
+  "description": "Pins generator functions (def+yield -> function*) and async/await syntax with Promise<T> return types."
+}

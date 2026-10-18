@@ -1,0 +1,16 @@
+{
+  "name": "package-modules",
+  "from": "python",
+  "to": "typescript",
+  "expectedClaimLevel": 2,
+  "expectedDecisionCounts": {
+    "deterministic": 35,
+    "semantic": 7,
+    "ambiguous": 0,
+    "unsupported": 0
+  },
+  "expectedWarnings": [
+    "CTW-NUM-INT-ARBITRARY-PRECISION"
+  ],
+  "description": "Multi-file project: __init__ -> index barrel, relative import rewriting via ModuleGraph, cross-module class typing."
+}

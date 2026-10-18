@@ -40,8 +40,11 @@ function isNodeShaped(value: unknown): value is Record<string, unknown> {
 // UTF-16 index → UTF-8 byte offset, memoized per source (many nodes share boundaries).
 export class ByteOffsetMap {
   readonly #memo = new Map<number, number>();
+  private readonly source: string;
 
-  constructor(private readonly source: string) {}
+  constructor(source: string) {
+    this.source = source;
+  }
 
   toByte(utf16Index: number): number {
     const hit = this.#memo.get(utf16Index);

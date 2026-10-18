@@ -8,5 +8,9 @@
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@ctrans/core": "workspace:*",
+    "prettier": "^3.9.9"
   }
 }

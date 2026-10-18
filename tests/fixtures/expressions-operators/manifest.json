@@ -1,0 +1,16 @@
+{
+  "name": "expressions-operators",
+  "from": "python",
+  "to": "typescript",
+  "expectedClaimLevel": 2,
+  "expectedDecisionCounts": {
+    "deterministic": 64,
+    "semantic": 28,
+    "ambiguous": 0,
+    "unsupported": 0
+  },
+  "expectedWarnings": [
+    "CTW-NUM-INT-ARBITRARY-PRECISION"
+  ],
+  "description": "Pins operator mappings on annotated values (int->number D-006), floor-div/mod helpers, truthiness, f-strings."
+}

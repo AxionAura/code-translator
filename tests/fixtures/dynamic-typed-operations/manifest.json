@@ -1,0 +1,14 @@
+{
+  "name": "dynamic-typed-operations",
+  "from": "python",
+  "to": "typescript",
+  "expectedClaimLevel": 2,
+  "expectedDecisionCounts": {
+    "deterministic": 23,
+    "semantic": 10,
+    "ambiguous": 0,
+    "unsupported": 0
+  },
+  "expectedWarnings": [],
+  "description": "Pins D-016 helper routing on statically unknown operands (add/compare/mul/index/slice/contains/len) - output stays `unknown`-typed and type-valid."
+}

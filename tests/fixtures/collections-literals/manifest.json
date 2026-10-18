@@ -1,0 +1,16 @@
+{
+  "name": "collections-literals",
+  "from": "python",
+  "to": "typescript",
+  "expectedClaimLevel": 2,
+  "expectedDecisionCounts": {
+    "deterministic": 39,
+    "semantic": 9,
+    "ambiguous": 0,
+    "unsupported": 0
+  },
+  "expectedWarnings": [
+    "CTW-TUPLE-ARRAY"
+  ],
+  "description": "Pins collection literals, the tuple->array tradeoff warning, dict key coercion, unpacking and swap."
+}

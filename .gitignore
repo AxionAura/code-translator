@@ -22,3 +22,5 @@ Thumbs.db
 __pycache__/
 .venv/
 *.pyc
+.tmp-runtime-ts/
+.tmp-runtime-js/

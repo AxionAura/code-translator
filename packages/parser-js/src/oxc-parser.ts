@@ -44,12 +44,16 @@ interface OxcError {
 }
 
 export class OxcJsParser implements JsParser {
-  private constructor(
-    private readonly oxc: OxcModule,
-    private readonly version: string,
-    private readonly maxSourceBytes: number,
-    private probeParser: BabelJsParser | null = null,
-  ) {}
+  private readonly oxc: OxcModule;
+  private readonly version: string;
+  private readonly maxSourceBytes: number;
+  private probeParser: BabelJsParser | null = null;
+
+  private constructor(oxc: OxcModule, version: string, maxSourceBytes: number) {
+    this.oxc = oxc;
+    this.version = version;
+    this.maxSourceBytes = maxSourceBytes;
+  }
 
   static async create(options: OxcJsParserOptions = {}): Promise<OxcJsParser> {
     let oxc: OxcModule;

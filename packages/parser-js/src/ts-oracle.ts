@@ -78,26 +78,26 @@ export class TypeScriptSemanticOracle {
   }
 
   summarizeModule(query: TsModuleSummaryQuery): TsModuleSummary {
-    const { program, contexts } = buildProgram(query.files);
-    const sourceFile = program.getSourceFile(query.filename);
+    const { program, contexts, toVirtual } = buildProgram(query.files);
+    const sourceFile = program.getSourceFile(absoluteSourceName(query.filename));
     if (sourceFile === undefined) {
       throw new Error(`oracle input does not contain "${query.filename}"`);
     }
     const checker = program.getTypeChecker();
     const diagnostics = ts
       .getPreEmitDiagnostics(program, sourceFile)
-      .map((diagnostic) => toDiagnostic(diagnostic, contexts));
+      .map((diagnostic) => toDiagnostic(diagnostic, contexts, toVirtual));
     // TS 6 exposes no SourceFile.symbol on its public surface; the module symbol is
     // reachable through the checker for module files and undefined for scripts.
     const moduleSymbol = checker.getSymbolAtLocation(sourceFile);
     const exports: TsExportSummary[] = [];
     if (moduleSymbol !== undefined && (moduleSymbol.flags & ts.SymbolFlags.Module) !== 0) {
       for (const exported of checker.getExportsOfModule(moduleSymbol)) {
-        exports.push(toExportSummary(checker, exported, contexts));
+        exports.push(toExportSummary(checker, exported, contexts, toVirtual));
       }
     } else if (moduleSymbol?.exports !== undefined) {
       for (const exported of moduleSymbol.exports.values()) {
-        exports.push(toExportSummary(checker, exported, contexts));
+        exports.push(toExportSummary(checker, exported, contexts, toVirtual));
       }
     }
     return { filename: query.filename, diagnostics, exports };
@@ -105,7 +105,7 @@ export class TypeScriptSemanticOracle {
 
   typeAt(query: TsTypeAtQuery): TsTypeSummary | null {
     const { program, contexts } = buildProgram(query.files);
-    const sourceFile = program.getSourceFile(query.filename);
+    const sourceFile = program.getSourceFile(absoluteSourceName(query.filename));
     const context = contexts.get(normalizeName(query.filename));
     if (sourceFile === undefined || context === undefined) {
       throw new Error(`oracle input does not contain "${query.filename}"`);
@@ -143,6 +143,7 @@ function normalizeName(filename: string): string {
 function buildProgram(files: readonly TsOracleSourceFile[]): {
   program: ts.Program;
   contexts: Map<string, FileContext>;
+  toVirtual: (name: string) => string | null;
 } {
   const contexts = new Map<string, FileContext>();
   for (const file of files) {
@@ -155,6 +156,7 @@ function buildProgram(files: readonly TsOracleSourceFile[]): {
   const compilerOptions: ts.CompilerOptions = {
     strict: true,
     noEmit: true,
+    allowImportingTsExtensions: true,
     allowJs: true,
     target: ts.ScriptTarget.ESNext,
     module: ts.ModuleKind.ESNext,
@@ -163,31 +165,78 @@ function buildProgram(files: readonly TsOracleSourceFile[]): {
     types: [],
   };
   const baseHost = ts.createCompilerHost(compilerOptions, /*setParentNodes*/ true);
+  const virtualLookup = (name: string): string | null => {
+    const normalized = normalizeName(name);
+    if (contexts.has(normalized)) return normalized;
+    const stripped = normalized.startsWith(VIRTUAL_ROOT)
+      ? normalized.slice(VIRTUAL_ROOT.length).replace(/^\//, "")
+      : null;
+    return stripped !== null && contexts.has(stripped) ? stripped : null;
+  };
   const host: ts.CompilerHost = {
     ...baseHost,
     getSourceFile: (name, languageVersion, onError, shouldCreate) => {
-      const context = contexts.get(normalizeName(name));
-      if (context !== undefined) {
+      const virtualKey = virtualLookup(name);
+      if (virtualKey !== null) {
         // Virtual files are parsed fresh; lib declarations load from the pinned
         // typescript package on disk (our own dependency, never user code).
-        return ts.createSourceFile(name, context.source, languageVersion, true);
+        return ts.createSourceFile(name, contexts.get(virtualKey)!.source, languageVersion, true);
       }
       return baseHost.getSourceFile(name, languageVersion, onError, shouldCreate);
+    },
+    fileExists: (name) => virtualLookup(name) !== null || baseHost.fileExists(name),
+    readFile: (name) => {
+      const virtualKey = virtualLookup(name);
+      if (virtualKey !== null) return contexts.get(virtualKey)!.source;
+      return baseHost.readFile(name);
+    },
+    directoryExists: (name) => {
+      const normalized = normalizeName(name).replace(/\/$/, "");
+      if (normalized === VIRTUAL_ROOT || normalized.startsWith(`${VIRTUAL_ROOT}/`)) {
+        const stripped = normalized.slice(VIRTUAL_ROOT.length).replace(/^\//, "");
+        if (stripped === "") return true; // the virtual workspace root itself
+        return [...contexts.keys()].some((key) => key.startsWith(`${stripped}/`));
+      }
+      return baseHost.directoryExists?.(name) ?? false;
+    },
+    // The standard resolver verifies paths through realpath; keep virtual files
+    // resolvable by mapping them onto the synthetic root namespace.
+    realpath: (name) => {
+      const virtualKey = virtualLookup(name);
+      return virtualKey !== null ? `${VIRTUAL_ROOT}/${virtualKey}` : name;
     },
     writeFile: () => {},
   };
   const program = ts.createProgram(
-    files.map((file) => file.filename),
+    files.map((file) => absoluteName(file.filename)),
     compilerOptions,
     host,
   );
-  return { program, contexts };
+  return { program, contexts, toVirtual: virtualLookup };
 }
 
-function toDiagnostic(diagnostic: ts.Diagnostic, contexts: Map<string, FileContext>): TsDiagnostic {
+// Absolute synthetic namespace for virtual files (module resolution operates on
+// absolute paths; project-relative names are treated as being below this root).
+const VIRTUAL_ROOT = "/__ctrans_virtual_workspace";
+
+function absoluteName(filename: string): string {
+  return `${VIRTUAL_ROOT}/${normalizeName(filename)}`;
+}
+
+// Absolute form of a project-relative virtual name (program root names must be
+// absolute for the standard resolver to combine containing directories).
+function absoluteSourceName(filename: string): string {
+  return absoluteName(filename);
+}
+
+function toDiagnostic(
+  diagnostic: ts.Diagnostic,
+  contexts: Map<string, FileContext>,
+  toVirtual: (name: string) => string | null,
+): TsDiagnostic {
   let span: SourceSpan | null = null;
   if (diagnostic.file !== undefined && typeof diagnostic.start === "number") {
-    const context = contexts.get(normalizeName(diagnostic.file.fileName));
+    const context = contexts.get(toVirtual(diagnostic.file.fileName) ?? "");
     if (context !== undefined) {
       const start = context.converter.toByte(diagnostic.start);
       const end = context.converter.toByte(
@@ -224,6 +273,7 @@ function toExportSummary(
   checker: ts.TypeChecker,
   symbol: ts.Symbol,
   contexts: Map<string, FileContext>,
+  toVirtual: (name: string) => string | null,
 ): TsExportSummary {
   const declaration = symbol.declarations?.[0];
   let type: TsTypeSummary | null = null;
@@ -250,14 +300,18 @@ function toExportSummary(
     symbolFlags: flagNames(ts.SymbolFlags as unknown as Record<string, unknown>, symbol.flags),
     type,
     exportKind: exportKindOf(symbol.flags),
-    declarations: declarationSpans(symbol, contexts),
+    declarations: declarationSpans(symbol, contexts, toVirtual),
   };
 }
 
-function declarationSpans(symbol: ts.Symbol, contexts: Map<string, FileContext>): SourceSpan[] {
+function declarationSpans(
+  symbol: ts.Symbol,
+  contexts: Map<string, FileContext>,
+  toVirtual: (name: string) => string | null,
+): SourceSpan[] {
   const spans: SourceSpan[] = [];
   for (const declaration of symbol.declarations ?? []) {
-    const context = contexts.get(normalizeName(declaration.getSourceFile().fileName));
+    const context = contexts.get(toVirtual(declaration.getSourceFile().fileName) ?? "");
     if (context === undefined) continue; // declarations in lib files are not ours to span
     const start = context.converter.toByte(declaration.getStart());
     const end = context.converter.toByte(declaration.getEnd());

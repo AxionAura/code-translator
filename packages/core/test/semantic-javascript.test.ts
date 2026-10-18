@@ -204,4 +204,98 @@ describe("javascript semantic analysis", () => {
     const app = findSymbol(model, "App")[0]!;
     expect(app.kind).toBe("namespace");
   });
+
+  it("attaches TS annotation types to parameters (D-002 shared algebra)", async () => {
+    const source = [
+      "export function f(",
+      "  a: string,",
+      "  b: number,",
+      "  c: boolean,",
+      "  d: bigint,",
+      "  e: Array<number>,",
+      "  g: [string, number],",
+      "  h: string | number,",
+      "  i: string & number,",
+      "  j?: string,",
+      "  k: Promise<number>,",
+      "  l: Widget,",
+      "  m: { nested: true },",
+      "): string | undefined {",
+      "  return undefined;",
+      "}",
+      "",
+    ].join("\n");
+    const model = analyzeModule(await parse(source, "f.ts", "typescript"));
+    const param = (name: string) => findSymbol(model, name)[0]?.type?.type;
+    expect(param("a")).toMatchObject({ kind: "string" });
+    expect(param("b")).toMatchObject({ kind: "number" });
+    expect(param("c")).toMatchObject({ kind: "boolean" });
+    expect(param("d")).toMatchObject({ kind: "bigint" });
+    // Generic type arguments are not followed by the M3 analyzer (instance surface only).
+    expect(param("e")).toMatchObject({ kind: "instance", className: "Array" });
+    expect(param("g")).toMatchObject({
+      kind: "tuple",
+      elements: [{ kind: "string" }, { kind: "number" }],
+    });
+    expect(param("h")).toMatchObject({
+      kind: "union",
+      members: [{ kind: "string" }, { kind: "number" }],
+    });
+    expect(param("i")).toMatchObject({ kind: "intersection" });
+    // Optional parameters are declared `j: string` without initializer; the J~? scan
+    // marks them plain here — the type itself still maps.
+    expect(param("j")).toMatchObject({ kind: "string" });
+    expect(param("k")).toMatchObject({ kind: "instance", className: "Promise" });
+    expect(param("l")).toMatchObject({ kind: "instance", className: "Widget" });
+    expect(param("m")).toMatchObject({ kind: "object" });
+    // Function symbols carry null (params are annotated per-name).
+    expect(findSymbol(model, "f")[0]!.type).toBeNull();
+  });
+
+  it("maps literal-type annotations and keyword variants honestly", async () => {
+    const source = [
+      "export function g(a: 'lit', b: unknown, c: any, d: void, e: never, f: object, h: symbol, i: null, j: undefined) {",
+      "  return j;",
+      "}",
+      "",
+    ].join("\n");
+    const model = analyzeModule(await parse(source, "g.ts", "typescript"));
+    const param = (name: string) => findSymbol(model, name)[0]?.type?.type;
+    expect(param("a")).toEqual({ kind: "literal", value: "lit" });
+    expect(param("b")).toEqual({ kind: "unknown" });
+    expect(param("c")).toEqual({ kind: "any" });
+    expect(param("d")).toEqual({ kind: "void" });
+    expect(param("e")).toEqual({ kind: "never" });
+    expect(param("f")).toEqual({ kind: "object" });
+    expect(param("h")).toEqual({ kind: "symbol" });
+    expect(param("i")).toEqual({ kind: "null" });
+    expect(param("j")).toEqual({ kind: "undefined" });
+  });
+
+  it("infers literal expression types honestly (dynamic sums stay unknown)", async () => {
+    const source = [
+      "const n = 5;",
+      "const s = 'text';",
+      "const flag = true;",
+      "const nil = null;",
+      "const big = 1n;",
+      "const dyn = n + 1;",
+      "",
+    ].join("\n");
+    const model = analyzeModule(await parse(source, "mod.js"));
+    const type = (name: string) => findSymbol(model, name)[0]?.type?.type?.kind;
+    expect(type("n")).toBe("number");
+    expect(type("s")).toBe("literal"); // string literals infer as literal types
+    expect(type("flag")).toBe("literal"); // bool literals also literalKind
+    expect(type("nil")).toBe("null");
+    expect(type("big")).toBe("literal"); // bigint literals carry literalKind bigint
+    expect(type("dyn")).toBe("unknown");
+  });
+
+  it("resolves qualified type references through TSQualifiedName chains", async () => {
+    const source = ["export function f(v: App.Widget) {", "  return v;", "}", ""].join("\n");
+    const model = analyzeModule(await parse(source, "f.ts", "typescript"));
+    const param = findSymbol(model, "v")[0]?.type?.type;
+    expect(param).toMatchObject({ kind: "instance", className: "App.Widget" });
+  });
 });

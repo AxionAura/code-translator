@@ -1,0 +1,14 @@
+{
+  "name": "print-and-io",
+  "from": "python",
+  "to": "javascript",
+  "expectedClaimLevel": 1,
+  "expectedDecisionCounts": {
+    "deterministic": 10,
+    "semantic": 4,
+    "ambiguous": 0,
+    "unsupported": 0
+  },
+  "expectedWarnings": [],
+  "description": "JavaScript direction: print -> __ctrans_print, Python str() spellings, JS claims level 1 by design."
+}
