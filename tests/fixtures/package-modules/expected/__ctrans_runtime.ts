@@ -50,15 +50,105 @@ export class RuntimeError extends PythonException {
 }
 
 // Python operators on dynamically typed values: numbers validate, then operate.
+// bigint counts as an integer operand (D-006 bigint mode); booleans act as 0/1.
 function __ctrans_requireNumber(v: unknown, op: string): number {
+  if (typeof v === "bigint") return Number(v);
+  if (typeof v === "boolean") return v ? 1 : 0;
   if (typeof v !== "number") {
     throw new TypeError(`unsupported operand type(s) for ${op}`);
   }
   return v;
 }
 
+// Integer classification across the D-006 modes: bigint is always integral,
+// booleans act as 0/1, Numbers are integral when they are whole values. Mixed
+// int/float arithmetic converts through Number (the documented bigint boundary).
+function __ctrans_isIntegral(v: unknown): boolean {
+  if (typeof v === "bigint") return true;
+  if (typeof v === "boolean") return true;
+  return typeof v === "number" && Number.isInteger(v);
+}
+
+function __ctrans_asBigInt(v: unknown): bigint {
+  if (typeof v === "bigint") return v;
+  if (typeof v === "boolean") return v ? 1n : 0n;
+  return BigInt(Math.trunc(Number(v)));
+}
+
+// Python floor division shared shape: q = trunc(a/b) corrected when the remainder
+// has the opposite sign of the divisor. Works for bigint and Number paths.
+function __ctrans_floorQuotient(
+  a: unknown,
+  b: unknown,
+  op: string,
+): number | bigint {
+  if (typeof a === "bigint" || typeof b === "bigint") {
+    const left = __ctrans_asBigInt(a);
+    const right = __ctrans_asBigInt(b);
+    if (right === 0n) throw new ZeroDivisionError("division by zero");
+    const q = left / right;
+    const r = left % right;
+    if (r !== 0n && left < 0n !== right < 0n) return q - 1n;
+    return q;
+  }
+  const left = __ctrans_requireNumber(a, op);
+  const right = __ctrans_requireNumber(b, op);
+  if (right === 0) throw new ZeroDivisionError("division by zero");
+  return Math.floor(left / right);
+}
+
+// Python modulo: result takes the divisor's sign.
+function __ctrans_pythonMod(
+  a: unknown,
+  b: unknown,
+  op: string,
+): number | bigint {
+  if (typeof a === "bigint" || typeof b === "bigint") {
+    const left = __ctrans_asBigInt(a);
+    const right = __ctrans_asBigInt(b);
+    if (right === 0n) throw new ZeroDivisionError("division by zero");
+    return ((left % right) + right) % right;
+  }
+  const left = __ctrans_requireNumber(a, op);
+  const right = __ctrans_requireNumber(b, op);
+  if (right === 0) throw new ZeroDivisionError("division by zero");
+  return ((left % right) + right) % right;
+}
+
+// Numeric arithmetic core shared by + - * and sum(): integral operands keep exact
+// bigint semantics when either side is bigint (D-006 exact mode); a float operand
+// converts the pair through Number (Python int+float -> float, precision boundary).
+function __ctrans_numeric(
+  a: unknown,
+  b: unknown,
+  op: string,
+  combineNumber: (left: number, right: number) => number,
+): number | bigint {
+  const left = __ctrans_requireNumber(a, op);
+  const right = __ctrans_requireNumber(b, op);
+  if (
+    (typeof a === "bigint" || typeof b === "bigint") &&
+    __ctrans_isIntegral(a) &&
+    __ctrans_isIntegral(b)
+  ) {
+    const bigLeft = __ctrans_asBigInt(a);
+    const bigRight = __ctrans_asBigInt(b);
+    switch (op) {
+      case "+":
+        return bigLeft + bigRight;
+      case "-":
+        return bigLeft - bigRight;
+      default:
+        return bigLeft * bigRight;
+    }
+  }
+  return combineNumber(left, right);
+}
+
 // Python - on dynamically typed values (numbers only; JS would coerce).
 
 export function __ctrans_sub(a: unknown, b: unknown): number {
-  return __ctrans_requireNumber(a, "-") - __ctrans_requireNumber(b, "-");
+  // The bigint branch is unreachable in the default mode (no bigint values exist
+  // there), so the narrowing assertion is runtime-true; bigint mode widens it.
+  return __ctrans_numeric(a, b, "-", (left, right) => left - right) as number;
 }

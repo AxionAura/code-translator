@@ -15,6 +15,7 @@ import { format } from "prettier";
 import type { PipelineInput } from "@ctrans/core";
 import { runPipeline, type TargetLanguage } from "@ctrans/core";
 import { createPyToJsTranslator } from "@ctrans/codegen-js";
+import { createRegistryLookup } from "@ctrans/registry";
 import { createPythonBridgeParser, type PythonParser } from "@ctrans/parser-py";
 import { createOxcSyntaxValidator, OracleTypeValidator } from "@ctrans/parser-js";
 
@@ -40,12 +41,17 @@ function listFixtures(): string[] {
 }
 
 function collectInputs(fixtureDir: string): string[] {
+  // Module ids STRIP the input/ prefix (matching the CLI's directory translation):
+  // Python 3 implicit-relative imports resolve against the project root, so the
+  // prefixed ids would misclassify intra-project imports as external.
   const inputs: string[] = [];
   const walk = (relative: string): void => {
     for (const entry of readdirSync(join(fixtureDir, relative), { withFileTypes: true })) {
       const child = relative === "" ? entry.name : `${relative}/${entry.name}`;
       if (entry.isDirectory()) walk(child);
-      else if (entry.name.endsWith(".py")) inputs.push(child);
+      else if (entry.name.endsWith(".py")) {
+        inputs.push(child.startsWith("input/") ? child.slice("input/".length) : child);
+      }
     }
   };
   walk("");
@@ -66,21 +72,42 @@ async function runFixture(
   const fixtureDir = join(FIXTURES_ROOT, fixture);
   const inputs: PipelineInput[] = [];
   for (const moduleFile of collectInputs(fixtureDir)) {
-    const source = readFileSync(join(fixtureDir, moduleFile), "utf8");
+    const source = readFileSync(join(fixtureDir, "input", moduleFile), "utf8");
     inputs.push({
       filename: moduleFile,
       parseResult: await py.parse(source, { filename: moduleFile }),
     });
   }
-  const result = await runPipeline(inputs, {
-    target,
-    translateUnit: await createPyToJsTranslator(target),
-    validateSyntax: await createOxcSyntaxValidator(),
-    validateTypes: new OracleTypeValidator(),
-  });
+  const result = await runPipeline(
+    inputs,
+    {
+      target,
+      translateUnit: await createPyToJsTranslator(target, { registry: createRegistryLookup() }),
+      validateSyntax: await createOxcSyntaxValidator(),
+      validateTypes: new OracleTypeValidator(),
+      // Same wiring as the CLI: sync-to-async boundary propagation + S3 data.
+      asyncBoundaryModules: ["requests"],
+    },
+    {
+      sourceImports: collectSourceImports(inputs),
+      mappedModules: new Set(["math", "json", "sys", "random", "requests"]),
+      unsupportedModules: new Set(["ctypes", "curses", "tkinter"]),
+    },
+  );
   const files = new Map<string, string>();
   for (const file of result.emittedFiles) files.set(file.targetPath, file.content);
   return { report: result.report as unknown as ReturnType<typeof JSON.parse>, files };
+}
+
+function collectSourceImports(inputs: readonly PipelineInput[]): Map<string, string[]> {
+  const map = new Map<string, string[]>();
+  for (const input of inputs) {
+    map.set(
+      input.filename,
+      (input.parseResult.module?.imports ?? []).map((entry) => entry.moduleSpecifier),
+    );
+  }
+  return map;
 }
 
 describe("golden fixtures (docs/testing.md §2)", () => {

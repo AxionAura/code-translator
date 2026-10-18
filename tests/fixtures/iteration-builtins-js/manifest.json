@@ -4,8 +4,8 @@
   "to": "javascript",
   "expectedClaimLevel": 1,
   "expectedDecisionCounts": {
-    "deterministic": 32,
-    "semantic": 9,
+    "deterministic": 34,
+    "semantic": 7,
     "ambiguous": 0,
     "unsupported": 0
   },

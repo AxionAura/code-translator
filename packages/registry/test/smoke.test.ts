@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { packageName } from "../src/index.js";
+import { lookupBuiltin } from "../src/index.js";
 
-describe("@ctrans/registry skeleton", () => {
-  it("loads its entry point", () => {
-    expect(packageName).toBe("@ctrans/registry");
+describe("@ctrans/registry entry point", () => {
+  it("exposes the v1 lookup surface", () => {
+    expect(lookupBuiltin("sorted")).not.toBeNull();
   });
 });

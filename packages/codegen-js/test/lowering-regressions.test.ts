@@ -11,6 +11,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { analyzeModule, buildModuleGraph } from "@ctrans/core";
 import { createPythonBridgeParser, type PythonBridgeParser } from "@ctrans/parser-py";
 import { createPyToJsTranslator } from "../src/translator.js";
+import { createRegistryLookup } from "@ctrans/registry";
 
 let py: PythonBridgeParser;
 
@@ -22,7 +23,9 @@ async function translateTs(source: string, filename = "mod.py") {
   const parseResult = await py.parse(source, { filename });
   const unit = { filename, parseResult, model: analyzeModule(parseResult) };
   const graph = buildModuleGraph([{ filename: unit.filename, parseResult: unit.parseResult }]);
-  const translator = await createPyToJsTranslator("typescript");
+  const translator = await createPyToJsTranslator("typescript", {
+    registry: createRegistryLookup(),
+  });
   const emission = await translator.translateUnit(unit, graph);
   const shared = await translator.finalizeUnits();
   const files = new Map<string, string>();
@@ -32,7 +35,7 @@ async function translateTs(source: string, filename = "mod.py") {
 
 describe("M4 audit regressions: honest lowering", () => {
   it("classifies unmapped Python builtins as unsupported (marker + warning), never as deterministic bare calls", async () => {
-    const { files, ledger } = await translateTs("def f(xs):\n    return sorted(xs)\n");
+    const { files, ledger } = await translateTs("def f(xs):\n    return bin(xs)\n");
     const entry = ledger.find((item) => item.rule === "py.Call(builtin)→unsupported");
     expect(entry).toBeDefined();
     expect(entry!.decision).toBe("unsupported");
@@ -110,13 +113,22 @@ describe("M4 audit regressions: honest lowering", () => {
     expect(entry?.decision).toBe("semantic");
   });
 
-  it("warns when container methods are emitted verbatim (method registry arrives in M5)", async () => {
+  it("maps registered container methods through the registry (retiring the unmapped warning)", async () => {
     const { ledger } = await translateTs(
       "def f(xs: list[int]):\n    xs.append(1)\n    return xs\n",
     );
-    const append = ledger.find((item) => item.targetSummary === "xs.append(1)");
+    const append = ledger.find((item) => item.targetSummary === "xs.push(1)");
     expect(append?.decision).toBe("deterministic");
-    expect(append?.warnings).toContain("CTW-METHOD-UNMAPPED");
+    expect(append?.warnings ?? []).not.toContain("CTW-METHOD-UNMAPPED");
+  });
+
+  it("keeps the unmapped warning for container methods outside the registry", async () => {
+    const { ledger } = await translateTs(
+      "def f(xs: list[int]):\n    xs.reshape(2)\n    return xs\n",
+    );
+    const entry = ledger.find((item) => item.targetSummary === "xs.reshape(2)");
+    expect(entry?.decision).toBe("deterministic");
+    expect(entry?.warnings).toContain("CTW-METHOD-UNMAPPED");
   });
 
   // End-to-end: translation + strict S2 (a full tsc program) + execution — needs a

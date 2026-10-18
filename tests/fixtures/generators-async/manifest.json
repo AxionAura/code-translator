@@ -2,10 +2,10 @@
   "name": "generators-async",
   "from": "python",
   "to": "typescript",
-  "expectedClaimLevel": 2,
+  "expectedClaimLevel": 3,
   "expectedDecisionCounts": {
-    "deterministic": 28,
-    "semantic": 2,
+    "deterministic": 29,
+    "semantic": 1,
     "ambiguous": 0,
     "unsupported": 0
   },

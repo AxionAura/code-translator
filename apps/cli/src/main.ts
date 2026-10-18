@@ -15,6 +15,8 @@ Commands:
                                   Translate a file or directory of Python sources
 
 Options:
+  --int-mode <number|bigint>      Integer policy (D-006): number = default with
+                                  precision warnings; bigint = exact Python ints
   -v, --version                   Print the CLI version
   -h, --help                      Print this help text
 `;
@@ -38,10 +40,12 @@ function parseOptions(argv: readonly string[]): {
   positional: string[];
   to: string | undefined;
   out: string | undefined;
+  intMode: "number" | "bigint";
 } {
   const positional: string[] = [];
   let to: string | undefined;
   let out: string | undefined;
+  let intMode: "number" | "bigint" = "number";
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i]!;
     if (arg === "--to") {
@@ -50,18 +54,22 @@ function parseOptions(argv: readonly string[]): {
     } else if (arg === "-o" || arg === "--out") {
       out = argv[i + 1];
       i += 1;
+    } else if (arg === "--int-mode") {
+      const value = argv[i + 1];
+      if (value === "bigint" || value === "number") intMode = value;
+      i += 1;
     } else {
       positional.push(arg);
     }
   }
-  return { positional, to, out };
+  return { positional, to, out, intMode };
 }
 
 async function runTranslation(
   command: "check" | "translate",
   rest: readonly string[],
 ): Promise<CliResult> {
-  const { positional, to, out } = parseOptions(rest);
+  const { positional, to, out, intMode } = parseOptions(rest);
   const sourcePath = positional[0];
   if (sourcePath === undefined || (to !== "ts" && to !== "js")) {
     return {
@@ -74,8 +82,8 @@ async function runTranslation(
   try {
     const outcome =
       command === "check"
-        ? await checkPath(sourcePath, target)
-        : await translatePath(sourcePath, target, out ?? "out");
+        ? await checkPath(sourcePath, target, intMode)
+        : await translatePath(sourcePath, target, out ?? "out", intMode);
     const partiallyTranslated = outcome.report.files.some(
       (file) => file.status === "partially-translated",
     );

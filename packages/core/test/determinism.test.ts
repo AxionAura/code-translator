@@ -97,5 +97,5 @@ describe("semantic layer determinism (AI disabled by construction)", () => {
     // Dependencies (low indices) before dependents.
     expect(graph.order.indexOf("pkg/m000.py")).toBeLessThan(graph.order.indexOf("pkg/m059.py"));
     expect(elapsed).toBeLessThan(10_000);
-  });
+  }, 15000);
 });

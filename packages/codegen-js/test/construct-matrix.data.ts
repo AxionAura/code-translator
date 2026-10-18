@@ -253,7 +253,8 @@ export const MATRIX: readonly MatrixEntry[] = [
   {
     id: "fstring",
     source: "def f(name):\n    return f'hello {name}'\n",
-    expectedContains: ["`hello ${name}`"],
+    // Python f"{x}" interpolates str(x) — bools print True/False, None prints None.
+    expectedContains: ["`hello ${__ctrans_str(name)}`"],
     decision: "deterministic",
     rule: "py.fstring→js.template",
   },
@@ -311,8 +312,30 @@ export const MATRIX: readonly MatrixEntry[] = [
   {
     id: "while",
     source: "def f(n):\n    while n > 0:\n        n -= 1\n",
-    expectedContains: ["while (__ctrans_truthy(__ctrans_gt(n, 0)))"],
+    // A comparison RESULT is boolean — its truthiness is provably equivalent, so
+    // the condition is native even for unknown operands (no double truthy wrap).
+    expectedContains: ["while (__ctrans_gt(n, 0))"],
     decision: "semantic",
+  },
+  {
+    // D-016 provability: a comparison result is boolean in both languages — the
+    // helper is provably unnecessary.
+    id: "truthiness-provable-compare",
+    source:
+      "def f(flag: bool, n: int) -> bool:\n    while n > 0:\n        n -= 1\n    return flag\n",
+    expectedContains: ["while (n > 0)"],
+    decision: "deterministic",
+    rule: "py.test→js.native",
+    tsOnly: true,
+  },
+  {
+    // A number-typed value may be NaN (Python-truthy, JS-falsy): helper retained.
+    id: "truthiness-unprovable-number",
+    source: "def f(x: float) -> bool:\n    if x:\n        return True\n    return False\n",
+    expectedContains: ["if (__ctrans_truthy(x))"],
+    decision: "semantic",
+    rule: "py.test→js.truthy",
+    tsOnly: true,
   },
 
   // ---- exceptions ----
@@ -368,7 +391,7 @@ export const MATRIX: readonly MatrixEntry[] = [
   // ---- M4 audit regressions (honest lowering) ----
   {
     id: "builtin-unmapped",
-    source: "def f(xs):\n    return sorted(xs)\n",
+    source: "def f(xs):\n    return bin(xs)\n",
     expectedContains: ["/* ctrans: unsupported py.Call(builtin)"],
     decision: "unsupported",
     rule: "py.Call(builtin)→unsupported",
@@ -416,12 +439,20 @@ export const MATRIX: readonly MatrixEntry[] = [
     tsOnly: true,
   },
   {
-    // Container methods have no JS counterpart until the M5 registry: emitted
-    // verbatim by policy, and the divergence must carry CTW-METHOD-UNMAPPED (the
-    // warning itself is asserted in lowering-regressions.test.ts).
-    id: "container-method-verbatim",
+    // Registry v1 (D-011): list.append maps to push with the documented return
+    // divergence (Python None vs JS length) — semantic adaptation, no unmapped warning.
+    id: "container-method-registry",
     source: "def f(xs: list[int]):\n    xs.append(1)\n    return xs\n",
-    expectedContains: ["xs.append(1);"],
+    expectedContains: ["xs.push(1);"],
+    decision: "deterministic",
+    rule: "py.array-method→js.list.append",
+  },
+  {
+    // Methods OUTSIDE the registry stay verbatim with CTW-METHOD-UNMAPPED (the M4
+    // honesty surface — asserted behaviorally in lowering-regressions.test.ts).
+    id: "container-method-unmapped",
+    source: "def f(xs: list[int]):\n    xs.reshape(2)\n    return xs\n",
+    expectedContains: ["xs.reshape(2);"],
     decision: "deterministic",
     rule: "py.call→js.call",
   },
@@ -471,6 +502,15 @@ export const MATRIX: readonly MatrixEntry[] = [
     decision: "semantic",
     rule: "py.kwargs→js.rest-object",
     tsOnly: true,
+  },
+
+  {
+    // Registry v1 (D-011): sorted lowers through the Python-semantics helper.
+    id: "builtin-registry-sorted",
+    source: "def f(xs):\n    return sorted(xs)\n",
+    expectedContains: ["__ctrans_sorted(xs)"],
+    decision: "semantic",
+    rule: "py.sorted→__ctrans.sorted",
   },
 
   // ---- unsupported (negative) ----
@@ -849,7 +889,8 @@ export const MATRIX: readonly MatrixEntry[] = [
   {
     id: "import-external-math",
     source: "import math\n\ndef f(x: float) -> float:\n    return x + 1.5\n",
-    expectedContains: ['import * as math from "math";'],
+    // Registry v1 (D-011): math maps to the generated __ctrans_math module.
+    expectedContains: ['import * as math from "./__ctrans_math'],
     decision: "deterministic",
     rule: "py.import→module-prologue",
   },

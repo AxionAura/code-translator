@@ -2,7 +2,7 @@
   "name": "package-modules",
   "from": "python",
   "to": "typescript",
-  "expectedClaimLevel": 2,
+  "expectedClaimLevel": 3,
   "expectedDecisionCounts": {
     "deterministic": 35,
     "semantic": 7,

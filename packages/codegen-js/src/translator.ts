@@ -6,6 +6,8 @@
 import { stripTypeScriptTypes } from "node:module";
 
 import {
+  NO_REGISTRY,
+  type RegistryLookup,
   CTransError,
   type AnalyzedUnit,
   type EmittedFile,
@@ -20,7 +22,13 @@ import {
 import { format } from "prettier";
 
 import { LoweringContext, ScopeStack } from "./context.js";
-import { RUNTIME_HELPERS, RUNTIME_EXCEPTION_CLASSES, helperClosure } from "./helpers.js";
+import {
+  INT_RESULT_TYPE,
+  REGISTRY_MODULE_SOURCES,
+  RUNTIME_HELPERS,
+  RUNTIME_EXCEPTION_CLASSES,
+  helperClosure,
+} from "./helpers.js";
 import { Emitter } from "./lower.js";
 
 const RUNTIME_MODULE_BASE = "__ctrans_runtime";
@@ -40,14 +48,24 @@ interface PendingModule {
 
 export class PyToJsTranslator implements UnitTranslator {
   readonly target: UnitTranslator["target"];
+  private readonly intMode: "number" | "bigint";
+  private readonly registry: RegistryLookup;
   private readonly pending: PendingModule[] = [];
+  // Registry v1 generated modules referenced by any unit (emitted once).
+  private readonly referencedModules = new Set<string>();
   private readonly unitHelpers = new Set<string>();
   private readonly unitExceptions = new Set<string>();
 
-  constructor(target: "javascript" | "typescript") {
+  constructor(
+    target: "javascript" | "typescript",
+    intMode: "number" | "bigint" = "number",
+    registry: RegistryLookup = NO_REGISTRY,
+  ) {
     // Explicit field assignment (not a parameter property): the unbuilt CLI runs
     // sources through Node strip-only mode, which rejects transform-only syntax.
     this.target = target;
+    this.intMode = intMode;
+    this.registry = registry;
   }
 
   async translateUnit(
@@ -56,13 +74,16 @@ export class PyToJsTranslator implements UnitTranslator {
     context?: UnitTranslationContext,
   ): Promise<UnitEmission> {
     const extension = this.target === "typescript" ? (".ts" as const) : (".js" as const);
-    const ctx = new LoweringContext(this.target, unit.filename);
+    const ctx = new LoweringContext(this.target, unit.filename, this.intMode);
     const exportedNames = new Set(pythonExportNames(unit.parseResult, unit.model));
     const emitter = new Emitter(
       ctx,
       new ScopeStack(),
       exportedNames,
       this.importedSymbolKinds(unit, graph, context),
+      context?.asyncFunctions?.get(unit.filename) ?? new Set(),
+      this.importedAsyncNames(unit, graph, context),
+      this.registry,
     );
 
     const moduleImports = this.importPrologue(unit, graph, extension);
@@ -71,6 +92,11 @@ export class PyToJsTranslator implements UnitTranslator {
     // Track every unit's helper/exception requirements for the shared runtime.
     for (const name of ctx.helpers) this.unitHelpers.add(name);
     for (const name of ctx.exceptionClasses) this.unitExceptions.add(name);
+    // Registry v1 modules referenced by this unit's imports.
+    for (const sourceImport of unit.parseResult.module?.imports ?? []) {
+      const root = sourceImport.moduleSpecifier.split(".")[0] ?? sourceImport.moduleSpecifier;
+      if (REGISTRY_MODULE_SOURCES[root] !== undefined) this.referencedModules.add(root);
+    }
 
     const targetPath = targetModulePath(unit.filename, extension);
     this.pending.push({
@@ -135,12 +161,73 @@ export class PyToJsTranslator implements UnitTranslator {
         ),
       });
     }
+    // Registry v1 generated modules (D-011): emitted once, only when referenced.
+    // Sources are TypeScript (ADR D-022); JS targets strip types like the runtime.
+    for (const moduleName of [...this.referencedModules].sort()) {
+      const raw = REGISTRY_MODULE_SOURCES[moduleName];
+      if (raw === undefined) continue;
+      let code = raw;
+      if (this.target === "javascript") {
+        try {
+          code = stripTypeScriptTypes(raw, { mode: "strip" });
+        } catch (error) {
+          throw new CTransError(
+            "CG-RUNTIME-STRIP-FAILED",
+            `Node type stripping failed for __ctrans_${moduleName}.js: ${
+              error instanceof Error ? error.message : String(error)
+            }`,
+            { cause: error },
+          );
+        }
+      }
+      files.push({
+        targetPath: `__ctrans_${moduleName}${extension}`,
+        sourcePath: `(registry:${moduleName})`,
+        content: await this.format(code),
+      });
+    }
     return {
       targetExtension: extension,
       pathFor: (id) => targetModulePath(id, extension),
       files,
       ledger: [],
     };
+  }
+
+  // WS F: from-imported names bound to async functions of their source unit —
+  // call sites in THIS unit must await them.
+  private importedAsyncNames(
+    unit: AnalyzedUnit,
+    graph: ModuleGraphModel,
+    context?: UnitTranslationContext,
+  ): ReadonlySet<string> {
+    const names = new Set<string>();
+    const asyncFunctions = context?.asyncFunctions;
+    if (asyncFunctions === undefined) return names;
+    const sourceImports = unit.parseResult.module?.imports ?? [];
+    for (const sourceImport of sourceImports) {
+      if (sourceImport.kind !== "named") continue;
+      const importedName = sourceImport.importedName;
+      const localName = sourceImport.localName ?? importedName;
+      if (importedName === null || localName === null) continue;
+      // Resolve the import's target unit through the graph.
+      const node = graph.modules[unit.filename];
+      if (node === undefined) continue;
+      for (const graphImport of node.imports) {
+        if (graphImport.importKind !== "static" || graphImport.resolvedModuleId === null) continue;
+        if (
+          !graphImport.specifier.endsWith(importedName) &&
+          !graphImport.specifier.endsWith(sourceImport.moduleSpecifier ?? "")
+        ) {
+          continue;
+        }
+        const asyncSet = asyncFunctions.get(graphImport.resolvedModuleId);
+        if (asyncSet !== undefined && asyncSet.has(importedName)) {
+          names.add(localName);
+        }
+      }
+    }
+    return names;
   }
 
   // Cross-module symbol kinds for from-imports: dep modules' top-level classes and
@@ -228,8 +315,31 @@ export class PyToJsTranslator implements UnitTranslator {
         return;
       }
       if (graphImport.status === "external") {
-        // M4 has no registry: externals are emitted verbatim with a warning; the
-        // mapping (e.g. os.path -> node:path) arrives in M5.
+        // Registry v1 (D-011): mapped externals emit through their registry entry.
+        const mapped = this.registry.lookupModule(
+          graphImport.specifier.split(".")[0] ?? graphImport.specifier,
+        );
+        if (mapped !== null && mapped.emit.kind === "rewrite") {
+          if (mapped.syncAsync === "sync-to-async") {
+            // WS F: the async boundary module needs no import (fetch is a global);
+            // the surface lowers at call sites. Record the mapping once per module.
+            lines.push(
+              `// ctrans: ${mapped.module} mapped to the JS fetch boundary (sync-to-async; surface documented in the registry)`,
+            );
+            return;
+          }
+          const spec = relativeImportSpecifier(myDir, `${mapped.emit.specifier}${extension}`);
+          if (sourceImport.kind === "namespace" || importedName === null) {
+            lines.push(`import * as ${localName ?? "module"} from "${spec}";`);
+            return;
+          }
+          lines.push(
+            importedName === localName || localName === null
+              ? `import { ${importedName} } from "${spec}";`
+              : `import { ${importedName} as ${localName} } from "${spec}";`,
+          );
+          return;
+        }
         lines.push(
           externalImport(sourceImport.kind, importedName, localName, graphImport.specifier),
         );
@@ -288,7 +398,7 @@ export class PyToJsTranslator implements UnitTranslator {
     helperNames: readonly string[],
     includeExceptions: boolean,
   ): Promise<string> {
-    return renderRuntime(this.target, helperNames, includeExceptions);
+    return renderRuntime(this.target, helperNames, includeExceptions, this.intMode);
   }
 }
 
@@ -299,9 +409,12 @@ export function renderRuntime(
   target: "javascript" | "typescript",
   helperNames: readonly string[],
   includeExceptions: boolean,
+  intMode: "number" | "bigint" = "number",
 ): string {
   // The helper sources are TypeScript (ADR D-022); JavaScript targets receive them
   // through Node's built-in type stripping — one source of truth, zero dependencies.
+  // Numeric helper result types are parameterized per the D-006 integer mode.
+  const intResult = INT_RESULT_TYPE[intMode];
   let code = `/* Generated by Code Translator - Python semantics helpers (D-007: zero runtime dependencies). */`;
   if (includeExceptions) {
     // Exception classes first: helpers and translated code reference them.
@@ -312,6 +425,7 @@ export function renderRuntime(
     if (helper === undefined || name === "exceptions") continue;
     code += `\n\n${helper.code}`;
   }
+  code = code.replaceAll("__CTRANS_NUM__", intResult);
   if (target === "typescript") return code;
   try {
     return stripTypeScriptTypes(code, { mode: "strip" });
@@ -365,8 +479,16 @@ export function relativeImportSpecifier(fromDir: string, toPath: string): string
   return joined.startsWith("..") || joined.startsWith(".") ? joined : `./${joined}`;
 }
 
+export interface PyToJsTranslatorOptions {
+  // D-006 integer policy (default "number"; "bigint" is the exact opt-in mode).
+  readonly intMode?: "number" | "bigint";
+  // D-017: the registry lookup is injected (core interface); default = none.
+  readonly registry?: RegistryLookup;
+}
+
 export async function createPyToJsTranslator(
   target: "javascript" | "typescript",
+  options: PyToJsTranslatorOptions = {},
 ): Promise<PyToJsTranslator> {
-  return new PyToJsTranslator(target);
+  return new PyToJsTranslator(target, options.intMode ?? "number", options.registry ?? NO_REGISTRY);
 }

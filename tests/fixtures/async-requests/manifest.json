@@ -1,0 +1,14 @@
+{
+  "name": "async-requests",
+  "from": "python",
+  "to": "typescript",
+  "expectedClaimLevel": 3,
+  "expectedDecisionCounts": {
+    "deterministic": 22,
+    "semantic": 4,
+    "ambiguous": 0,
+    "unsupported": 0
+  },
+  "expectedWarnings": [],
+  "description": "WS F: sync-to-async propagation \u2014 requests.get in fetcher, build_report and run become async through the ModuleGraph; signatures recorded in the ledger."
+}

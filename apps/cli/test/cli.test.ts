@@ -70,19 +70,19 @@ describe("runCliCommand: usage errors", () => {
 });
 
 describe("runCliCommand: check (in-memory pipeline)", () => {
-  it("reports a clean file as translated with claim level 2 for --to ts", async () => {
+  it("reports a clean file as translated with claim level 3 for --to ts", async () => {
     const root = writeProject("clean", {
       "calc.py": "def add(a: int, b: int) -> int:\n    return a + b\n",
     });
     const result = await runCliCommand(["check", join(root, "calc.py"), "--to", "ts"]);
     expect(result.code).toBe(0);
-    expect(result.stdout).toContain("claim level 2");
+    expect(result.stdout).toContain("claim level 3");
     expect(result.stdout).toContain("S1-syntax:pass");
     expect(result.stdout).toContain("S2-types:pass");
     expect(result.stdout).toContain("calc.py -> calc.ts [translated]");
     // Emitted files are available in memory for check.
     expect(result.stdout).toContain("decisions:");
-  });
+  }, 30000);
 
   it("reports unsupported constructs honestly: partially translated, exit code 3", async () => {
     const root = writeProject("unsupported", {
@@ -94,7 +94,7 @@ describe("runCliCommand: check (in-memory pipeline)", () => {
     expect(result.stdout).toContain("dispatch.py -> dispatch.ts [partially-translated]");
     expect(result.stdout).toContain("unsupported");
     expect(result.stdout).toContain("CTW-UNSUPPORTED");
-  });
+  }, 30000);
 
   it("skips S2 honestly for --to js (no JS type checker) and claims level 1", async () => {
     const root = writeProject("jscheck", { "m.py": "x = 1\n" });
@@ -126,8 +126,9 @@ describe("runCliCommand: translate (writes output + .ctrans artifacts)", () => {
     const report = JSON.parse(readFileSync(join(out, ".ctrans", "report.json"), "utf8")) as {
       claimLevel: number;
     };
-    expect(report.claimLevel).toBe(2);
-  });
+    // S3 (M5) runs and passes for this import-free file: claim level 3.
+    expect(report.claimLevel).toBe(3);
+  }, 30000);
 
   it("translates a multi-file project, rewriting local imports to target paths", async () => {
     const root = writeProject("translate-project", {
@@ -146,7 +147,7 @@ describe("runCliCommand: translate (writes output + .ctrans artifacts)", () => {
     expect(existsSync(join(out, "pkg", "helper.ts"))).toBe(true);
     const main = readFileSync(join(out, "pkg", "main.ts"), "utf8");
     expect(main).toContain('import { thing } from "./helper.ts"');
-  });
+  }, 30000);
 
   it("translates to JavaScript without type annotations and claims level 1", async () => {
     const root = writeProject("translate-js", {

@@ -8,8 +8,19 @@ import { analyzeModule, type SemanticModel } from "./semantic.js";
 import { buildModuleGraph, normalizeModuleId, type ModuleGraphModel } from "./module-graph.js";
 import type { ParseResult, SourceLanguage } from "./parse-result.js";
 import { validateTranslationReport, type ClaimLevel, type TranslationReport } from "./report.js";
+import {
+  collectFunctionCalls,
+  collectImportedFunctions,
+  propagateAsync,
+} from "./async-propagation.js";
+import { validateDependencies } from "./s3-dependencies.js";
 
 export type TargetLanguage = "javascript" | "typescript";
+
+// D-006: Python int is arbitrary precision. `number` (default) maps int to float64
+// with precision-risk diagnostics; `bigint` is the exact opt-in mode (Python ints
+// become JS bigint; int/float mixing converts across a documented Number boundary).
+export type IntMode = "number" | "bigint";
 
 export interface PipelineInput {
   readonly filename: string;
@@ -21,6 +32,8 @@ export interface PipelineInput {
 
 export interface TranslateOptions {
   readonly target: TargetLanguage;
+  // D-006 integer policy; default "number" (precision diagnostics), "bigint" exact.
+  readonly intMode?: IntMode;
   // Per-unit translator (implemented by @ctrans/codegen-js for M4's directions).
   readonly translateUnit: UnitTranslator;
   // S1: target syntax validation (implemented with @ctrans/parser-js at the wiring
@@ -28,6 +41,20 @@ export interface TranslateOptions {
   readonly validateSyntax?: SyntaxValidator;
   // S2: type validation for TypeScript targets (oracle-backed); JS targets skip.
   readonly validateTypes?: TypeValidator;
+  // S3: dependency validation (M5) — import resolution of the emitted project
+  // against the ModuleGraph and the dependency registry.
+  readonly validateDependencies?: DependencyValidator;
+  // WS F: registry modules whose target API is async-only (e.g. requests -> fetch).
+  // Non-empty triggers the deterministic async-propagation fixpoint.
+  readonly asyncBoundaryModules?: readonly string[];
+}
+
+// S3 stage inputs supplied by the wiring layer (the registry data lives outside
+// core per D-017; core only sees plain sets).
+export interface S3StageInput {
+  readonly sourceImports: ReadonlyMap<string, readonly string[]>;
+  readonly mappedModules: ReadonlySet<string>;
+  readonly unsupportedModules: ReadonlySet<string>;
 }
 
 export interface AnalyzedUnit {
@@ -40,6 +67,10 @@ export interface AnalyzedUnit {
 // unit in the graph (used for cross-module import typing, e.g. class imports).
 export interface UnitTranslationContext {
   readonly analyzed: ReadonlyMap<string, AnalyzedUnit>;
+  // WS F: functions that must be emitted as async (sync-to-async registry boundary
+  // propagation). Units consult this for their own functions and for cross-module
+  // callees; absent = no boundary in the project.
+  readonly asyncFunctions?: ReadonlyMap<string, ReadonlySet<string>>;
 }
 
 export interface UnitTranslator {
@@ -71,7 +102,7 @@ export interface UnitEmission {
 }
 
 export interface StageResult {
-  readonly stage: "S1-syntax" | "S2-types";
+  readonly stage: "S1-syntax" | "S2-types" | "S3-dependencies";
   readonly status: "pass" | "fail" | "warn" | "skipped";
   readonly reason: string | null;
   readonly details: readonly string[];
@@ -87,25 +118,38 @@ export interface TypeValidator {
   validate(files: readonly { path: string; content: string }[]): Promise<StageResult>;
 }
 
+// S3 (docs/validation.md §1): the emitted project's imports resolve against the
+// ModuleGraph and the dependency registry. Implemented at the wiring layer (the
+// registry lookup is injected; codegen/pipeline stay registry-agnostic).
+export interface DependencyValidator {
+  validate(files: readonly { path: string; content: string }[]): Promise<StageResult>;
+}
+
 export interface PipelineResult {
   readonly report: TranslationReport;
   readonly emittedFiles: readonly EmittedFile[];
   readonly ledger: readonly LedgerEntry[];
 }
 
-// Claim ladder (docs/validation.md §2): 0 generated, 1 syntax-valid, 2 type-valid.
-// Later stages extend the ladder; M4 executes S1/S2 only.
+// Claim ladder (docs/validation.md §2): 0 generated, 1 syntax-valid, 2 type-valid,
+// 3 dependency-resolved. Later stages extend the ladder; M5 executes S1/S2/S3.
 export function computeClaimLevel(stages: readonly StageResult[]): ClaimLevel {
   const s1 = stages.find((stage) => stage.stage === "S1-syntax");
   const s2 = stages.find((stage) => stage.stage === "S2-types");
+  const s3 = stages.find((stage) => stage.stage === "S3-dependencies");
   if (s1?.status === "fail") return 0;
   if (s1?.status !== "pass") return 0;
-  if (s2?.status === "pass") return 2;
-  return 1;
+  if (s2?.status !== "pass") return 1;
+  if (s3?.status !== "pass") return 2;
+  return 3;
 }
 
 // Deterministic target module path policy (roadmap M4 §8): pkg/mod.py -> pkg/mod.<ext>,
 // pkg/__init__.py -> pkg/index.<ext>. Single source of truth for emitter and importer.
+function extensionFor(target: TargetLanguage): ".js" | ".ts" {
+  return target === "typescript" ? ".ts" : ".js";
+}
+
 export function targetModulePath(sourceModuleId: string, extension: ".js" | ".ts"): string {
   const id = normalizeModuleId(sourceModuleId);
   if (id.endsWith("__init__.py")) {
@@ -118,6 +162,7 @@ export function targetModulePath(sourceModuleId: string, extension: ".js" | ".ts
 export async function runPipeline(
   inputs: readonly PipelineInput[],
   options: TranslateOptions,
+  s3?: S3StageInput,
 ): Promise<PipelineResult> {
   // Stage: parse (inputs arrive pre-parsed by the wiring layer to keep the bridge
   // spawn lifecycle at the app boundary) — the parseResults travel with the input.
@@ -138,6 +183,34 @@ export async function runPipeline(
     }),
   );
 
+  // WS F: async boundary propagation when a sync-to-async module is in play. The
+  // wiring layer passes `asyncBoundaryModules` (from the registry); without it no
+  // propagation runs and every signature stays synchronous.
+  let asyncFunctions: Map<string, Set<string>> | undefined;
+  if (options.asyncBoundaryModules !== undefined && options.asyncBoundaryModules.length > 0) {
+    const unitFunctions = new Map<string, ReturnType<typeof collectFunctionCalls>>();
+    const unitImports = new Map<string, Map<string, { unit: string; function: string }>>();
+    const moduleIds = new Set(analyzed.map((unit) => unit.filename));
+    for (const unit of analyzed) {
+      unitFunctions.set(unit.filename, collectFunctionCalls(unit.filename, unit.parseResult.ast));
+      unitImports.set(
+        unit.filename,
+        collectImportedFunctions(unit.filename, unit.parseResult.ast, graph, moduleIds),
+      );
+    }
+    const boundary = options.asyncBoundaryModules.find((module) =>
+      analyzed.some((unit) =>
+        (unit.parseResult.module?.imports ?? []).some(
+          (entry) =>
+            entry.moduleSpecifier === module || entry.moduleSpecifier.startsWith(`${module}.`),
+        ),
+      ),
+    );
+    if (boundary !== undefined) {
+      asyncFunctions = propagateAsync(unitFunctions, unitImports, boundary);
+    }
+  }
+
   // Stage: translate units in dependency order (deterministic; graph.order).
   const analyzedById = new Map(analyzed.map((unit) => [unit.filename, unit]));
   const emittedFiles: EmittedFile[] = [];
@@ -147,6 +220,7 @@ export async function runPipeline(
     if (unit === undefined) continue;
     const emission = await options.translateUnit.translateUnit(unit, graph, {
       analyzed: analyzedById,
+      ...(asyncFunctions === undefined ? {} : { asyncFunctions }),
     });
     emittedFiles.push(...emission.files);
     ledger.push(...emission.ledger);
@@ -199,6 +273,22 @@ export async function runPipeline(
           : "no type validator wired",
       details: [],
     });
+  }
+  // Stage: S3 dependencies (WS G) — runs on the emitted files with the graph- and
+  // registry-derived verdicts; skipped honestly when no wiring data exists (the
+  // claim ladder caps at level 2 without it).
+  if (s3 !== undefined && emittedFiles.length > 0) {
+    const filesByName = new Map(emittedFiles.map((file) => [file.targetPath, file.content]));
+    stages.push(
+      validateDependencies({
+        files: filesByName,
+        mappedModules: s3.mappedModules,
+        unsupportedModules: s3.unsupportedModules,
+        sourceImports: s3.sourceImports,
+        targetPathFor: (sourceModuleId: string) =>
+          targetModulePath(sourceModuleId, extensionFor(options.target)),
+      }),
+    );
   }
 
   // Stage: report.

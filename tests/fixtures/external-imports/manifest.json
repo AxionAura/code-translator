@@ -2,7 +2,7 @@
   "name": "external-imports",
   "from": "python",
   "to": "typescript",
-  "expectedClaimLevel": 1,
+  "expectedClaimLevel": 3,
   "expectedDecisionCounts": {
     "deterministic": 5,
     "semantic": 0,

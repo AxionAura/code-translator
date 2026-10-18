@@ -2,10 +2,10 @@
   "name": "dynamic-typed-operations",
   "from": "python",
   "to": "typescript",
-  "expectedClaimLevel": 2,
+  "expectedClaimLevel": 3,
   "expectedDecisionCounts": {
-    "deterministic": 23,
-    "semantic": 10,
+    "deterministic": 25,
+    "semantic": 8,
     "ambiguous": 0,
     "unsupported": 0
   },

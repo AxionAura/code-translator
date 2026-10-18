@@ -13,6 +13,7 @@
     "@ctrans/codegen-js": "workspace:*",
     "@ctrans/core": "workspace:*",
     "@ctrans/parser-js": "workspace:*",
-    "@ctrans/parser-py": "workspace:*"
+    "@ctrans/parser-py": "workspace:*",
+    "@ctrans/registry": "workspace:*"
   }
 }

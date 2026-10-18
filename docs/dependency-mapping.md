@@ -47,7 +47,17 @@ Rationale: a static registry alone can't cover ecosystem breadth; heuristics alo
 
 Rules: an entry without a passing usage test cannot ship (`fidelity` claims are tested, not asserted); `lossy` entries always produce warnings at use sites; entries are versioned together with the registry package.
 
-## 4. V1 registry scope (Python → TS/JS)
+## 4. V1 registry scope (Python → TS/JS) — IMPLEMENTED (M5, 2026-10-18)
+
+The M5 registry (`@ctrans/registry`) implements the deterministic layer with usage-tested entries consumed through the core `RegistryLookup` interface (D-017 injection):
+
+- **Builtins (10):** `sorted` (stable, code-point ordering, mixed-type TypeError), `list`, `min`/`max` (ValueError on empty), `reversed` (materialized — documented), `zip` (shortest-truncation, materialized pairs), `next` (StopIteration raise), `abs`, `bool` (= truthy), `enumerate`. kwargs forms outside the M4/M5 call surface stay unsupported-loud.
+- **Methods (32 entries):** list (`append`→push, `pop`, `clear`→length-0, `copy`→slice, `index`/`count`/`remove` with == semantics + ValueError, `insert`→splice, `extend`→push-spread, `reverse`), dict (`get`/`keys`/`values`/`items`/`pop` with KeyError), str (`upper`/`lower`/`strip`/`lstrip`/`rstrip`/`startswith`/`endswith`/`replace`→replaceAll/`split` (whitespace-run form)/`join`/`find`/`capitalize`), set (`add`/`discard`/`remove`/`clear`). Dynamically typed receivers dispatch identically through `__ctrans_callMethod` — one semantic authority for both paths.
+- **Modules (5):** `math`, `json`, `sys`, `random` (generated `__ctrans_<name>` modules, only-when-referenced), `requests` (sync-to-async boundary → fetch; see §6). `pathlib`/`datetime`/`re`/`itertools`/`functools`/`enum`/`dataclasses`/`typing`/`abc`/`logging`/`statistics`/`decimal` remain unmapped (reported, never guessed) until helper-class wrappers and usage tests exist.
+
+Every entry carries usage tests executing generated code against Python semantics (`registry-usage.test.ts`); structural invariants (unique ids, fidelity-honesty, deterministic lookups) are pinned in `registry.test.ts`.
+
+## 4a. Original V1 scope table (planning reference)
 
 | Module | Fidelity | Notes |
 | --- | --- | --- |

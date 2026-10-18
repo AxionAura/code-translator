@@ -12,10 +12,12 @@ export const CTW_DEFAULT_EVAL = "CTW-DEFAULT-EVAL-DEFERRED";
 export const CTW_WITH_EXIT_ARGS = "CTW-WITH-EXIT-ARGS";
 export const CTW_NUM_PRECISION = "CTW-NUM-INT-ARBITRARY-PRECISION";
 export const CTW_NUM_BITWISE = "CTW-NUM-BITWISE";
+export const CTW_NUM_BIGINT_BOUNDARY = "CTW-NUM-BIGINT-FLOAT-BOUNDARY";
 export const CTW_GENERATOR_EAGER = "CTW-GENERATOR-EAGER";
 export const CTW_EXTERNAL_UNMAPPED = "CTW-EXTERNAL-UNMAPPED";
 export const CTW_KWARGS = "CTW-KWARGS";
 export const CTW_METHOD_UNMAPPED = "CTW-METHOD-UNMAPPED";
+export const CTW_METHOD_ADAPTED = "CTW-METHOD-ADAPTED";
 
 export class LoweringContext {
   readonly ledger: LedgerEntry[] = [];
@@ -24,13 +26,17 @@ export class LoweringContext {
   readonly warnings = new Set<string>();
   readonly target: TargetLanguage;
   readonly filename: string;
+  // D-006 integer policy: "number" (default) maps Python int to float64 with
+  // precision diagnostics; "bigint" is the exact mode (ints become JS bigint).
+  readonly intMode: "number" | "bigint";
   private ordinal = 0;
 
-  constructor(target: TargetLanguage, filename: string) {
+  constructor(target: TargetLanguage, filename: string, intMode: "number" | "bigint" = "number") {
     // Explicit field assignment (not a parameter property): the unbuilt CLI runs
     // sources through Node strip-only mode, which rejects transform-only syntax.
     this.target = target;
     this.filename = filename;
+    this.intMode = intMode;
   }
 
   record(entry: {

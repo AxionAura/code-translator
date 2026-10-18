@@ -2,10 +2,10 @@
   "name": "classes-inheritance",
   "from": "python",
   "to": "typescript",
-  "expectedClaimLevel": 2,
+  "expectedClaimLevel": 3,
   "expectedDecisionCounts": {
-    "deterministic": 34,
-    "semantic": 8,
+    "deterministic": 35,
+    "semantic": 7,
     "ambiguous": 0,
     "unsupported": 0
   },

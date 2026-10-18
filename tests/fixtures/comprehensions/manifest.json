@@ -2,7 +2,7 @@
   "name": "comprehensions",
   "from": "python",
   "to": "typescript",
-  "expectedClaimLevel": 2,
+  "expectedClaimLevel": 3,
   "expectedDecisionCounts": {
     "deterministic": 22,
     "semantic": 4,

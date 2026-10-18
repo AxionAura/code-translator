@@ -5,7 +5,13 @@
 import { mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
 
-import { runPipeline, type PipelineResult, type TargetLanguage } from "@ctrans/core";
+import { MODULE_MAPPINGS, createRegistryLookup } from "@ctrans/registry";
+import {
+  runPipeline,
+  type PipelineInput,
+  type PipelineResult,
+  type TargetLanguage,
+} from "@ctrans/core";
 import { createPyToJsTranslator } from "@ctrans/codegen-js";
 import { createPythonBridgeParser } from "@ctrans/parser-py";
 import { createOxcSyntaxValidator, OracleTypeValidator } from "@ctrans/parser-js";
@@ -15,8 +21,12 @@ export interface CheckOutcome {
   readonly files: ReadonlyMap<string, string>; // target path -> content (in memory for check)
 }
 
-export async function checkPath(inputPath: string, target: TargetLanguage): Promise<CheckOutcome> {
-  const result = await runOnPath(inputPath, target);
+export async function checkPath(
+  inputPath: string,
+  target: TargetLanguage,
+  intMode: "number" | "bigint" = "number",
+): Promise<CheckOutcome> {
+  const result = await runOnPath(inputPath, target, intMode);
   const files = new Map<string, string>();
   for (const file of result.emittedFiles) files.set(file.targetPath, file.content);
   return { report: result.report, files };
@@ -26,8 +36,9 @@ export async function translatePath(
   inputPath: string,
   target: TargetLanguage,
   outputDir: string,
+  intMode: "number" | "bigint" = "number",
 ): Promise<CheckOutcome> {
-  const result = await runOnPath(inputPath, target);
+  const result = await runOnPath(inputPath, target, intMode);
   for (const file of result.emittedFiles) {
     const destination = join(outputDir, file.targetPath);
     mkdirSync(join(destination, ".."), { recursive: true });
@@ -43,7 +54,11 @@ export async function translatePath(
   };
 }
 
-async function runOnPath(inputPath: string, target: TargetLanguage): Promise<PipelineResult> {
+async function runOnPath(
+  inputPath: string,
+  target: TargetLanguage,
+  intMode: "number" | "bigint",
+): Promise<PipelineResult> {
   const pyFiles = collectPythonFiles(inputPath);
   if (pyFiles.length === 0) {
     throw new Error(`no .py files found under "${inputPath}"`);
@@ -56,12 +71,43 @@ async function runOnPath(inputPath: string, target: TargetLanguage): Promise<Pip
       parseResult: await parser.parse(readFileSync(file.path, "utf8"), { filename: file.moduleId }),
     });
   }
-  return runPipeline(inputs, {
-    target,
-    translateUnit: await createPyToJsTranslator(target),
-    validateSyntax: await createOxcSyntaxValidator(),
-    validateTypes: new OracleTypeValidator(),
-  });
+  return runPipeline(
+    inputs,
+    {
+      target,
+      intMode,
+      translateUnit: await createPyToJsTranslator(target, {
+        intMode,
+        registry: createRegistryLookup(),
+      }),
+      validateSyntax: await createOxcSyntaxValidator(),
+      validateTypes: new OracleTypeValidator(),
+      asyncBoundaryModules: ["requests"],
+    },
+    {
+      // S3 (WS G): the graph-derived import map feeds dependency validation.
+      sourceImports: collectSourceImports(inputs),
+      mappedModules: new Set(
+        MODULE_MAPPINGS.filter((m) => m.syncAsync !== undefined || m.emit.kind === "rewrite").map(
+          (m) => m.module,
+        ),
+      ),
+      unsupportedModules: new Set(["ctypes", "curses", "tkinter"]),
+    },
+  );
+}
+
+// The ModuleGraph already resolved imports per unit; S3 re-derives the specifier
+// list from the same parse data (cheap, deterministic, one source of truth).
+function collectSourceImports(inputs: readonly PipelineInput[]): Map<string, string[]> {
+  const map = new Map<string, string[]>();
+  for (const input of inputs) {
+    const specifiers = (input.parseResult.module?.imports ?? []).map(
+      (entry) => entry.moduleSpecifier,
+    );
+    map.set(input.filename, specifiers);
+  }
+  return map;
 }
 
 function collectPythonFiles(inputPath: string): Array<{ path: string; moduleId: string }> {

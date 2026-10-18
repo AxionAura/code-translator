@@ -20,6 +20,9 @@ importers:
       '@ctrans/parser-py':
         specifier: workspace:*
         version: link:packages/parser-py
+      '@ctrans/registry':
+        specifier: workspace:*
+        version: link:packages/registry
       '@types/node':
         specifier: ^24.19.1
         version: 24.19.1
@@ -56,6 +59,9 @@ importers:
       '@ctrans/parser-py':
         specifier: workspace:*
         version: link:../../packages/parser-py
+      '@ctrans/registry':
+        specifier: workspace:*
+        version: link:../../packages/registry
 
   packages/ai: {}
 
@@ -99,7 +105,11 @@ importers:
         specifier: ^0.27.0
         version: 0.27.0
 
-  packages/registry: {}
+  packages/registry:
+    dependencies:
+      '@ctrans/core':
+        specifier: workspace:*
+        version: link:../core
 
   packages/repair: {}
 

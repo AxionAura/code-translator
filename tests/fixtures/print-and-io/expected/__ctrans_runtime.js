@@ -49,10 +49,45 @@ export class RuntimeError extends PythonException {
   }
 }
 
-// Python len(): sequences, mappings, sets. Strings measure UTF-16 units (astral
-// plane divergence documented; code-point semantics land in M5).
+// Python float repr (str == repr for floats since 3.1): shortest round-trip
+// digits (shared with JS String/toExponential) reformatted to Python's layout —
+// ".0" on integral values, "-0.0" for negative zero, "inf"/"nan", scientific
+// notation exactly when abs(x) >= 1e16 or 0 < abs(x) < 1e-4, and a signed
+// exponent with at least two digits.
+export function __ctrans_floatStr(v) {
+  if (Number.isNaN(v)) return "nan";
+  if (v === Infinity) return "inf";
+  if (v === -Infinity) return "-inf";
+  if (v === 0) return Object.is(v, -0) ? "-0.0" : "0.0";
+  if (Number.isInteger(v) && Math.abs(v) < 1e16) return v.toString() + ".0";
+  const exponential = Math.abs(v).toExponential();
+  const match = /^(\d)(?:\.(\d+))?e([+-]\d+)$/.exec(exponential);
+  if (match === null) return v.toString();
+  const digits = match[1] + (match[2] ?? "");
+  const exponent = Number(match[3]);
+  const sign = v < 0 ? "-" : "";
+  const formatExponent = (value) =>
+    value < 0
+      ? `e-${String(-value).padStart(2, "0")}`
+      : `e+${String(value).padStart(2, "0")}`;
+  if (exponent >= 16 || exponent <= -5) {
+    const mantissa =
+      digits.length === 1 ? digits : `${digits[0]}.${digits.slice(1)}`;
+    return `${sign}${mantissa}${formatExponent(exponent)}`;
+  }
+  if (exponent >= 0) {
+    const head = digits.slice(0, exponent + 1).padEnd(exponent + 1, "0");
+    const tail = digits.slice(exponent + 1);
+    return tail.length > 0 ? `${sign}${head}.${tail}` : `${sign}${head}.0`;
+  }
+  return `${sign}0.${"0".repeat(-exponent - 1)}${digits}`;
+}
+
+// Python len(): sequences, mappings, sets; strings measure UNICODE CODE POINTS
+// (Python semantics; JS .length counts UTF-16 units and diverges for astral chars).
 export function __ctrans_len(v) {
-  if (typeof v === "string" || Array.isArray(v)) return v.length;
+  if (typeof v === "string") return Array.from(v).length;
+  if (Array.isArray(v)) return v.length;
   if (v instanceof Set || v instanceof Map) return v.size;
   if (typeof v === "object" && v !== null) return Object.keys(v).length;
   throw new TypeError("object has no len()");
@@ -64,11 +99,19 @@ export function __ctrans_print(...args) {
 }
 
 // Python str(): text conversion with Python spellings for scalars and sequences.
+// Non-integral numbers use the Python float layout (exponent thresholds differ
+// from JS); INTEGRAL numbers print int-like — a float-typed value such as 100.0
+// prints "100" here (the int/float distinction is lost at runtime in number
+// mode; statically float-typed sites emit __ctrans_floatStr directly, and in
+// bigint mode Python ints are bigint so dynamic sites stay int-exact).
 export function __ctrans_str(v) {
   if (v === null || v === undefined) return "None";
   if (typeof v === "boolean") return v ? "True" : "False";
   if (typeof v === "string") return v;
-  if (typeof v === "number") return v.toString();
+  if (typeof v === "bigint") return v.toString();
+  if (typeof v === "number") {
+    return Number.isInteger(v) ? v.toString() : __ctrans_floatStr(v);
+  }
   if (Array.isArray(v)) return "[" + v.map(__ctrans_repr).join(", ") + "]";
   if (v instanceof Set)
     return v.size === 0

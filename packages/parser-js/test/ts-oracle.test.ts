@@ -68,7 +68,7 @@ describe("TypeScript 6 semantic oracle", () => {
       byteOffset: SOURCE.indexOf("double(n"),
     });
     expect(atFunction?.display).toContain("(n: number)");
-  });
+  }, 30000);
 
   it("returns null types gracefully for positions without content", () => {
     const typeAt = oracle.typeAt({

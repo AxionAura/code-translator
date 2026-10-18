@@ -11,10 +11,10 @@
   "entry": [
     "input/math_utils.py"
   ],
-  "expectedClaimLevel": 2,
+  "expectedClaimLevel": 3,
   "expectedDecisionCounts": {
-    "deterministic": ">=18",
-    "semantic": ">=3",
+    "deterministic": 43,
+    "semantic": 14,
     "ambiguous": 0,
     "unsupported": 0
   },

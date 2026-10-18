@@ -5,6 +5,7 @@ import type { ParseResult } from "@ctrans/core";
 import { createPythonBridgeParser, type PythonBridgeParser } from "@ctrans/parser-py";
 import { createOxcSyntaxValidator } from "@ctrans/parser-js";
 import { createPyToJsTranslator, type PyToJsTranslator } from "../src/translator.js";
+import { createRegistryLookup } from "@ctrans/registry";
 import { MATRIX } from "./construct-matrix.data.js";
 
 let py: PythonBridgeParser;
@@ -24,7 +25,7 @@ async function translate(
   ledger: Awaited<ReturnType<PyToJsTranslator["translateUnit"]>>["ledger"];
 }> {
   const parseResult = await py.parse(source, { filename });
-  const translator = await createPyToJsTranslator(target);
+  const translator = await createPyToJsTranslator(target, { registry: createRegistryLookup() });
   const emission = await translator.translateUnit(
     { filename, parseResult, model: analyzeModule(parseResult) },
     buildModuleGraph([{ filename, parseResult }]),

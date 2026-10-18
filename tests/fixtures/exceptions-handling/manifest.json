@@ -2,10 +2,10 @@
   "name": "exceptions-handling",
   "from": "python",
   "to": "typescript",
-  "expectedClaimLevel": 2,
+  "expectedClaimLevel": 3,
   "expectedDecisionCounts": {
-    "deterministic": 31,
-    "semantic": 11,
+    "deterministic": 33,
+    "semantic": 9,
     "ambiguous": 0,
     "unsupported": 0
   },

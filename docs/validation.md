@@ -16,6 +16,8 @@ Status: **approved blueprint**. The validation engine is the product's trust bou
 
 Every stage result is one of: `pass`, `fail`, `warn`, `skipped(reason)`. **A skipped stage is reported as skipped, forever visible in the report.** Nothing downgrades a failure to a warning.
 
+**S3 verdict classes (M5, implemented):** `emitted-local` (import resolves to an emitted project module), `mapped` (registry v1 entry), `external-verbatim` (unmapped third-party — exact warning, passes through, never guessed), `unsupported` (declared non-goal — warns), `unresolved` (relative import to no emitted module — FAILS the stage). S3 pass extends the claim ladder to level 3. A registry miss is NEVER conflated with a missing project module.
+
 ## 2. What may be claimed (claim ladder)
 
 The run report computes the strongest claim supported by executed stages:

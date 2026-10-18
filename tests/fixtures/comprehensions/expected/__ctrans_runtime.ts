@@ -49,49 +49,123 @@ export class RuntimeError extends PythonException {
   }
 }
 
+// Python ordering: numeric pairs compare numerically (bigint/number mixed safe);
+// string pairs compare by UNICODE CODE POINTS — JS < compares UTF-16 units, which
+// diverges for astral-plane characters (surrogate units sort below U+E000..U+FFFF
+// BMP characters that follow them in code-point order).
+function __ctrans_compareCodePoints(a: string, b: string): number {
+  const left = Array.from(a);
+  const right = Array.from(b);
+  const shared = Math.min(left.length, right.length);
+  for (let i = 0; i < shared; i += 1) {
+    const l = left[i]!.codePointAt(0)!;
+    const r = right[i]!.codePointAt(0)!;
+    if (l !== r) return l < r ? -1 : 1;
+  }
+  return left.length - right.length;
+}
 function __ctrans_compare(op: string, a: unknown, b: unknown): boolean {
-  if (typeof a === "number" && typeof b === "number") {
-    if (Number.isNaN(a) || Number.isNaN(b))
+  const aNumeric =
+    typeof a === "number" || typeof a === "bigint" || typeof a === "boolean";
+  const bNumeric =
+    typeof b === "number" || typeof b === "bigint" || typeof b === "boolean";
+  if (aNumeric && bNumeric) {
+    const left = Number(a);
+    const right = Number(b);
+    if (Number.isNaN(left) || Number.isNaN(right)) {
       throw new TypeError(`'${op}' not supported between NaN`);
-  } else if (typeof a === "string" && typeof b === "string") {
-    // Python compares code points; JS compares UTF-16 units (diverges for astral
-    // plane characters — documented, M5 owns code-point ordering).
-  } else {
-    throw new TypeError(
-      `'${op}' not supported between instances of '${__ctrans_str(a)}' and '${__ctrans_str(b)}'`,
-    );
+    }
+    switch (op) {
+      case "<":
+        return left < right;
+      case "<=":
+        return left <= right;
+      case ">":
+        return left > right;
+      default:
+        return left >= right;
+    }
   }
-  switch (op) {
-    case "<":
-      return a < b;
-    case "<=":
-      return a <= b;
-    case ">":
-      return a > b;
-    default:
-      return a >= b;
+  if (typeof a === "string" && typeof b === "string") {
+    const order = __ctrans_compareCodePoints(a, b);
+    switch (op) {
+      case "<":
+        return order < 0;
+      case "<=":
+        return order <= 0;
+      case ">":
+        return order > 0;
+      default:
+        return order >= 0;
+    }
   }
+  throw new TypeError(
+    `'${op}' not supported between instances of '${__ctrans_str(a)}' and '${__ctrans_str(b)}'`,
+  );
+}
+
+// Python float repr (str == repr for floats since 3.1): shortest round-trip
+// digits (shared with JS String/toExponential) reformatted to Python's layout —
+// ".0" on integral values, "-0.0" for negative zero, "inf"/"nan", scientific
+// notation exactly when abs(x) >= 1e16 or 0 < abs(x) < 1e-4, and a signed
+// exponent with at least two digits.
+export function __ctrans_floatStr(v: number): string {
+  if (Number.isNaN(v)) return "nan";
+  if (v === Infinity) return "inf";
+  if (v === -Infinity) return "-inf";
+  if (v === 0) return Object.is(v, -0) ? "-0.0" : "0.0";
+  if (Number.isInteger(v) && Math.abs(v) < 1e16) return v.toString() + ".0";
+  const exponential = Math.abs(v).toExponential();
+  const match = /^(\d)(?:\.(\d+))?e([+-]\d+)$/.exec(exponential);
+  if (match === null) return v.toString();
+  const digits = match[1]! + (match[2] ?? "");
+  const exponent = Number(match[3]);
+  const sign = v < 0 ? "-" : "";
+  const formatExponent = (value: number): string =>
+    value < 0
+      ? `e-${String(-value).padStart(2, "0")}`
+      : `e+${String(value).padStart(2, "0")}`;
+  if (exponent >= 16 || exponent <= -5) {
+    const mantissa =
+      digits.length === 1 ? digits : `${digits[0]}.${digits.slice(1)}`;
+    return `${sign}${mantissa}${formatExponent(exponent)}`;
+  }
+  if (exponent >= 0) {
+    const head = digits.slice(0, exponent + 1).padEnd(exponent + 1, "0");
+    const tail = digits.slice(exponent + 1);
+    return tail.length > 0 ? `${sign}${head}.${tail}` : `${sign}${head}.0`;
+  }
+  return `${sign}0.${"0".repeat(-exponent - 1)}${digits}`;
 }
 
 export function __ctrans_gt(a: unknown, b: unknown): boolean {
   return __ctrans_compare(">", a, b);
 }
 
-// Python len(): sequences, mappings, sets. Strings measure UTF-16 units (astral
-// plane divergence documented; code-point semantics land in M5).
+// Python len(): sequences, mappings, sets; strings measure UNICODE CODE POINTS
+// (Python semantics; JS .length counts UTF-16 units and diverges for astral chars).
 export function __ctrans_len(v: unknown): number {
-  if (typeof v === "string" || Array.isArray(v)) return v.length;
+  if (typeof v === "string") return Array.from(v).length;
+  if (Array.isArray(v)) return v.length;
   if (v instanceof Set || v instanceof Map) return v.size;
   if (typeof v === "object" && v !== null) return Object.keys(v).length;
   throw new TypeError("object has no len()");
 }
 
 // Python str(): text conversion with Python spellings for scalars and sequences.
+// Non-integral numbers use the Python float layout (exponent thresholds differ
+// from JS); INTEGRAL numbers print int-like — a float-typed value such as 100.0
+// prints "100" here (the int/float distinction is lost at runtime in number
+// mode; statically float-typed sites emit __ctrans_floatStr directly, and in
+// bigint mode Python ints are bigint so dynamic sites stay int-exact).
 export function __ctrans_str(v: unknown): string {
   if (v === null || v === undefined) return "None";
   if (typeof v === "boolean") return v ? "True" : "False";
   if (typeof v === "string") return v;
-  if (typeof v === "number") return v.toString();
+  if (typeof v === "bigint") return v.toString();
+  if (typeof v === "number") {
+    return Number.isInteger(v) ? v.toString() : __ctrans_floatStr(v);
+  }
   if (Array.isArray(v)) return "[" + v.map(__ctrans_repr).join(", ") + "]";
   if (v instanceof Set)
     return v.size === 0

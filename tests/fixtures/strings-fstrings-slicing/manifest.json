@@ -2,7 +2,7 @@
   "name": "strings-fstrings-slicing",
   "from": "python",
   "to": "typescript",
-  "expectedClaimLevel": 2,
+  "expectedClaimLevel": 3,
   "expectedDecisionCounts": {
     "deterministic": 23,
     "semantic": 6,

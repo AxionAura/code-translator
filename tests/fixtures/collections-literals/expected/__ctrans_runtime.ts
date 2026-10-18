@@ -67,10 +67,15 @@ export function __ctrans_contains(container: unknown, item: unknown): boolean {
   throw new TypeError("argument of type is not iterable");
 }
 
-// Python == : value comparison with elementwise sequences (primitives: JS ===).
+// Python == : value comparison with elementwise sequences; 1 == 1.0 and
+// bigint/number pairs compare numerically across the D-006 boundary.
 export function __ctrans_eq(a: unknown, b: unknown): boolean {
   if (a === b) return true;
-  if (typeof a === "number" && typeof b === "number") return a === b;
+  const aNumeric =
+    typeof a === "number" || typeof a === "bigint" || typeof a === "boolean";
+  const bNumeric =
+    typeof b === "number" || typeof b === "bigint" || typeof b === "boolean";
+  if (aNumeric && bNumeric) return Number(a) === Number(b);
   if (Array.isArray(a) && Array.isArray(b)) {
     return (
       a.length === b.length &&
@@ -80,24 +85,83 @@ export function __ctrans_eq(a: unknown, b: unknown): boolean {
   return false;
 }
 
-// Python len(): sequences, mappings, sets. Strings measure UTF-16 units (astral
-// plane divergence documented; code-point semantics land in M5).
+// Python float repr (str == repr for floats since 3.1): shortest round-trip
+// digits (shared with JS String/toExponential) reformatted to Python's layout —
+// ".0" on integral values, "-0.0" for negative zero, "inf"/"nan", scientific
+// notation exactly when abs(x) >= 1e16 or 0 < abs(x) < 1e-4, and a signed
+// exponent with at least two digits.
+export function __ctrans_floatStr(v: number): string {
+  if (Number.isNaN(v)) return "nan";
+  if (v === Infinity) return "inf";
+  if (v === -Infinity) return "-inf";
+  if (v === 0) return Object.is(v, -0) ? "-0.0" : "0.0";
+  if (Number.isInteger(v) && Math.abs(v) < 1e16) return v.toString() + ".0";
+  const exponential = Math.abs(v).toExponential();
+  const match = /^(\d)(?:\.(\d+))?e([+-]\d+)$/.exec(exponential);
+  if (match === null) return v.toString();
+  const digits = match[1]! + (match[2] ?? "");
+  const exponent = Number(match[3]);
+  const sign = v < 0 ? "-" : "";
+  const formatExponent = (value: number): string =>
+    value < 0
+      ? `e-${String(-value).padStart(2, "0")}`
+      : `e+${String(value).padStart(2, "0")}`;
+  if (exponent >= 16 || exponent <= -5) {
+    const mantissa =
+      digits.length === 1 ? digits : `${digits[0]}.${digits.slice(1)}`;
+    return `${sign}${mantissa}${formatExponent(exponent)}`;
+  }
+  if (exponent >= 0) {
+    const head = digits.slice(0, exponent + 1).padEnd(exponent + 1, "0");
+    const tail = digits.slice(exponent + 1);
+    return tail.length > 0 ? `${sign}${head}.${tail}` : `${sign}${head}.0`;
+  }
+  return `${sign}0.${"0".repeat(-exponent - 1)}${digits}`;
+}
+
+// Python len(): sequences, mappings, sets; strings measure UNICODE CODE POINTS
+// (Python semantics; JS .length counts UTF-16 units and diverges for astral chars).
 export function __ctrans_len(v: unknown): number {
-  if (typeof v === "string" || Array.isArray(v)) return v.length;
+  if (typeof v === "string") return Array.from(v).length;
+  if (Array.isArray(v)) return v.length;
   if (v instanceof Set || v instanceof Map) return v.size;
   if (typeof v === "object" && v !== null) return Object.keys(v).length;
   throw new TypeError("object has no len()");
 }
 
-// Python truth-value testing: NaN, [], {} are truthy in Python and falsy in JS.
-export function __ctrans_truthy(v: unknown): boolean {
-  if (v === null || v === undefined) return false;
-  if (typeof v === "boolean") return v;
-  if (typeof v === "number") return v !== 0; // NaN is truthy in Python
-  if (typeof v === "bigint") return v !== 0n;
-  if (typeof v === "string") return v.length > 0;
-  if (Array.isArray(v)) return v.length > 0;
-  if (v instanceof Set || v instanceof Map) return v.size > 0;
-  if (typeof v === "object") return Object.keys(v).length > 0;
-  return true;
+// Python str(): text conversion with Python spellings for scalars and sequences.
+// Non-integral numbers use the Python float layout (exponent thresholds differ
+// from JS); INTEGRAL numbers print int-like — a float-typed value such as 100.0
+// prints "100" here (the int/float distinction is lost at runtime in number
+// mode; statically float-typed sites emit __ctrans_floatStr directly, and in
+// bigint mode Python ints are bigint so dynamic sites stay int-exact).
+export function __ctrans_str(v: unknown): string {
+  if (v === null || v === undefined) return "None";
+  if (typeof v === "boolean") return v ? "True" : "False";
+  if (typeof v === "string") return v;
+  if (typeof v === "bigint") return v.toString();
+  if (typeof v === "number") {
+    return Number.isInteger(v) ? v.toString() : __ctrans_floatStr(v);
+  }
+  if (Array.isArray(v)) return "[" + v.map(__ctrans_repr).join(", ") + "]";
+  if (v instanceof Set)
+    return v.size === 0
+      ? "set()"
+      : "{" + [...v].map(__ctrans_repr).join(", ") + "}";
+  if (typeof v === "object") {
+    return (
+      "{" +
+      Object.entries(v)
+        .map(([key, entry]) => __ctrans_repr(key) + ": " + __ctrans_repr(entry))
+        .join(", ") +
+      "}"
+    );
+  }
+  return String(v);
+}
+
+function __ctrans_repr(v: unknown): string {
+  if (typeof v === "string")
+    return "'" + v.replaceAll("\\", "\\\\").replaceAll("'", "\\'") + "'";
+  return __ctrans_str(v);
 }

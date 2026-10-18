@@ -33,9 +33,28 @@ export type {
   TranslationReport,
 } from "./report.js";
 export { computeClaimLevel, runPipeline, targetModulePath } from "./pipeline.js";
+export { validateDependencies, type S3Finding, type S3Input } from "./s3-dependencies.js";
+export {
+  NO_REGISTRY,
+  type BuiltinMappingView,
+  type MethodEmit,
+  type MethodMappingView,
+  type ModuleMappingView,
+  type RegistryFidelity,
+  type RegistryLookup,
+} from "./registry-lookup.js";
+export {
+  ASYNC_BOUNDARY_MODULE,
+  collectFunctionCalls,
+  collectImportedFunctions,
+  propagateAsync,
+  type AsyncRequirements,
+} from "./async-propagation.js";
 export type {
   AnalyzedUnit,
+  DependencyValidator,
   EmittedFile,
+  IntMode,
   PipelineInput,
   PipelineResult,
   StageResult,

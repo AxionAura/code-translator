@@ -6,7 +6,13 @@
 // exception hierarchy. Unsupported constructs are never silently translated: they
 // emit a marker comment plus an `unsupported` ledger entry and count as failures in
 // the report (the claim ladder caps accordingly).
-import { UNKNOWN, type AnnotatedType, type CommonType } from "@ctrans/core";
+import {
+  UNKNOWN,
+  NO_REGISTRY,
+  type AnnotatedType,
+  type CommonType,
+  type RegistryLookup,
+} from "@ctrans/core";
 import type { AstNode } from "@ctrans/core";
 
 import {
@@ -15,8 +21,10 @@ import {
   CTW_DICT_KEY_COERCION,
   CTW_GENERATOR_EAGER,
   CTW_KWARGS,
+  CTW_METHOD_ADAPTED,
   CTW_METHOD_UNMAPPED,
   CTW_MUTABLE_DEFAULT,
+  CTW_NUM_BIGINT_BOUNDARY,
   CTW_NUM_BITWISE,
   CTW_NUM_PRECISION,
   CTW_TUPLE_ARRAY,
@@ -228,18 +236,38 @@ export class Emitter {
 
   private readonly importedKinds: ReadonlyMap<string, "class" | "function">;
 
+  // WS F: functions of this unit that must be emitted async (sync-to-async
+  // boundary propagation, docs/dependency-mapping.md §6). Absent = none.
+  private readonly asyncFunctions: ReadonlySet<string>;
+  // WS F: variables assigned directly from `requests.<verb>(...)` calls — the
+  // documented response surface (text/json/status_code/raise_for_status/ok) maps
+  // on these receivers (fetch Response).
+  private readonly fetchAssigned = new Set<string>();
+  // WS F: local names bound to async functions of OTHER units (from-imports) —
+  // call sites await them.
+  private readonly importedAsync = new Set<string>();
+
+  // D-017: the registry lookup is injected (core interface); default = no registry.
+  private readonly registry: RegistryLookup;
+
   constructor(
     ctx: LoweringContext,
     scopes: ScopeStack,
     exportedNames: ReadonlySet<string>,
     importedKinds: ReadonlyMap<string, "class" | "function"> = new Map(),
+    asyncFunctions: ReadonlySet<string> = new Set(),
+    importedAsyncNames: ReadonlySet<string> = new Set(),
+    registry: RegistryLookup = NO_REGISTRY,
   ) {
+    for (const name of importedAsyncNames) this.importedAsync.add(name);
     // Explicit field assignment (not parameter properties): the unbuilt CLI runs
     // sources through Node strip-only mode, which rejects transform-only syntax.
     this.ctx = ctx;
     this.scopes = scopes;
     this.exportedNames = exportedNames;
     this.importedKinds = importedKinds;
+    this.asyncFunctions = asyncFunctions;
+    this.registry = registry;
   }
 
   lowerModuleBody(statements: readonly AstNode[]): void {
@@ -605,6 +633,18 @@ export class Emitter {
       return value ? "true" : "false";
     }
     if (typeof value === "number") {
+      if (this.ctx.intMode === "bigint" && Number.isInteger(value)) {
+        // D-006 exact mode: Python ints are JS bigint literals.
+        this.ctx.record({
+          span: pySpan(node),
+          sourceKind: "py.Constant(int)",
+          rule: "py.int→js.bigint",
+          decision: "deterministic",
+          rationale: "intMode=bigint: integer literal emitted exactly as a bigint literal",
+          targetSummary: `${String(value)}n`,
+        });
+        return `${String(value)}n`;
+      }
       const risky = Number.isInteger(value) && !Number.isSafeInteger(value);
       this.ctx.record({
         span: pySpan(node),
@@ -633,6 +673,19 @@ export class Emitter {
     }
     const decimal = taggedDecimal(value);
     if (decimal !== null) {
+      if (this.ctx.intMode === "bigint") {
+        // D-006 exact mode: arbitrarily large integers stay exact.
+        this.ctx.record({
+          span: pySpan(node),
+          sourceKind: "py.Constant(int)",
+          rule: "py.int→js.bigint",
+          decision: "deterministic",
+          rationale:
+            "intMode=bigint: integer literal beyond 2^53 emitted exactly as a bigint literal",
+          targetSummary: `${decimal}n`,
+        });
+        return `${decimal}n`;
+      }
       this.ctx.record({
         span: pySpan(node),
         sourceKind: "py.Constant(int)",
@@ -669,6 +722,49 @@ export class Emitter {
     const receiverNode = kid(node, "value")!;
     // CPython's Attribute.attr is a plain identifier STRING, not an AST node.
     const attributeName = String(scalar(node, "attr") ?? "");
+    // WS F: the requests->fetch response surface on fetch-assigned receivers.
+    if (
+      receiverNode.kind === "Name" &&
+      this.fetchAssigned.has(String(scalar(receiverNode, "id") ?? ""))
+    ) {
+      const surface: Record<string, string> = {
+        text: "await ${r}.text()",
+        json: "await ${r}.json()",
+        status_code: "${r}.status",
+        ok: "${r}.ok",
+      };
+      const shape = surface[attributeName];
+      if (shape !== undefined) {
+        const receiver = String(scalar(receiverNode, "id") ?? "");
+        const expanded = shape.replaceAll("${r}", receiver);
+        this.ctx.record({
+          span: pySpan(node),
+          sourceKind: `py.Attribute(response.${attributeName})`,
+          rule: `py.requests-response→js.${attributeName}`,
+          decision: "semantic",
+          rationale:
+            "sync-to-async boundary response surface (registry v1): Python properties/methods map to the fetch Response API — text/json are async methods in JS",
+          adaptation: expanded,
+          targetSummary: expanded,
+        });
+        return expanded;
+      }
+      if (attributeName === "raise_for_status") {
+        const receiver = String(scalar(receiverNode, "id") ?? "");
+        // raise_for_status is a METHOD in Python; attribute lowering returns a
+        // bound marker — the call lowering produces the throw. Approximate here.
+        this.ctx.record({
+          span: pySpan(node),
+          sourceKind: "py.Attribute(response.raise_for_status)",
+          rule: "py.requests-response→js.raise-for-status",
+          decision: "semantic",
+          rationale: "raise_for_status maps to an HTTP-status guard over the fetch Response",
+          adaptation: "status guard",
+          targetSummary: "raise_for_status guard",
+        });
+        return `__ctrans_raiseForStatus(${receiver})`;
+      }
+    }
     const receiverText = this.lowerExpr(receiverNode);
     const span = pySpan(node);
     if (this.memberAccessNative(receiverNode)) {
@@ -725,7 +821,16 @@ export class Emitter {
   private operandKind(node: AstNode, emittedText: string): "number" | "string" | "array" | null {
     const nodeKind = this.inferOperandKind(node);
     if (nodeKind !== null) return nodeKind;
+    // D-006 bigint mode: widened numeric helpers may return bigint, so their
+    // results are dynamic for native-op decisions (emissions chain through helpers
+    // instead of applying native operators to a `number | bigint` value).
+    const widenedText =
+      this.ctx.intMode === "bigint" &&
+      /^__ctrans_(sub|floorDiv|mod|pow|sum|neg|pos|bitAnd|bitOr|bitXor|lShift|rShift)\(/.test(
+        emittedText,
+      );
     if (
+      !widenedText &&
       /^__ctrans_(sub|div|floorDiv|mod|pow|len|sum|toInt|toFloat|neg|pos|bitAnd|bitOr|bitXor|lShift|rShift)\(/.test(
         emittedText,
       )
@@ -749,6 +854,20 @@ export class Emitter {
     const bothStrings = leftKind === "string" && rightKind === "string";
     const bothArrays = leftKind === "array" && rightKind === "array";
     const dynamic = !bothNumbers && !bothStrings;
+    // D-006 bigint mode: statically-provable int operands keep exact native bigint
+    // operators; a provable int mixed with a provable float converts across the
+    // documented Number boundary; unknown operands go through the bigint-aware
+    // helpers exactly as in number mode.
+    const bigintMode = this.ctx.intMode === "bigint";
+    const leftIsInt = bigintMode && this.exprIsInt(leftNode);
+    const rightIsInt = bigintMode && this.exprIsInt(rightNode);
+    const bothInts = leftIsInt && rightIsInt;
+    const mixedIntFloat =
+      bigintMode &&
+      ((leftIsInt && !rightIsInt && rightKind === "number") ||
+        (rightIsInt && !leftIsInt && leftKind === "number"));
+    const convertToIntSide = (text: string, node: AstNode): string =>
+      this.exprIsInt(node) ? this.helperCall("toFloat", [text]) : text;
     switch (operator) {
       case "Add": {
         this.ctx.record({
@@ -771,6 +890,25 @@ export class Emitter {
           targetSummary: dynamic ? "add(left, right)" : `${left} + ${right}`,
         });
         if (bothArrays) return `([...${left}, ...${right}])`;
+        if (mixedIntFloat) {
+          // Python int + float -> float: the int operand crosses the D-006 Number
+          // boundary explicitly (documented precision note).
+          const leftText = convertToIntSide(left, leftNode);
+          const rightText = convertToIntSide(right, rightNode);
+          this.ctx.record({
+            span,
+            sourceKind: "py.BinOp(Add)",
+            rule: "py.add-mixed→js.float-boundary",
+            decision: "semantic",
+            rationale:
+              "intMode=bigint: int/float mix follows Python (float result); the int operand converts through Number (precision boundary above 2^53)",
+            adaptation: "__ctrans_toFloat boundary conversion",
+            warnings: [CTW_NUM_BIGINT_BOUNDARY],
+            targetSummary: "float addition (int converted)",
+          });
+          return `(${leftText} + ${rightText})`;
+        }
+        if (bothInts) return `(${left} + ${right})`;
         if (dynamic) return this.helperCall("add", [left, right]);
         return `(${left} + ${right})`;
       }
@@ -786,6 +924,23 @@ export class Emitter {
           adaptation: dynamic ? "__ctrans_sub" : null,
           targetSummary: dynamic ? "sub(left, right)" : `${left} - ${right}`,
         });
+        if (mixedIntFloat) {
+          const leftText = convertToIntSide(left, leftNode);
+          const rightText = convertToIntSide(right, rightNode);
+          this.ctx.record({
+            span,
+            sourceKind: "py.BinOp(Sub)",
+            rule: "py.sub-mixed→js.float-boundary",
+            decision: "semantic",
+            rationale:
+              "intMode=bigint: int/float mix follows Python (float result); the int operand converts through Number (precision boundary above 2^53)",
+            adaptation: "__ctrans_toFloat boundary conversion",
+            warnings: [CTW_NUM_BIGINT_BOUNDARY],
+            targetSummary: "float subtraction (int converted)",
+          });
+          return `(${leftText} - ${rightText})`;
+        }
+        if (bothInts) return `(${left} - ${right})`;
         if (dynamic) return this.helperCall("sub", [left, right]);
         return `(${left} - ${right})`;
       }
@@ -813,6 +968,23 @@ export class Emitter {
           adaptation: bothNumbers ? null : "__ctrans_mul",
           targetSummary: bothNumbers ? `${left} * ${right}` : "__ctrans_mul(left, right)",
         });
+        if (mixedIntFloat) {
+          const leftText = convertToIntSide(left, leftNode);
+          const rightText = convertToIntSide(right, rightNode);
+          this.ctx.record({
+            span,
+            sourceKind: "py.BinOp(Mult)",
+            rule: "py.mul-mixed→js.float-boundary",
+            decision: "semantic",
+            rationale:
+              "intMode=bigint: int/float mix follows Python (float result); the int operand converts through Number (precision boundary above 2^53)",
+            adaptation: "__ctrans_toFloat boundary conversion",
+            warnings: [CTW_NUM_BIGINT_BOUNDARY],
+            targetSummary: "float multiplication (int converted)",
+          });
+          return `(${leftText} * ${rightText})`;
+        }
+        if (bothInts) return `(${left} * ${right})`;
         if (bothNumbers) return `(${left} * ${right})`;
         return this.helperCall("mul", [left, right]);
       }
@@ -827,29 +999,76 @@ export class Emitter {
           targetSummary: "__ctrans_div(left, right)",
         });
         return this.helperCall("div", [left, right]);
-      case "FloorDiv":
+      case "FloorDiv": {
+        // D-006 bigint mode: floor division of provable ints is always a Python
+        // int (bigint), so the widened helper result is soundly narrowed here.
+        const intArgs = bigintMode && leftIsInt && rightIsInt;
         this.ctx.record({
           span,
           sourceKind: "py.BinOp(FloorDiv)",
           rule: "py.floordiv→__ctrans.floorDiv",
           decision: "semantic",
-          rationale: "JS division truncates toward zero; Python floors toward negative infinity",
+          rationale: intArgs
+            ? "intMode=bigint: floor division of provable ints is exact (result narrowed to bigint)"
+            : "JS division truncates toward zero; Python floors toward negative infinity",
           adaptation: "floor division via __ctrans_floorDiv",
           targetSummary: "__ctrans_floorDiv(left, right)",
         });
-        return this.helperCall("floorDiv", [left, right]);
-      case "Mod":
+        const floorText = this.helperCall("floorDiv", [left, right]);
+        return intArgs && this.ctx.target === "typescript" ? `${floorText} as bigint` : floorText;
+      }
+      case "Mod": {
+        const intArgs = bigintMode && leftIsInt && rightIsInt;
         this.ctx.record({
           span,
           sourceKind: "py.BinOp(Mod)",
           rule: "py.mod→__ctrans.mod",
           decision: "semantic",
-          rationale: "Python modulo takes the divisor's sign; JS takes the dividend's",
+          rationale: intArgs
+            ? "intMode=bigint: modulo of provable ints is exact (result narrowed to bigint)"
+            : "Python modulo takes the divisor's sign; JS takes the dividend's",
           adaptation: "modulo via __ctrans_mod",
           targetSummary: "__ctrans_mod(left, right)",
         });
-        return this.helperCall("mod", [left, right]);
+        const modText = this.helperCall("mod", [left, right]);
+        return intArgs && this.ctx.target === "typescript" ? `${modText} as bigint` : modText;
+      }
       case "Pow": {
+        // bigint mode: provable ints go through the helper — Python returns a float
+        // for negative exponents, and native bigint ** would RangeError on them.
+        // A provably NON-NEGATIVE literal exponent keeps the exact native operator.
+        const powExponent = kid(node, "right")!;
+        const powExponentLiteral =
+          bigintMode &&
+          powExponent.kind === "Constant" &&
+          typeof powExponent.fields["value"] === "number" &&
+          Number.isInteger(powExponent.fields["value"]) &&
+          (powExponent.fields["value"] as number) >= 0;
+        if (bothInts && powExponentLiteral) {
+          this.ctx.record({
+            span,
+            sourceKind: "py.BinOp(Pow)",
+            rule: "py.pow→js.**",
+            decision: "deterministic",
+            rationale:
+              "intMode=bigint: non-negative literal exponent keeps exact native bigint exponentiation",
+            targetSummary: `${left} ** ${right}`,
+          });
+          return `(${left} ** ${right})`;
+        }
+        if (bothInts) {
+          this.ctx.record({
+            span,
+            sourceKind: "py.BinOp(Pow)",
+            rule: "py.pow→__ctrans.pow",
+            decision: "semantic",
+            rationale:
+              "intMode=bigint: __ctrans_pow keeps exact bigint results for non-negative exponents and Python's float result for negative ones",
+            adaptation: "__ctrans_pow",
+            targetSummary: "__ctrans_pow(left, right)",
+          });
+          return this.helperCall("pow", [left, right]);
+        }
         this.ctx.record({
           span,
           sourceKind: "py.BinOp(Pow)",
@@ -872,6 +1091,19 @@ export class Emitter {
         const jsOperator = { BitOr: "|", BitAnd: "&", BitXor: "^", LShift: "<<", RShift: ">>" }[
           operator
         ]!;
+        if (bothInts) {
+          // D-006 exact mode: native bigint bitwise operators are exact — no int32
+          // truncation, so the number-mode precision warning does not apply.
+          this.ctx.record({
+            span,
+            sourceKind: `py.BinOp(${operator})`,
+            rule: "py.bitwise→js.bigint-bitwise",
+            decision: "deterministic",
+            rationale: "intMode=bigint: native bigint bitwise operators are exact",
+            targetSummary: `${left} ${jsOperator} ${right}`,
+          });
+          return `(${left} ${jsOperator} ${right})`;
+        }
         if (bothNumbers) {
           this.ctx.record({
             span,
@@ -907,6 +1139,160 @@ export class Emitter {
       }
       default:
         return this.unsupportedExpr(node, `py.BinOp(${operator})`, "unsupported binary operator");
+    }
+  }
+
+  // Conservative bigint-mode classification (D-006 exact mode): does this expression
+  // carry a Python INT value at runtime, so native bigint operators are exact?
+  // Only statically provable int-ness qualifies (constants, int-annotated bindings,
+  // int-preserving operations on ints); everything else routes through the helpers,
+  // which resolve the int/float mix at runtime.
+  private exprIsInt(node: AstNode): boolean {
+    switch (node.kind) {
+      case "Constant":
+        return typeof node.fields["value"] === "number" && Number.isInteger(node.fields["value"]);
+      case "UnaryOp": {
+        const op = kid(node, "op")!.kind;
+        return (op === "USub" || op === "UAdd") && this.exprIsInt(kid(node, "operand") ?? node);
+      }
+      case "Name": {
+        const hit = this.scopes.lookup(String(scalar(node, "id") ?? ""));
+        return hit !== null && hit.type.kind === "number" && hit.type.numberKind === "int";
+      }
+      case "Attribute": {
+        if (this.selfNames.length > 0) {
+          const receiver = kid(node, "value");
+          const receiverName =
+            receiver !== null && receiver.kind === "Name"
+              ? String(scalar(receiver, "id") ?? "")
+              : null;
+          const activeSelf = this.selfNames[this.selfNames.length - 1];
+          if (receiverName !== null && activeSelf === receiverName) {
+            const fieldType = this.selfFieldTypes.get(String(scalar(node, "attr") ?? ""));
+            return (
+              fieldType !== undefined &&
+              fieldType.type.kind === "number" &&
+              fieldType.type.numberKind === "int"
+            );
+          }
+        }
+        return false;
+      }
+      case "Call": {
+        const func = kid(node, "func");
+        if (func !== null && func.kind === "Name") {
+          const id = String(scalar(func, "id") ?? "");
+          if (id.startsWith("__ctrans_")) {
+            // Only helpers whose bigint-mode result is ALWAYS bigint qualify.
+            return ["toIntBig"].includes(id.slice("__ctrans_".length));
+          }
+          const hit = this.scopes.lookup(id);
+          return (
+            hit !== null &&
+            hit.type.kind === "function" &&
+            hit.type.returnType.kind === "number" &&
+            hit.type.returnType.numberKind === "int"
+          );
+        }
+        return false;
+      }
+      case "BinOp": {
+        const op = kid(node, "op")!.kind;
+        if (op === "Pow") {
+          // base ** exponent is an int only when the exponent is a provably
+          // non-negative int literal (a negative exponent yields a float).
+          const exponent = kid(node, "right")!;
+          const exponentValue = exponent.fields["value"];
+          const exponentConstant =
+            exponent.kind === "Constant" &&
+            typeof exponentValue === "number" &&
+            Number.isInteger(exponentValue) &&
+            exponentValue >= 0;
+          if (!exponentConstant) return false;
+          return this.exprIsInt(kid(node, "left")!);
+        }
+        // / is Python true division (always float); arithmetic and bitwise
+        // operators preserve int-ness for int operands.
+        if (
+          ![
+            "Add",
+            "Sub",
+            "Mult",
+            "FloorDiv",
+            "Mod",
+            "BitOr",
+            "BitAnd",
+            "BitXor",
+            "LShift",
+            "RShift",
+          ].includes(op)
+        ) {
+          return false;
+        }
+        return this.exprIsInt(kid(node, "left")!) && this.exprIsInt(kid(node, "right")!);
+      }
+      default:
+        return false;
+    }
+  }
+
+  // Statically provable Python-float-ness (used for Python-exact float str() at
+  // f-string/str() sites): float literals, float-annotated bindings, and operations
+  // with a float operand. Python `/` ALWAYS yields a float. Conservative: dynamic
+  // values are not proven float (the runtime str helper keeps int-like output for
+  // integral numbers — the documented number-mode limitation).
+  private exprIsFloat(node: AstNode): boolean {
+    switch (node.kind) {
+      case "Constant":
+        return typeof node.fields["value"] === "number" && !Number.isInteger(node.fields["value"]);
+      case "UnaryOp": {
+        const op = kid(node, "op")!.kind;
+        return (op === "USub" || op === "UAdd") && this.exprIsFloat(kid(node, "operand") ?? node);
+      }
+      case "Name": {
+        const hit = this.scopes.lookup(String(scalar(node, "id") ?? ""));
+        return hit !== null && hit.type.kind === "number" && hit.type.numberKind === "float";
+      }
+      case "Attribute": {
+        if (this.selfNames.length > 0) {
+          const receiver = kid(node, "value");
+          const receiverName =
+            receiver !== null && receiver.kind === "Name"
+              ? String(scalar(receiver, "id") ?? "")
+              : null;
+          const activeSelf = this.selfNames[this.selfNames.length - 1];
+          if (receiverName !== null && activeSelf === receiverName) {
+            const fieldType = this.selfFieldTypes.get(String(scalar(node, "attr") ?? ""));
+            return (
+              fieldType !== undefined &&
+              fieldType.type.kind === "number" &&
+              fieldType.type.numberKind === "float"
+            );
+          }
+        }
+        return false;
+      }
+      case "Call": {
+        const func = kid(node, "func");
+        if (func !== null && func.kind === "Name") {
+          const hit = this.scopes.lookup(String(scalar(func, "id") ?? ""));
+          return (
+            hit !== null &&
+            hit.type.kind === "function" &&
+            hit.type.returnType.kind === "number" &&
+            hit.type.returnType.numberKind === "float"
+          );
+        }
+        return false;
+      }
+      case "BinOp": {
+        const op = kid(node, "op")!.kind;
+        if (op === "Div") return true; // Python true division is always a float
+        if (!["Add", "Sub", "Mult", "FloorDiv", "Mod", "Pow"].includes(op)) return false;
+        return this.exprIsFloat(kid(node, "left")!) || this.exprIsFloat(kid(node, "right")!);
+      }
+      default:
+        return false;
     }
   }
 
@@ -958,6 +1344,11 @@ export class Emitter {
           const id = String(scalar(func, "id") ?? "");
           if (id.startsWith("__ctrans_")) {
             const helper = id.slice("__ctrans_".length);
+            // D-006 bigint mode: widened numeric helpers may return bigint, so
+            // their results are dynamic for native-op decisions (helpers chain).
+            if (this.ctx.intMode === "bigint" && HELPER_WIDENED_RETURNS.has(helper)) {
+              return null;
+            }
             if (HELPER_NUMBER_RETURNS.has(helper)) return "number";
           }
           const hit = this.scopes.lookup(id);
@@ -974,7 +1365,16 @@ export class Emitter {
         const right = this.inferOperandKind(kid(node, "right")!);
         if (left === "string" || right === "string") return "string";
         if (left === "array" && right === "array") return "array";
-        if (left === "number" && right === "number") return "number";
+        if (left === "number" && right === "number") {
+          // D-006 bigint mode: sub/floorDiv/mod/pow/bitwise on dynamic operands
+          // lower to widened helpers (result `number | bigint`) — only `/` keeps a
+          // guaranteed-number helper result here.
+          if (this.ctx.intMode === "bigint") {
+            const op = kid(node, "op")!.kind;
+            return op === "Div" ? "number" : null;
+          }
+          return "number";
+        }
         return null;
       }
       default:
@@ -1123,6 +1523,22 @@ export class Emitter {
   private lowerBoolOp(node: AstNode): string {
     const values = kids(node, "values");
     const isAnd = kid(node, "op")!.kind === "And";
+    // D-016 provability: when EVERY operand's Python truthiness is provably equal
+    // to JS truthiness, the value semantics coincide with native &&/||. Otherwise
+    // the ternary chain preserves Python's operand-value semantics.
+    if (values.every((operand) => this.nativeTruthyProvable(operand))) {
+      const native = values.map((operand) => this.lowerExpr(operand));
+      this.ctx.record({
+        span: pySpan(node),
+        sourceKind: `py.BoolOp(${isAnd ? "And" : "Or"})`,
+        rule: "py.boolop→js.native",
+        decision: "deterministic",
+        rationale:
+          "all operand truthinesses are provably equivalent, so native &&/|| preserves Python's operand-value semantics",
+        targetSummary: isAnd ? "native and-chain" : "native or-chain",
+      });
+      return `(${native.join(isAnd ? " && " : " || ")})`;
+    }
     // Python and/or return OPERAND values gated on Python truthiness; JS &&/|| use JS
     // truthiness (diverges for NaN/[]/{}). The ternary chain preserves Python values.
     this.ctx.useHelper("truthy");
@@ -1334,6 +1750,38 @@ export class Emitter {
     if (func.kind === "Attribute") {
       const receiverNode = kid(func, "value")!;
       const attrName = String(scalar(func, "attr") ?? "");
+      // WS F: `requests.<verb>(...)` -> `await fetch(...)` (sync-to-async boundary,
+      // docs/dependency-mapping.md §6). The documented subset: GET/POST/HEAD/DELETE
+      // with data=/json= kwargs unsupported (kwargs calls are outside the M4/M5
+      // call surface) — anything else stays an honest unsupported marker.
+      if (receiverNode.kind === "Name" && scalar(receiverNode, "id") === "requests") {
+        const verb = attrName.toLowerCase();
+        const methodMap: Record<string, string> = {
+          get: "GET",
+          post: "POST",
+          head: "HEAD",
+          delete: "DELETE",
+        };
+        const method = methodMap[verb];
+        if (method !== undefined && args.length === 1) {
+          this.ctx.record({
+            span,
+            sourceKind: `py.Call(requests.${verb})`,
+            rule: `py.requests-${verb}→js.fetch`,
+            decision: "semantic",
+            rationale:
+              "sync-to-async boundary (D-011): Python requests is synchronous, JS fetch is async-only — the call awaits and the response surface is the documented subset (status/text/json/raise_for_status)",
+            adaptation: `await fetch(...) (${method})`,
+            targetSummary: `fetch(${args.map((arg) => this.lowerExpr(arg)).join(", ")})`,
+          });
+          return `await fetch(${args.map((arg) => this.lowerExpr(arg)).join(", ")}, { method: "${method}" })`;
+        }
+        return this.unsupportedExpr(
+          node,
+          `py.Call(requests.${attrName})`,
+          "requests surface outside the mapped subset (methods/data=/json=/sessions) — the registry documents the boundary",
+        );
+      }
       // `super().__init__(...)` calls the parent constructor: JS needs `super(...)`.
       if (receiverNode.kind === "Call" && isSuperCall(receiverNode) && attrName === "__init__") {
         this.ctx.record({
@@ -1349,6 +1797,74 @@ export class Emitter {
       const receiverText = this.lowerExpr(receiverNode);
       if (this.memberAccessNative(receiverNode)) {
         const receiverType = this.receiverCommonType(receiverNode);
+        // Registry v1 (D-011): mapped (receiver kind, method) pairs lower through
+        // their registry entry; unmapped container methods keep the M4 warning.
+        const receiverKind: "array" | "map" | "string" | "set" | null =
+          receiverType !== null &&
+          (receiverType.type.kind === "array" ||
+            receiverType.type.kind === "map" ||
+            receiverType.type.kind === "string" ||
+            receiverType.type.kind === "set")
+            ? (receiverType.type.kind as "array" | "map" | "string" | "set")
+            : null;
+        const mapping =
+          receiverKind !== null ? this.registry.lookupMethod(receiverKind, attrName) : null;
+        if (mapping !== null && mapping.emit.kind !== "unsupported") {
+          if (mapping.emit.kind === "rename") {
+            const method = mapping.emit.method;
+            let callText: string;
+            let decision: "deterministic" | "semantic" = "deterministic";
+            if (method === "length-zero") {
+              callText = `(${receiverText}.length = 0)`;
+              decision = "semantic";
+            } else if (method === "slice" || method === "keys-object") {
+              callText =
+                method === "slice" ? `${receiverText}.slice()` : `Object.keys(${receiverText})`;
+              decision = "semantic";
+            } else if (method === "values-object") {
+              callText = `Object.values(${receiverText})`;
+              decision = "semantic";
+            } else if (method === "entries-object") {
+              callText = `Object.entries(${receiverText})`;
+              decision = "semantic";
+            } else if (method === "push-spread") {
+              callText = `${receiverText}.push(...${argsText.join(", ")})`;
+              decision = "semantic";
+            } else if (method === "splice") {
+              // insert(i, v) -> splice(i, 0, v)
+              callText = `${receiverText}.splice(${argsText.join(", ")}, 0)`;
+              decision = "semantic";
+            } else {
+              callText = `${receiverText}.${method}(${argsText.join(", ")})`;
+            }
+            const notes = mapping.emit.notes.join("; ");
+            this.ctx.record({
+              span,
+              sourceKind: "py.Call",
+              rule: `py.${receiverKind}-method→js.${mapping.id}`,
+              decision,
+              rationale: `registry v1 mapping (${mapping.id}): ${notes === "" ? "identical semantics" : notes}`,
+              adaptation: method,
+              warnings: decision === "semantic" ? [CTW_METHOD_ADAPTED] : [],
+              targetSummary: callText,
+            });
+            return callText;
+          }
+          // helper mapping: Python semantics via the runtime helper.
+          const helperArgs = [receiverText, ...argsText];
+          const notes = mapping.emit.notes.join("; ");
+          this.ctx.record({
+            span,
+            sourceKind: "py.Call",
+            rule: `py.${receiverKind}-method→__ctrans.${mapping.emit.helper}`,
+            decision: "semantic",
+            rationale: `registry v1 mapping (${mapping.id}): ${notes === "" ? "Python semantics via the runtime helper" : notes}`,
+            adaptation: `__ctrans_${mapping.emit.helper}`,
+            warnings: [CTW_METHOD_ADAPTED],
+            targetSummary: `${mapping.emit.helper}(receiver, ...)`,
+          });
+          return this.helperCall(mapping.emit.helper, helperArgs);
+        }
         const containerReceiver =
           receiverType !== null &&
           (receiverType.type.kind === "array" || receiverType.type.kind === "map");
@@ -1358,7 +1874,7 @@ export class Emitter {
           rule: "py.call→js.call",
           decision: "deterministic",
           rationale: containerReceiver
-            ? "method call on a statically typed Python container: JS has no corresponding method until the M5 registry maps it (list.append stays .append and fails at runtime) — documented verbatim M4 surface"
+            ? "method call on a statically typed Python container with no registry mapping: JS has no corresponding method (e.g. list.append without the registry entry) — documented verbatim surface"
             : "method call correspondence on a statically typed receiver",
           warnings: containerReceiver ? [CTW_METHOD_UNMAPPED] : [],
           targetSummary: `${receiverText}.${attrName}(${argsText.join(", ")})`,
@@ -1379,6 +1895,29 @@ export class Emitter {
     }
     if (func.kind === "Name") {
       const name = String(scalar(func, "id") ?? "");
+      // WS F: calls to propagated-async functions await (the callee's signature
+      // changed; Python callers are synchronous and must become async too). The
+      // set covers BOTH this unit's functions and from-imported ones.
+      if (this.asyncFunctions.has(name) || this.importedAsync.has(name)) {
+        this.ctx.record({
+          span,
+          sourceKind: "py.Call",
+          rule: "py.call→js.await-asyncified",
+          decision: "semantic",
+          rationale:
+            "callee is asyncified (sync-to-async boundary propagation) — the call site awaits to preserve Python's synchronous control flow",
+          adaptation: "await",
+          targetSummary: `await ${name}(...)`,
+        });
+        const argsText0 = args
+          .map((arg) =>
+            arg.kind === "Starred"
+              ? `...${this.lowerExpr(kid(arg, "value") ?? arg)}`
+              : this.lowerExpr(arg),
+          )
+          .join(", ");
+        return `await ${name}(${argsText0})`;
+      }
       const hit = this.scopes.lookup(name);
       if (hit !== null && hit.type.kind === "class") {
         // Python construction; JS classes need `new` (deterministic here because the
@@ -1409,7 +1948,12 @@ export class Emitter {
         });
         return this.helperCall("call", [name, ...argsText]);
       }
-      if (hit === null && UNMAPPED_PYTHON_BUILTINS.has(name) && !this.unitDefinedNames.has(name)) {
+      if (
+        hit === null &&
+        UNMAPPED_PYTHON_BUILTINS.has(name) &&
+        this.registry.lookupBuiltin(name) === null &&
+        !this.unitDefinedNames.has(name)
+      ) {
         // An unmapped Python builtin cannot be emitted as a bare identifier (the
         // target has no such binding): unsupported with marker + warning, counted
         // as a failure — never a silent verbatim call (AGENTS.md §3, §11).
@@ -1453,6 +1997,28 @@ export class Emitter {
     span: Span,
   ): string | null {
     const lowered = (): string[] => args.map((arg) => this.lowerExpr(arg));
+    // Registry v1 (D-011): mapped builtins lower through Python-semantics helpers.
+    // Arity outside the entry's supported surface stays unsupported (never guessed).
+    const mapped = this.registry.lookupBuiltin(name);
+    if (mapped !== null) {
+      const arityOk = args.length >= mapped.arity.min && args.length <= mapped.arity.max;
+      const hasKwargs = args.some((arg) => arg.kind === "keyword");
+      if (arityOk && !hasKwargs) {
+        const notes = mapped.notes.join("; ");
+        this.ctx.record({
+          span,
+          sourceKind: `py.Call(${name})`,
+          rule: `py.${name}→__ctrans.${mapped.helper}`,
+          decision: mapped.fidelity === "full" ? "deterministic" : "semantic",
+          rationale: `registry v1 mapping (${mapped.id}): ${
+            notes === "" ? "exact Python semantics via the generated runtime helper" : notes
+          }`,
+          adaptation: `__ctrans_${mapped.helper}`,
+          targetSummary: `${name}(...)`,
+        });
+        return this.helperCall(mapped.helper, lowered());
+      }
+    }
     switch (name) {
       case "len": {
         if (args.length !== 1) break;
@@ -1468,6 +2034,21 @@ export class Emitter {
         return this.helperCall("len", lowered());
       }
       case "range": {
+        if (this.ctx.intMode === "bigint") {
+          // D-006 exact mode: range elements are Python ints -> bigints so
+          // downstream integer arithmetic stays exact.
+          this.ctx.record({
+            span,
+            sourceKind: "py.Call(range)",
+            rule: "py.range→__ctrans.rangeBig",
+            decision: "semantic",
+            rationale:
+              "intMode=bigint: range elements are bigints (the helper still materializes - memory divergence for huge ranges)",
+            adaptation: "__ctrans_rangeBig",
+            targetSummary: "range(...)",
+          });
+          return this.helperCall("rangeBig", lowered());
+        }
         this.ctx.record({
           span,
           sourceKind: "py.Call(range)",
@@ -1482,6 +2063,20 @@ export class Emitter {
       }
       case "int": {
         if (args.length !== 1) break;
+        if (this.ctx.intMode === "bigint") {
+          // D-006 exact mode: int() produces a Python int -> bigint.
+          this.ctx.record({
+            span,
+            sourceKind: "py.Call(int)",
+            rule: "py.int→__ctrans.toIntBig",
+            decision: "semantic",
+            rationale:
+              "intMode=bigint: int() returns a bigint; strict integer-string validation and exact float truncation preserved",
+            adaptation: "__ctrans_toIntBig",
+            targetSummary: "toIntBig(x)",
+          });
+          return this.helperCall("toIntBig", lowered());
+        }
         this.ctx.record({
           span,
           sourceKind: "py.Call(int)",
@@ -1616,7 +2211,14 @@ export class Emitter {
           this.lowerExpr(kid(value, "value")!);
           continue;
         }
-        parts.push(`\${${this.lowerExpr(kid(value, "value")!)}}`);
+        const valueNode = kid(value, "value")!;
+        // Python f"{x}" interpolates str(x): bools print True/False, floats keep
+        // Python's repr layout (100.0), None prints None. Statically float-typed
+        // sites emit __ctrans_floatStr for the exact float layout.
+        const lowered = this.exprIsFloat(valueNode)
+          ? this.helperCall("floatStr", [this.lowerExpr(valueNode)])
+          : this.helperCall("str", [this.lowerExpr(valueNode)]);
+        parts.push(`\${${lowered}}`);
       }
     }
     if (hasUnsupportedSpec) {
@@ -1632,7 +2234,8 @@ export class Emitter {
       sourceKind: "py.JoinedStr",
       rule: "py.fstring→js.template",
       decision: "deterministic",
-      rationale: "interpolation and literal text correspond",
+      rationale:
+        "interpolation and literal text correspond; interpolations apply str() like Python (float-typed sites use the Python float layout)",
       targetSummary: "template literal",
     });
     return "`" + parts.join("") + "`";
@@ -2223,6 +2826,17 @@ export class Emitter {
       // whose first binding happens in this nested block are hoisted first so the
       // emitted destructure is a rebinding, not a block-scoped declaration.
       const leafNames = collectLeafNames(targetNode);
+      // Snapshot for nested-pattern arms: by element-emission time the parent has
+      // declared every leaf, so nested-fresh detection must use this snapshot.
+      const preDeclared = new Set(leafNames.filter((name) => this.isDeclared(name)));
+      // D-006 bigint mode: a parallel assignment whose elements are all provable
+      // ints binds int-typed names — the rebind idiom (a, b = b, a + b) then
+      // lowers to exact native bigint operators.
+      const bigintIntTuple =
+        this.ctx.intMode === "bigint" &&
+        parallelTuple &&
+        valueNode !== null &&
+        kids(valueNode, "elts").every((element) => this.exprIsInt(element));
       for (const name of leafNames) {
         if (!this.isDeclared(name) && this.bindingRequiresHoist(name)) {
           this.hoistBinding(name, null);
@@ -2230,7 +2844,17 @@ export class Emitter {
       }
       const declared = leafNames.filter((name) => this.isDeclared(name));
       for (const name of leafNames) {
-        this.scopes.declare(name, annotateUnknown());
+        this.scopes.declare(
+          name,
+          bigintIntTuple
+            ? {
+                type: { kind: "number", numberKind: "int" },
+                origin: "inferred",
+                confidence: "approximate",
+                span: null,
+              }
+            : annotateUnknown(),
+        );
         this.declareLocally(name);
       }
       // Parallel assignment packs the value elements into one tuple; unpacking has a
@@ -2287,8 +2911,19 @@ export class Emitter {
               hit.type.elementType.kind !== "unknown"
             );
           })();
+        // D-006 bigint mode: a parallel assignment whose elements are all provable
+        // ints binds bigint-typed names — the rebind idiom (a, b = b, a + b) then
+        // lowers to exact native bigint operators.
+        const bigintIntTuple =
+          this.ctx.intMode === "bigint" &&
+          parallelTuple &&
+          kids(valueNode!, "elts").every((element) => this.exprIsInt(element));
         const unpackAnnotation =
-          !rhsElementKnown && this.ctx.target === "typescript" ? ": unknown[]" : "";
+          !rhsElementKnown && this.ctx.target === "typescript"
+            ? bigintIntTuple
+              ? ": bigint[]"
+              : ": unknown[]"
+            : "";
         this.ctx.record({
           span,
           sourceKind: "py.Assign(tuple-target)",
@@ -2316,7 +2951,7 @@ export class Emitter {
         });
         this.line(`const ${tmp} = ${rhsText};`);
         elements.forEach((element, index) => {
-          this.emitUnpackElement(element, `${tmp}[${String(index)}]`);
+          this.emitUnpackElement(element, `${tmp}[${String(index)}]`, preDeclared);
         });
         return;
       }
@@ -2335,20 +2970,35 @@ export class Emitter {
       });
       this.line(`const ${tmp} = ${rhsText};`);
       elements.forEach((element, index) => {
-        this.emitUnpackElement(element, `${tmp}[${String(index)}]`);
+        this.emitUnpackElement(element, `${tmp}[${String(index)}]`, preDeclared);
       });
       return;
     }
 
     const value = valueNode === null ? "undefined" : this.lowerExpr(valueNode);
     const initType = valueNode === null ? null : this.valueAnnotatedType(valueNode);
+    // WS F: `response = requests.get(...)` (now `await fetch(...)`) marks the
+    // target for the documented response-surface mapping.
+    if (value.includes("await fetch(")) {
+      for (const target of targets) {
+        if (target.kind === "Name") this.fetchAssigned.add(String(scalar(target, "id") ?? ""));
+      }
+    }
     for (const target of targets) {
       this.lowerAssignTarget(target, value, initType, valueNode);
     }
   }
 
   // One element of a tuple-target assignment from an already-evaluated temp slot.
-  private emitUnpackElement(element: AstNode, valueText: string): void {
+  // preDeclared carries the leaves that were bound BEFORE this statement — the
+  // parent declares every leaf up front, so isDeclared alone cannot distinguish
+  // fresh nested names (a nested `let` here would shadow, a plain assignment
+  // would be a TDZ error).
+  private emitUnpackElement(
+    element: AstNode,
+    valueText: string,
+    preDeclared: ReadonlySet<string> = new Set(),
+  ): void {
     if (element.kind === "Name") {
       const name = String(scalar(element, "id") ?? "");
       const first = !this.isDeclared(name);
@@ -2363,7 +3013,9 @@ export class Emitter {
     }
     if (element.kind === "Tuple" || element.kind === "List") {
       const nestedLeaves = collectLeafNames(element);
-      const nestedFresh = nestedLeaves.filter((name) => !this.isDeclared(name));
+      // preDeclared is authoritative here: the parent already declared every Name
+      // leaf of this statement, so isDeclared is true for fresh names too.
+      const nestedFresh = nestedLeaves.filter((name) => !preDeclared.has(name));
       if (nestedFresh.length === 0) {
         this.line(`${destructurePattern(element, this)} = ${valueText};`);
       } else if (nestedFresh.length === nestedLeaves.length && isNamePattern(element)) {
@@ -2574,7 +3226,9 @@ export class Emitter {
     }
     const name = String(scalar(target, "id") ?? "");
     const tsType =
-      this.ctx.target === "typescript" ? (tsTypeFromAnnotation(annotation) ?? "unknown") : null;
+      this.ctx.target === "typescript"
+        ? (tsTypeFromAnnotation(annotation, this.ctx.intMode) ?? "unknown")
+        : null;
     this.scopes.declare(name, this.declaredType(annotation));
     const first = !this.isDeclared(name);
     const hoist = first && this.bindingRequiresHoist(name);
@@ -2805,8 +3459,67 @@ export class Emitter {
     return typeof value === "number" ? value : null;
   }
 
+  // Conservative provability analysis (D-016): native JS truthiness equals Python's
+  // exactly for booleans, null/undefined, strings, bigint, and NON-NaN numbers
+  // (Python ints cannot be NaN). Everything else — unknown values, plain-number
+  // bindings (NaN diverges), arrays/maps/sets/objects (empty containers are falsy
+  // in Python, truthy in JS) — keeps the __ctrans_truthy helper.
+  private nativeTruthyProvable(node: AstNode): boolean {
+    switch (node.kind) {
+      case "Constant": {
+        const value = node.fields["value"];
+        if (value === null) return true; // None -> undefined: falsy in both
+        if (typeof value === "boolean") return true;
+        if (typeof value === "string") return true;
+        if (typeof value === "number") {
+          // Integer literals (and float literals) are never NaN.
+          return Number.isNaN(value) === false;
+        }
+        return false;
+      }
+      case "Name": {
+        const hit = this.scopes.lookup(String(scalar(node, "id") ?? ""));
+        if (hit === null) return false;
+        if (hit.type.kind === "boolean" || hit.type.kind === "string" || hit.type.kind === "null") {
+          return true;
+        }
+        if (hit.type.kind === "number") {
+          // Python int cannot be NaN; a plain float may be.
+          return hit.type.numberKind === "int";
+        }
+        return false;
+      }
+      case "Compare":
+        // Comparison results are booleans in both languages.
+        return true;
+      case "UnaryOp":
+        return (
+          kid(node, "op")!.kind === "Not" && this.nativeTruthyProvable(kid(node, "operand") ?? node)
+        );
+      case "BoolOp":
+        return kids(node, "values").every((operand) => this.nativeTruthyProvable(operand));
+      case "Await":
+        return this.nativeTruthyProvable(kid(node, "value") ?? node);
+      default:
+        return false;
+    }
+  }
+
   private truthyTest(testNode: AstNode, sourceKind: string): string {
     const test = this.lowerExpr(testNode);
+    if (this.nativeTruthyProvable(testNode)) {
+      // Provably equivalent: native condition, no helper (D-016 provability).
+      this.ctx.record({
+        span: pySpan(testNode),
+        sourceKind,
+        rule: "py.test→js.native",
+        decision: "deterministic",
+        rationale:
+          "statically provable that JS truthiness equals Python truthiness for this expression (boolean/string/null/int/bigint/comparison)",
+        targetSummary: "native test",
+      });
+      return `(${test})`;
+    }
     this.ctx.useHelper("truthy");
     this.ctx.record({
       span: pySpan(testNode),
@@ -2867,6 +3580,7 @@ export class Emitter {
       );
       return;
     }
+    // D-006 bigint mode: C-style range counters are Python ints (bigint).
     this.scopes.declare(targetName, annotateUnknown());
     this.declareLocally(targetName);
 
@@ -2884,9 +3598,12 @@ export class Emitter {
         rangeArgs.length <= 3 &&
         rangeArgs.every((arg) => this.inferOperandKind(arg) === "number");
       if ((rangeArgs.length <= 2 || step === 1) && argsNumeric) {
+        // D-006 bigint mode: the C-style counter is a bigint so the loop variable
+        // stays a Python int (i++ is a valid bigint increment).
+        const zeroLiteral = this.ctx.intMode === "bigint" ? "0n" : "0";
         const [startText, endText] =
           rangeArgs.length === 1
-            ? ["0", this.lowerExpr(rangeArgs[0]!)]
+            ? [zeroLiteral, this.lowerExpr(rangeArgs[0]!)]
             : [this.lowerExpr(rangeArgs[0]!), this.lowerExpr(rangeArgs[1] ?? rangeArgs[0]!)];
         this.ctx.record({
           span,
@@ -2896,6 +3613,14 @@ export class Emitter {
           rationale: "unit-step range loops map to C-style for loops (bounds statically numeric)",
           targetSummary: "for (let i = ...; i < ...; i++)",
         });
+        if (this.ctx.intMode === "bigint") {
+          this.scopes.declare(targetName, {
+            type: { kind: "number", numberKind: "int" },
+            origin: "inferred",
+            confidence: "approximate",
+            span: null,
+          });
+        }
         this.block(
           `for (let ${targetName} = ${startText}; ${targetName} < ${endText}; ${targetName}++)`,
           () => {
@@ -2904,18 +3629,20 @@ export class Emitter {
         );
         return;
       }
-      this.ctx.useHelper("range");
+      // D-006 bigint mode: materialized range elements are Python ints (bigints).
+      const rangeHelper = this.ctx.intMode === "bigint" ? "rangeBig" : "range";
+      this.ctx.useHelper(rangeHelper);
       this.ctx.record({
         span,
         sourceKind: "py.For(range,step)",
-        rule: "py.for-range→__ctrans.range",
+        rule: `py.for-range→__ctrans.${rangeHelper}`,
         decision: "semantic",
         rationale:
           "stepped or dynamically bounded range materializes via helper (Python range is lazy; the helper validates integer-ness)",
-        adaptation: "__ctrans_range",
+        adaptation: `__ctrans_${rangeHelper}`,
         targetSummary: "for-of over range(...)",
       });
-      const rangeCall = `__ctrans_range(${rangeArgs.map((arg) => this.lowerExpr(arg)).join(", ")})`;
+      const rangeCall = `__ctrans_${rangeHelper}(${rangeArgs.map((arg) => this.lowerExpr(arg)).join(", ")})`;
       this.block(`for (const ${targetName} of ${rangeCall})`, () => {
         this.lowerBody(node, "body");
       });
@@ -3044,9 +3771,12 @@ export class Emitter {
     this.scopeBaseIndent.push(this.indent + 1);
     const { params, returnType } = this.collectParams(args, node);
     const exported = this.exportedNames.has(name) && this.indent === 0;
+    // WS F: the propagation engine marked this function async (a sync-to-async
+    // boundary call is reachable from it). The signature change is recorded.
+    const mustBeAsync = isAsync || this.asyncFunctions.has(name);
     const typeSuffix =
       this.ctx.target === "typescript" && returnType !== null
-        ? `: ${isAsync ? `Promise<${returnType}>` : returnType}`
+        ? `: ${mustBeAsync ? `Promise<${returnType}>` : returnType}`
         : "";
     this.ctx.record({
       span,
@@ -3055,11 +3785,13 @@ export class Emitter {
       decision: "deterministic",
       rationale: isGenerator
         ? "generator function correspondence (def with yield → function*)"
-        : "function correspondence (closures via JS scoping; async syntax corresponds)",
-      targetSummary: `${isAsync ? "async " : ""}${isGenerator ? "function* " : "function "}${name}`,
+        : this.asyncFunctions.has(name) && !isAsync
+          ? "asyncified: a sync-to-async boundary call is reachable from this function — the JS target API is async-only, so the signature changes (recorded per docs/dependency-mapping.md §6)"
+          : "function correspondence (closures via JS scoping; async syntax corresponds)",
+      targetSummary: `${mustBeAsync ? "async " : ""}${isGenerator ? "function* " : "function "}${name}`,
     });
     this.line(
-      `${exported ? "export " : ""}${isAsync ? "async " : ""}function${isGenerator ? "*" : ""} ${name}(${params})${typeSuffix} {`,
+      `${exported ? "export " : ""}${mustBeAsync ? "async " : ""}function${isGenerator ? "*" : ""} ${name}(${params})${typeSuffix} {`,
     );
     this.indent += 1;
     const bodyInsertIndex = this.lines.length;
@@ -3150,7 +3882,7 @@ export class Emitter {
     const returnsNode = kid(functionNode, "returns");
     const returnType =
       this.ctx.target === "typescript" && returnsNode !== null
-        ? tsTypeFromAnnotation(returnsNode)
+        ? tsTypeFromAnnotation(returnsNode, this.ctx.intMode)
         : null;
     return { params: parts.join(", "), returnType };
   }
@@ -3177,17 +3909,29 @@ export class Emitter {
       return;
     }
     if (type.kind === "number" && type.numberKind === "int") {
-      this.ctx.record({
-        span: pySpan(annotation),
-        sourceKind: "py.arg(annotation)",
-        rule: "py.int-annotation→js.number",
-        decision: "semantic",
-        rationale:
-          "Python int is arbitrary precision; JS number is float64 (D-006: intMode=bigint is the exact mode)",
-        adaptation: "number with precision warning",
-        warnings: [CTW_NUM_PRECISION],
-        targetSummary: `${argName}: number`,
-      });
+      if (this.ctx.intMode === "bigint") {
+        // D-006 exact mode: int annotations are bigint — no precision divergence.
+        this.ctx.record({
+          span: pySpan(annotation),
+          sourceKind: "py.arg(annotation)",
+          rule: "py.int-annotation→js.bigint",
+          decision: "deterministic",
+          rationale: "intMode=bigint: Python int maps to JS bigint exactly (D-006 exact mode)",
+          targetSummary: `${argName}: bigint`,
+        });
+      } else {
+        this.ctx.record({
+          span: pySpan(annotation),
+          sourceKind: "py.arg(annotation)",
+          rule: "py.int-annotation→js.number",
+          decision: "semantic",
+          rationale:
+            "Python int is arbitrary precision; JS number is float64 (D-006: intMode=bigint is the exact mode)",
+          adaptation: "number with precision warning",
+          warnings: [CTW_NUM_PRECISION],
+          targetSummary: `${argName}: number`,
+        });
+      }
     }
     this.scopes.declare(argName, {
       type,
@@ -3202,7 +3946,8 @@ export class Emitter {
     // Honest typing: unannotated Python parameters are `unknown`, never implicit any.
     const tsType =
       this.ctx.target === "typescript"
-        ? ((annotation !== null ? tsTypeFromAnnotation(annotation) : null) ?? "unknown")
+        ? ((annotation !== null ? tsTypeFromAnnotation(annotation, this.ctx.intMode) : null) ??
+          "unknown")
         : null;
     const typeSuffix = tsType === null ? "" : `: ${tsType}`;
     if (defaultNode === null) return `${argName}${typeSuffix}`;
@@ -3534,14 +4279,14 @@ export class Emitter {
       targetSummary: `class ${name}`,
     });
     const exported = this.exportedNames.has(name) && this.indent === 0;
-    const instanceAttributes = collectInstanceAttributes(node);
+    const instanceAttributes = collectInstanceAttributes(node, this.ctx.intMode);
     // Field types inherit through the (single-inheritance) base chain: subclass
     // methods keep native arithmetic and fields are declared exactly once.
     const baseFields = base !== null ? this.classFieldTypes.get(base) : undefined;
     const fieldTypes = new Map(baseFields ?? []);
     for (const attribute of instanceAttributes) {
       if (fieldTypes.has(attribute.name)) continue;
-      const common = tsTextToCommonType(attribute.tsType);
+      const common = attribute.commonType ?? tsTextToCommonType(attribute.tsType);
       if (common !== null) {
         fieldTypes.set(attribute.name, {
           type: common,
@@ -3570,8 +4315,15 @@ export class Emitter {
         adaptation: "declared field (typed from first assignment, else unknown)",
         targetSummary: `field ${attribute.name}`,
       });
-      const typeSuffix =
-        this.ctx.target === "typescript" ? `: ${attribute.tsType ?? "unknown"}` : "";
+      // D-006 bigint mode: int-typed fields declare bigint (the CommonType carries
+      // the int kind; the tsType text alone would say number).
+      const declaredType =
+        this.ctx.intMode === "bigint" &&
+        attribute.commonType?.kind === "number" &&
+        attribute.commonType.numberKind === "int"
+          ? "bigint"
+          : (attribute.tsType ?? "unknown");
+      const typeSuffix = this.ctx.target === "typescript" ? `: ${declaredType}` : "";
       const definite =
         this.ctx.target === "typescript" && !attribute.initializedInConstructor ? "!" : "";
       this.line(`${attribute.name}${definite}${typeSuffix};`);
@@ -3684,7 +4436,7 @@ export class Emitter {
     const returnType =
       isConstructor || this.ctx.target !== "typescript" || returnsNode === null
         ? null
-        : tsTypeFromAnnotation(returnsNode);
+        : tsTypeFromAnnotation(returnsNode, this.ctx.intMode);
     const typeSuffix = returnType === null ? "" : `: ${returnType}`;
     const targetName = isConstructor ? "constructor" : name;
     this.ctx.record({
@@ -3746,6 +4498,23 @@ function containsYield(functionNode: AstNode): boolean {
 }
 
 // Runtime helpers whose results are statically numbers (operand-kind propagation).
+// Numeric helpers whose result type widens to `number | bigint` in the D-006
+// bigint mode (their results are treated as dynamic there — never native ops).
+const HELPER_WIDENED_RETURNS = new Set([
+  "sub",
+  "floorDiv",
+  "mod",
+  "pow",
+  "sum",
+  "neg",
+  "pos",
+  "bitAnd",
+  "bitOr",
+  "bitXor",
+  "lShift",
+  "rShift",
+]);
+
 const HELPER_NUMBER_RETURNS = new Set([
   "sub",
   "div",
@@ -3802,12 +4571,15 @@ function jsExceptionName(pyName: string): string {
 
 // Python annotation -> TypeScript type text; null when outside the mappable subset
 // (callers then emit no annotation rather than inventing one).
-export function tsTypeFromAnnotation(node: AstNode): string | null {
+export function tsTypeFromAnnotation(
+  node: AstNode,
+  intMode: "number" | "bigint" = "number",
+): string | null {
   switch (node.kind) {
     case "Name": {
       const name = String(scalar(node, "id") ?? "");
       const mapping: Record<string, string> = {
-        int: "number",
+        int: intMode === "bigint" ? "bigint" : "number",
         float: "number",
         str: "string",
         bool: "boolean",
@@ -3822,8 +4594,8 @@ export function tsTypeFromAnnotation(node: AstNode): string | null {
       return /^[A-Z]/.test(name) ? name : null;
     }
     case "BinOp": {
-      const left = tsTypeFromAnnotation(kid(node, "left")!);
-      const right = tsTypeFromAnnotation(kid(node, "right")!);
+      const left = tsTypeFromAnnotation(kid(node, "left")!, intMode);
+      const right = tsTypeFromAnnotation(kid(node, "right")!, intMode);
       if (left === null || right === null) return null;
       return `${left} | ${right}`;
     }
@@ -3836,7 +4608,7 @@ export function tsTypeFromAnnotation(node: AstNode): string | null {
       const args =
         slice === null ? [] : kids(slice, "elts").length > 0 ? kids(slice, "elts") : [slice];
       const argType = (index: number): string | null =>
-        args[index] === undefined ? null : tsTypeFromAnnotation(args[index]!);
+        args[index] === undefined ? null : tsTypeFromAnnotation(args[index]!, intMode);
       if (baseName === "list") {
         const element = argType(0);
         return element === null ? null : `Array<${element}>`;
@@ -3855,7 +4627,7 @@ export function tsTypeFromAnnotation(node: AstNode): string | null {
         return inner === null ? null : `${inner} | undefined`;
       }
       if (baseName === "tuple") {
-        const elements = args.map((arg) => tsTypeFromAnnotation(arg));
+        const elements = args.map((arg) => tsTypeFromAnnotation(arg, intMode));
         if (elements.length > 0 && elements.every((entry) => entry !== null)) {
           return `[${elements.join(", ")}]`;
         }
@@ -3873,6 +4645,9 @@ export function tsTypeFromAnnotation(node: AstNode): string | null {
 interface InstanceAttribute {
   readonly name: string;
   readonly tsType: string | null;
+  // The CommonType WITH numberKind (the tsType text round-trip loses int/float —
+  // operand-kind inference and f-string float detection need it).
+  readonly commonType: AnnotatedType["type"] | null;
   // Strict TS requires definite assignment; fields assigned outside the constructor
   // get a `!` assertion (recorded in the ledger rationale).
   readonly initializedInConstructor: boolean;
@@ -3930,8 +4705,12 @@ export function commonTypeFromAnnotation(node: AstNode): CommonType | null {
 // Pre-scan class methods for `self.X = ...` assignments (M4 subset: direct attribute
 // writes in method bodies). Types come from AnnAssign annotations or conservative
 // value inference; anything dynamic becomes `unknown` (never any).
-function collectInstanceAttributes(classNode: AstNode): InstanceAttribute[] {
+function collectInstanceAttributes(
+  classNode: AstNode,
+  intMode: "number" | "bigint",
+): InstanceAttribute[] {
   const attributes = new Map<string, string | null>();
+  const annotationCommons = new Map<string, AnnotatedType["type"]>();
   const constructorAssigned = new Set<string>();
   for (const statement of kids(classNode, "body")) {
     if (statement.kind !== "FunctionDef" && statement.kind !== "AsyncFunctionDef") continue;
@@ -3969,8 +4748,12 @@ function collectInstanceAttributes(classNode: AstNode): InstanceAttribute[] {
               : undefined;
           attributes.set(
             attrName,
-            annotation === undefined ? null : tsTypeFromAnnotation(annotation),
+            annotation === undefined ? null : tsTypeFromAnnotation(annotation, intMode),
           );
+          if (annotation !== undefined) {
+            const common = commonTypeFromAnnotation(annotation);
+            if (common !== null) annotationCommons.set(attrName, common);
+          }
         }
       }
       for (const entry of Object.values(record["fields"] ?? record)) {
@@ -3980,12 +4763,81 @@ function collectInstanceAttributes(classNode: AstNode): InstanceAttribute[] {
     }
   }
   return [...attributes.entries()]
-    .map(([name, tsType]) => ({
-      name,
-      tsType: tsType ?? inferAttributeType(classNode, name),
-      initializedInConstructor: constructorAssigned.has(name),
-    }))
+    .map(([name, tsType]) => {
+      const resolved = tsType ?? inferAttributeType(classNode, name);
+      // CommonType WITH numberKind: from the annotation when mappable, else the
+      // initializer constant's int/float kind (the text round-trip loses it, and
+      // operand-kind inference + f-string float detection need it).
+      let commonType: AnnotatedType["type"] | null = annotationCommons.get(name) ?? null;
+      if (commonType === null && resolved !== null) {
+        const back = tsTextToCommonType(resolved);
+        if (back !== null && back.kind === "number") {
+          const kind = initializerNumberKind(classNode, name);
+          commonType = { kind: "number", ...(kind !== undefined ? { numberKind: kind } : {}) };
+        } else {
+          commonType = back;
+        }
+      }
+      return {
+        name,
+        tsType: resolved,
+        commonType,
+        initializedInConstructor: constructorAssigned.has(name),
+      };
+    })
     .sort((left, right) => (left.name < right.name ? -1 : 1));
+}
+
+// The initializer's int/float kind for an un-annotated self.<name> (undefined =
+// unknown or non-numeric initializer).
+function initializerNumberKind(
+  classNode: AstNode,
+  attributeName: string,
+): "int" | "float" | undefined {
+  for (const statement of kids(classNode, "body")) {
+    if (statement.kind !== "FunctionDef" && statement.kind !== "AsyncFunctionDef") continue;
+    const stack: unknown[] = [...kids(statement, "body")];
+    while (stack.length > 0) {
+      const current = stack.pop();
+      if (Array.isArray(current)) {
+        stack.push(...current);
+        continue;
+      }
+      if (typeof current !== "object" || current === null) continue;
+      const record = current as { kind?: string; fields?: Record<string, unknown> };
+      if (record.kind === undefined || record.fields === undefined) continue;
+      if (record.kind === "Assign" || record.kind === "AnnAssign") {
+        const targets =
+          record.kind === "Assign"
+            ? ((record.fields["targets"] as readonly AstNode[] | undefined) ?? [])
+            : (record.fields["target"] as AstNode | undefined) !== undefined
+              ? [record.fields["target"] as AstNode]
+              : [];
+        for (const target of targets) {
+          if (target.kind !== "Attribute") continue;
+          const receiver = kid(target, "value");
+          if (receiver === null || String(scalar(receiver, "id") ?? "") !== "self") continue;
+          if (String(scalar(target, "attr") ?? "") !== attributeName) continue;
+          // The assigned VALUE lives on the STATEMENT (Assign.value / AnnAssign.value),
+          // never on the target node. record IS the statement node here.
+          const assigned =
+            record.kind === "Assign"
+              ? kid(record as unknown as AstNode, "value")
+              : ((record.fields["value"] as AstNode | undefined) ?? null);
+          if (assigned === null || assigned.kind !== "Constant") continue;
+          const literal = assigned.fields["value"];
+          if (typeof literal === "number") {
+            return Number.isInteger(literal) ? "int" : "float";
+          }
+        }
+      }
+      for (const entry of Object.values(record.fields)) {
+        if (Array.isArray(entry)) stack.push(...entry);
+        else if (typeof entry === "object" && entry !== null) stack.push(entry);
+      }
+    }
+  }
+  return undefined;
 }
 
 // Conservative value inference for un-annotated attribute assignments.

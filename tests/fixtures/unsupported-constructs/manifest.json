@@ -2,7 +2,7 @@
   "name": "unsupported-constructs",
   "from": "python",
   "to": "typescript",
-  "expectedClaimLevel": 2,
+  "expectedClaimLevel": 3,
   "expectedDecisionCounts": {
     "deterministic": 7,
     "semantic": 2,

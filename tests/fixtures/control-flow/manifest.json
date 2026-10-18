@@ -2,10 +2,10 @@
   "name": "control-flow",
   "from": "python",
   "to": "typescript",
-  "expectedClaimLevel": 2,
+  "expectedClaimLevel": 3,
   "expectedDecisionCounts": {
-    "deterministic": 63,
-    "semantic": 24,
+    "deterministic": 70,
+    "semantic": 17,
     "ambiguous": 0,
     "unsupported": 0
   },
