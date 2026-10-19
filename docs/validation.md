@@ -1,6 +1,6 @@
 # Validation
 
-Status: **approved blueprint**. The validation engine is the product's trust boundary: it decides what the tool is allowed to claim.
+Status: S1–S3 **implemented (M4/M5)**, S5/S6 **implemented (M6)**, S4/S7 and the repair-loop integration still **blueprint**. The validation engine is the product's trust boundary: it decides what the tool is allowed to claim.
 
 ## 1. Stage pipeline
 
@@ -17,6 +17,8 @@ Status: **approved blueprint**. The validation engine is the product's trust bou
 Every stage result is one of: `pass`, `fail`, `warn`, `skipped(reason)`. **A skipped stage is reported as skipped, forever visible in the report.** Nothing downgrades a failure to a warning.
 
 **S3 verdict classes (M5, implemented):** `emitted-local` (import resolves to an emitted project module), `mapped` (registry v1 entry), `external-verbatim` (unmapped third-party — exact warning, passes through, never guessed), `unsupported` (declared non-goal — warns), `unresolved` (relative import to no emitted module — FAILS the stage). S3 pass extends the claim ladder to level 3. A registry miss is NEVER conflated with a missing project module.
+
+**S5/S6 as implemented (M6):** S5 runs the translated vitest suite inside `@ctrans/sandbox` — the toolchain's `node_modules` enters the workspace as a per-package writable symlink (nothing is installed; security.md §5 holds) and the vitest json reporter is pinned to stdout. S6 materializes the SOURCE project plus a tool-provided stdlib runner and `pytest` stub in the same sandbox and executes it there (source code is untrusted — it never runs on the host); parametrize cases and same-module fixture factories are reproduced so the comparison is per-test AND per-case, matched by pytest-convention names. Both stages demand enforced network isolation (`requireNetworkIsolation: true`) — without bwrap they are refused (`SandboxIsolationError`) and reported `skipped(reason)`, never downgraded. S4 is recorded `skipped` (no build stage wired) and does not block the ladder.
 
 ## 2. What may be claimed (claim ladder)
 

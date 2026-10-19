@@ -4,6 +4,12 @@
 export const packageName = "@ctrans/codegen-js";
 
 export { PyToJsTranslator, createPyToJsTranslator, relativeImportSpecifier } from "./translator.js";
+export {
+  PytestToVitestMapper,
+  type TestMapperContext,
+  type TranslatedTestModule,
+  type UnsupportedTestConstruct,
+} from "./test-mapper.js";
 export { RUNTIME_HELPERS } from "./helpers.js";
 export {
   CTW_CLASS_ATTR_STATIC,

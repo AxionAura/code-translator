@@ -1,0 +1,30 @@
+{
+  "name": "project-parametrize-exceptions",
+  "from": "python",
+  "to": "typescript",
+  "expectedClaimLevel": 5,
+  "expectedDecisionCounts": {
+    "deterministic": ">=15",
+    "semantic": ">=4",
+    "unsupported": 0
+  },
+  "expectedWarnings": [],
+  "expectedMatchedTests": [
+    "test_parse_int_valid 7 7",
+    "test_parse_int_valid -42 -42",
+    "test_parse_int_valid 0 0",
+    "test_parse_int_invalid 12a",
+    "test_parse_int_invalid x",
+    "test_parse_int_invalid -",
+    "test_parse_int_empty_raises",
+    "test_word_count",
+    "test_palindromes racecar",
+    "test_palindromes never odd or even",
+    "test_palindromes step on no pets",
+    "test_not_palindromes hello",
+    "test_not_palindromes world",
+    "test_initials",
+    "test_parse_int_digits_membership"
+  ],
+  "description": "Mini project golden (M6): parametrize cases (differential matched per case with value-rendered names), pytest.raises, membership asserts, dict and slice lowering; sandboxed S5 + S6 differential reaching claim level 5."
+}

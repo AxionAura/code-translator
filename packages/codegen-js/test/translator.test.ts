@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { analyzeModule } from "@ctrans/core";
+import { analyzeModule, buildModuleGraph } from "@ctrans/core";
 import { createPythonBridgeParser, type PythonBridgeParser } from "@ctrans/parser-py";
 import { createOxcSyntaxValidator } from "@ctrans/parser-js";
 import { createPyToJsTranslator, type PyToJsTranslator } from "../src/translator.js";
@@ -71,6 +71,32 @@ describe("python → typescript translator", () => {
     expect(module).toContain("if (__ctrans_truthy(__ctrans_truthy(a) ? b : a)) {");
     expect(module).toContain("__ctrans_eq(a, b)");
     expect(module).toContain("!__ctrans_truthy(a)");
+  });
+
+  it("maps methods on self attributes through the registry (self.books.append → push)", async () => {
+    // Regression (M6 golden project-barrels-multi-module): receiverCommonType for
+    // `self.<attr>` used to return the type of `self` (a class), so the receiver
+    // kind was null and `list.append` lowered to a raw `.append()` — invalid JS
+    // with no ledger warning. The collected field type must drive the registry
+    // mapping (NO_REGISTRY keeps the honest unmapped-method warning instead).
+    const { createRegistryLookup } = await import("@ctrans/registry");
+    const parseResult = await py.parse(
+      "class Shelf:\n    def __init__(self):\n        self.books = []\n\n    def add(self, book):\n        self.books.append(book)\n        return len(self.books)\n",
+      { filename: "mod.py" },
+    );
+    const translator = await createPyToJsTranslator("typescript", {
+      registry: createRegistryLookup(),
+    });
+    const emission = await translator.translateUnit(
+      { filename: "mod.py", parseResult, model: analyzeModule(parseResult) },
+      buildModuleGraph([{ filename: "mod.py", parseResult }]),
+    );
+    const shared = await translator.finalizeUnits();
+    const module = shared.files.find((file) => file.targetPath === "mod.ts")!.content;
+    expect(module).not.toContain(".append(");
+    expect(module).toContain(".push(book)");
+    const appendEntry = emission.ledger.find((entry) => entry.rule.includes("list.append"));
+    expect(appendEntry?.decision).toBe("deterministic");
   });
 
   it("translates comprehensions to map/filter chains", async () => {

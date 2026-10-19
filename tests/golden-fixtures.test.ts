@@ -34,10 +34,16 @@ interface FixtureManifest {
 }
 
 function listFixtures(): string[] {
-  return readdirSync(FIXTURES_ROOT, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => entry.name)
-    .sort();
+  return (
+    readdirSync(FIXTURES_ROOT, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name)
+      // project-* fixtures are whole mini-projects (M6): they run through the
+      // project runner (translation + tests + differential) in golden-projects.test.ts,
+      // not the single-unit pipeline here.
+      .filter((name) => !name.startsWith("project-"))
+      .sort()
+  );
 }
 
 function collectInputs(fixtureDir: string): string[] {

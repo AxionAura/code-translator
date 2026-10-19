@@ -1272,7 +1272,9 @@ export function __ctrans_callMethod(
       if (isArray) return receiver.reverse();
       break;
     case "get":
-      if (isObject && typeof args[0] === "string") return receiver[args[0]];
+      if (isObject && typeof args[0] === "string") {
+        return (receiver as Record<string, unknown>)[args[0]];
+      }
       break;
     case "keys":
       if (isObject) return Object.keys(receiver);
@@ -1287,7 +1289,9 @@ export function __ctrans_callMethod(
       break;
     case "pop":
       if (isArray) return receiver.pop();
-      if (isObject && typeof args[0] === "string") return __ctrans_dictPop(receiver, args[0]);
+      if (isObject && typeof args[0] === "string") {
+        return __ctrans_dictPop(receiver as Record<string, unknown>, args[0]);
+      }
       break;
     case "upper":
       if (isString) return receiver.toUpperCase();

@@ -1,0 +1,20 @@
+{
+  "name": "project-barrels-multi-module",
+  "from": "python",
+  "to": "typescript",
+  "expectedClaimLevel": 5,
+  "expectedDecisionCounts": {
+    "deterministic": ">=20",
+    "semantic": ">=3",
+    "unsupported": 0
+  },
+  "expectedWarnings": [],
+  "expectedMatchedTests": [
+    "test_add_tracks_count",
+    "test_total_pages",
+    "test_find_present_and_missing",
+    "TestBook.test_blurb",
+    "test_titles_order"
+  ],
+  "description": "Mini project golden (M6): package barrel (__init__ -> index), cross-module imports, class instances shared through the barrel; pytest fixtures + Test class translated to vitest; sandboxed S5 + S6 differential reaching claim level 5."
+}

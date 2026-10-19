@@ -33,7 +33,21 @@ export type {
   TranslationReport,
 } from "./report.js";
 export { computeClaimLevel, runPipeline, targetModulePath } from "./pipeline.js";
+export type { ValidationStageName } from "./pipeline.js";
 export { validateDependencies, type S3Finding, type S3Input } from "./s3-dependencies.js";
+export {
+  DEFAULT_INTAKE_CAPS,
+  discoverProjectFiles,
+  isTestModulePath,
+  readProjectFile,
+  targetPathForModule,
+  type DiscoveredFile,
+  type ParsedProjectUnit,
+  type ProjectDiscovery,
+  type ProjectIntakeCaps,
+  type ProjectIntakeResult,
+  type ProjectTestModule,
+} from "./project.js";
 export {
   NO_REGISTRY,
   type BuiltinMappingView,

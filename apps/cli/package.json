@@ -14,6 +14,8 @@
     "@ctrans/core": "workspace:*",
     "@ctrans/parser-js": "workspace:*",
     "@ctrans/parser-py": "workspace:*",
-    "@ctrans/registry": "workspace:*"
+    "@ctrans/registry": "workspace:*",
+    "@ctrans/sandbox": "workspace:*",
+    "@ctrans/validator": "workspace:*"
   }
 }

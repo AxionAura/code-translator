@@ -101,8 +101,11 @@ export interface UnitEmission {
   readonly ledger: readonly LedgerEntry[];
 }
 
+export type ValidationStageName =
+  "S1-syntax" | "S2-types" | "S3-dependencies" | "S4-build" | "S5-tests" | "S6-differential";
+
 export interface StageResult {
-  readonly stage: "S1-syntax" | "S2-types" | "S3-dependencies";
+  readonly stage: ValidationStageName;
   readonly status: "pass" | "fail" | "warn" | "skipped";
   readonly reason: string | null;
   readonly details: readonly string[];
@@ -132,16 +135,25 @@ export interface PipelineResult {
 }
 
 // Claim ladder (docs/validation.md §2): 0 generated, 1 syntax-valid, 2 type-valid,
-// 3 dependency-resolved. Later stages extend the ladder; M5 executes S1/S2/S3.
+// 3 dependency-resolved, 4 translated tests pass (S5), 5 source-vs-target
+// equivalence on the translated suite (S6). Each level requires EVERY lower level
+// to genuinely pass — a failed/skipped required stage caps the claim.
 export function computeClaimLevel(stages: readonly StageResult[]): ClaimLevel {
-  const s1 = stages.find((stage) => stage.stage === "S1-syntax");
-  const s2 = stages.find((stage) => stage.stage === "S2-types");
-  const s3 = stages.find((stage) => stage.stage === "S3-dependencies");
-  if (s1?.status === "fail") return 0;
+  const stage = (name: ValidationStageName): StageResult | undefined =>
+    stages.find((candidate) => candidate.stage === name);
+  const s1 = stage("S1-syntax");
   if (s1?.status !== "pass") return 0;
+  const s2 = stage("S2-types");
   if (s2?.status !== "pass") return 1;
+  const s3 = stage("S3-dependencies");
   if (s3?.status !== "pass") return 2;
-  return 3;
+  // S4 (build) is not wired in M6 (no bundler target yet) — its absence does not
+  // block the ladder; S5/S6 carry levels 4/5.
+  const s5 = stage("S5-tests");
+  if (s5?.status !== "pass") return 3;
+  const s6 = stage("S6-differential");
+  if (s6?.status !== "pass") return 4;
+  return 5;
 }
 
 // Deterministic target module path policy (roadmap M4 §8): pkg/mod.py -> pkg/mod.<ext>,

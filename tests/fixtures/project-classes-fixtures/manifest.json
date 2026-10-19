@@ -1,0 +1,21 @@
+{
+  "name": "project-classes-fixtures",
+  "from": "python",
+  "to": "typescript",
+  "expectedClaimLevel": 5,
+  "expectedDecisionCounts": {
+    "deterministic": ">=15",
+    "semantic": ">=2",
+    "unsupported": 0
+  },
+  "expectedWarnings": [],
+  "expectedMatchedTests": [
+    "test_translated",
+    "test_contains_true",
+    "test_contains_false",
+    "test_unit_rect_area",
+    "TestRect.test_area",
+    "TestRect.test_contains_corner_only"
+  ],
+  "description": "Mini project golden (M6): classes with methods and boolean semantics, same-module pytest fixture factories feeding test parameters; sandboxed S5 + S6 differential reaching claim level 5."
+}

@@ -23,6 +23,12 @@ importers:
       '@ctrans/registry':
         specifier: workspace:*
         version: link:packages/registry
+      '@ctrans/sandbox':
+        specifier: workspace:*
+        version: link:packages/sandbox
+      '@ctrans/validator':
+        specifier: workspace:*
+        version: link:packages/validator
       '@types/node':
         specifier: ^24.19.1
         version: 24.19.1
@@ -62,6 +68,12 @@ importers:
       '@ctrans/registry':
         specifier: workspace:*
         version: link:../../packages/registry
+      '@ctrans/sandbox':
+        specifier: workspace:*
+        version: link:../../packages/sandbox
+      '@ctrans/validator':
+        specifier: workspace:*
+        version: link:../../packages/validator
 
   packages/ai: {}
 
@@ -113,9 +125,20 @@ importers:
 
   packages/repair: {}
 
-  packages/sandbox: {}
+  packages/sandbox:
+    dependencies:
+      '@ctrans/core':
+        specifier: workspace:*
+        version: link:../core
 
-  packages/validator: {}
+  packages/validator:
+    dependencies:
+      '@ctrans/core':
+        specifier: workspace:*
+        version: link:../core
+      '@ctrans/sandbox':
+        specifier: workspace:*
+        version: link:../sandbox
 
 packages:
 

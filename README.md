@@ -2,7 +2,7 @@
 
 A behavior-preserving source-code translator for **Python ↔ JavaScript ↔ TypeScript**, designed to translate whole projects — not just snippets — with explicit, honest reporting of what was translated deterministically, what was adapted semantically, what was ambiguous, and what was not supported.
 
-**Status: M4 complete — Python → JavaScript/TypeScript translation works end-to-end** for the core language subset (expressions, control flow, functions and classes, exceptions, comprehensions, f-strings, slicing, generators/async syntax), with a per-construct decision ledger, S1/S2 validation, and CLI `check`/`translate` commands. Reverse directions and the dependency-mapping registry are later milestones; see [docs/roadmap.md](docs/roadmap.md) and [PROJECT_STATE.md](PROJECT_STATE.md).
+**Status: M6 complete — whole-project Python → TypeScript with sandboxed validation** (M5's registry/async/bigint/string semantics included). Whole projects translate end-to-end — including pytest test modules to vitest — and every run is validated in an isolated sandbox: the translated suite executes (S5) and the source suite runs in the same sandbox for a per-test differential comparison (S6), supporting claim-ladder level 5. Reverse directions are next; see [docs/roadmap.md](docs/roadmap.md) and [PROJECT_STATE.md](PROJECT_STATE.md).
 
 ## Quickstart
 
@@ -15,6 +15,11 @@ node apps/cli/bin/ctrans.mjs check sample.py --to ts
 # Translate a file or a whole project directory (writes target files + .ctrans/ artifacts)
 node apps/cli/bin/ctrans.mjs translate sample.py --to ts -o out/
 node apps/cli/bin/ctrans.mjs translate my-project/ --to js -o out-js/
+
+# Translate a whole project INCLUDING its pytest test modules (→ vitest) and validate
+# it in the sandbox: translated tests run (S5), source tests run sandboxed and are
+# compared per-test against the target outcomes (S6 → claim level 5)
+node apps/cli/bin/ctrans.mjs project my-project/ --to ts -o out/
 ```
 
 The CLI prints the claim-ladder level (what validation actually proved), per-file status, and decision counts. Translated output is finalized through Prettier; runtime helpers land in a generated `__ctrans_runtime.ts|js` that carries **zero** dependencies.

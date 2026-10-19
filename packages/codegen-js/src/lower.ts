@@ -277,6 +277,48 @@ export class Emitter {
     this.flushHoists(0);
   }
 
+  // Render ONE statement to text (test-mapper reuse): the full statement-lowering
+  // machinery runs (assign/let-hoist/if-truthy/aug-assign helpers/ledger), and the
+  // produced lines are captured and removed from the module buffer. Nested
+  // statements carry their relative indentation.
+  renderStatement(node: AstNode): string {
+    const start = this.lines.length;
+    this.lowerStmt(node);
+    const text = this.lines.slice(start).join("\n");
+    this.lines.length = start;
+    return text;
+  }
+
+  // Pre-declare a binding the surrounding template owns (test-mapper fixture
+  // params): body Assigns then emit plain rebinding assignments, matching Python's
+  // rebindable names without a colliding second declaration.
+  preDeclareBinding(name: string): void {
+    this.scopes.declare(name, annotateUnknown());
+    this.declareLocally(name);
+  }
+
+  // Test-mapper scope brackets: params pre-declared in a fresh function scope.
+  pushScopeForTest(params: readonly string[]): void {
+    this.scopes.push();
+    this.declaredPerScope.push(new Set());
+    for (const param of params) {
+      if (param === "") continue;
+      this.scopes.declare(param, annotateUnknown());
+      this.declareLocally(param);
+    }
+  }
+
+  popScopeForTest(): void {
+    this.scopes.pop();
+    this.declaredPerScope.pop();
+  }
+
+  // Public hook for the pytest mapper (which renders import statements itself):
+  // registers the bound names' scope kinds so class construction lowers to `new`.
+  noteImportBindings(node: AstNode): void {
+    this.declareImportBindings(node);
+  }
+
   render(): string {
     return this.lines.join("\n");
   }
@@ -831,13 +873,13 @@ export class Emitter {
       );
     if (
       !widenedText &&
-      /^__ctrans_(sub|div|floorDiv|mod|pow|len|sum|toInt|toFloat|neg|pos|bitAnd|bitOr|bitXor|lShift|rShift)\(/.test(
+      /^__ctrans_(sub|div|floorDiv|mod|pow|len|sum|toInt|toFloat|neg|pos|bitAnd|bitOr|bitXor|lShift|rShift|listIndex)\(/.test(
         emittedText,
       )
     ) {
       return "number";
     }
-    if (/^__ctrans_str\(/.test(emittedText)) return "string";
+    if (/^__ctrans_(str|strJoin)\(/.test(emittedText)) return "string";
     return null;
   }
 
@@ -2356,7 +2398,23 @@ export class Emitter {
       return this.scopes.lookup(String(scalar(node, "id") ?? ""));
     }
     if (node.kind === "Attribute") {
-      return this.receiverCommonType(kid(node, "value"));
+      // The type the attribute VALUE denotes — for `self.<attr>` inside a method
+      // body that is the class's collected field type (e.g. self.books -> array),
+      // which drives method mappings, slicing, and iteration typing. The inner
+      // receiver's own type (e.g. self -> class) is NOT the attribute's type.
+      const parts: string[] = [];
+      let current: AstNode | null = node;
+      while (current !== null && current.kind === "Attribute") {
+        parts.unshift(String(scalar(current, "attr") ?? ""));
+        current = kid(current, "value");
+      }
+      if (current !== null && current.kind === "Name" && parts.length > 0) {
+        const root = String(scalar(current, "id") ?? "");
+        if (root === "self" || root === "cls") {
+          return this.selfFieldTypes.get(parts[0]!) ?? null;
+        }
+      }
+      return null;
     }
     return null;
   }

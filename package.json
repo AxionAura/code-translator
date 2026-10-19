@@ -25,14 +25,16 @@
     "@ctrans/core": "workspace:*",
     "@ctrans/parser-js": "workspace:*",
     "@ctrans/parser-py": "workspace:*",
+    "@ctrans/registry": "workspace:*",
+    "@ctrans/sandbox": "workspace:*",
+    "@ctrans/validator": "workspace:*",
     "@types/node": "^24.19.1",
     "@vitest/coverage-v8": "5.0.5",
     "eslint": "^10.12.0",
     "prettier": "^3.9.9",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.71.1",
-    "vitest": "^5.0.3",
-    "@ctrans/registry": "workspace:*"
+    "vitest": "^5.0.3"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

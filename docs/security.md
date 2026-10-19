@@ -24,6 +24,8 @@ Status: **approved blueprint**. Local-first; user code is untrusted; execution i
 
 ## 3. Sandbox design (`@ctrans/sandbox`)
 
+**Implemented (M6):** `SandboxRunner.run` is the only execution path for source or translated code. Baseline = hardened spawn (argv arrays, env allowlist with `HOME` pinned to a non-user path, fresh temp workspace materialized per run, process-group SIGKILL on timeout, per-stream output caps). `prlimit` wraps the command with rlimits when available. bwrap (`--unshare-net --unshare-pid --die-with-parent --ro-bind / /` + explicit workspace bind) is autodetected with a probe that actually exercises the network block; the capability report travels with every run and `networkIsolation: "enforced" | "policy-only"` distinguishes real isolation from policy-only. Strict mode (`requireNetworkIsolation: true`) throws `SandboxIsolationError` when enforced isolation is unavailable — execution is refused, never downgraded (S5/S6 run strict).
+
 **Baseline (always, no privileges):**
 - `child_process.spawn` with argv arrays (`shell:false`), explicit env whitelist (`PATH`, `HOME`=temp, `LANG`, plus runtime-specific minimals), `cwd` = temp copy of the minimum file set, `stdio` piped with size caps, wall-clock timeout + SIGKILL, no TTY.
 - Resource limits via `prlimit` wrapper when present (CPU seconds, address space, file size, nproc); otherwise limits degrade to timeout-only — **recorded in capability report**.
