@@ -6,10 +6,12 @@ import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 
 import { detectCapabilities } from "@ctrans/sandbox";
+import { DisabledRepairProposer } from "@ctrans/repair";
 
 import { buildAiWiring, summarizeAiJournal } from "./ai-wiring.ts";
 
 import { runProject } from "./project-run.ts";
+import { translateWithRepair } from "./repair-run.ts";
 import { checkPath, summarize, translatePath } from "./translate.ts";
 
 const HELP_TEXT = `ctrans - translate code between Python, JavaScript, and TypeScript
@@ -29,6 +31,11 @@ Commands:
 Options:
   --int-mode <number|bigint>      Integer policy (D-006): number = default with
                                   precision warnings; bigint = exact Python ints
+  --repair                        After translating, run the bounded repair loop
+                                  (translate only; 3 attempts/unit, 8/run). Needs
+                                  --ai-provider; without AI the run reports
+                                  repair-unavailable and the deterministic output
+                                  is unchanged. History: .ctrans/repairs/
   -v, --version                   Print the CLI version
   -h, --help                      Print this help text
 `;
@@ -54,6 +61,7 @@ function parseOptions(argv: readonly string[]): {
   out: string | undefined;
   intMode: "number" | "bigint";
   noTests: boolean;
+  repair: boolean;
   aiProvider: string | undefined;
   aiModel: string | undefined;
   aiBaseUrl: string | undefined;
@@ -63,6 +71,7 @@ function parseOptions(argv: readonly string[]): {
   let out: string | undefined;
   let intMode: "number" | "bigint" = "number";
   let noTests = false;
+  let repair = false;
   let aiProvider: string | undefined;
   let aiModel: string | undefined;
   let aiBaseUrl: string | undefined;
@@ -80,6 +89,8 @@ function parseOptions(argv: readonly string[]): {
       i += 1;
     } else if (arg === "--no-tests") {
       noTests = true;
+    } else if (arg === "--repair") {
+      repair = true;
     } else if (arg === "--ai-provider") {
       aiProvider = argv[i + 1];
       i += 1;
@@ -93,20 +104,28 @@ function parseOptions(argv: readonly string[]): {
       positional.push(arg);
     }
   }
-  return { positional, to, out, intMode, noTests, aiProvider, aiModel, aiBaseUrl };
+  return { positional, to, out, intMode, noTests, repair, aiProvider, aiModel, aiBaseUrl };
 }
 
 async function runTranslation(
   command: "check" | "translate",
   rest: readonly string[],
 ): Promise<CliResult> {
-  const { positional, to, out, intMode, aiProvider, aiModel, aiBaseUrl } = parseOptions(rest);
+  const { positional, to, out, intMode, repair, aiProvider, aiModel, aiBaseUrl } =
+    parseOptions(rest);
   const sourcePath = positional[0];
   if (sourcePath === undefined || (to !== "ts" && to !== "js" && to !== "py")) {
     return {
       code: 2,
       stdout: "",
       stderr: `ctrans: ${command} requires a path and --to <ts|js> (run \`ctrans --help\`)\n`,
+    };
+  }
+  if (repair && command === "check") {
+    return {
+      code: 2,
+      stdout: "",
+      stderr: "ctrans: --repair is only available for `translate` (it writes the accepted state)\n",
     };
   }
   const target = to === "ts" ? "typescript" : to === "py" ? "python" : "javascript";
@@ -116,6 +135,38 @@ async function runTranslation(
       ...(aiModel === undefined ? {} : { model: aiModel }),
       ...(aiBaseUrl === undefined ? {} : { baseUrl: aiBaseUrl }),
     });
+    if (command === "translate" && repair) {
+      const outcome = await translateWithRepair({
+        sourcePath,
+        target,
+        outputDir: out ?? "out",
+        intMode,
+        proposer: ai?.repairProposer ?? new DisabledRepairProposer(),
+        ...(ai === null ? {} : { resolver: ai.resolver }),
+      });
+      if (ai !== null) {
+        const journalDir = join(out ?? "out", ".ctrans");
+        mkdirSync(journalDir, { recursive: true });
+        writeFileSync(join(journalDir, "ai-journal.json"), ai.journal.toJson());
+      }
+      const partiallyTranslated = outcome.report.files.some(
+        (file) => file.status === "partially-translated",
+      );
+      const failed = outcome.report.files.some((file) => file.status === "failed");
+      const aiSummary = ai !== null ? `${summarizeAiJournal(ai.journal)}\n` : "";
+      return {
+        // A repair infrastructure error is a real failure even though the
+        // deterministic output stays byte-identical.
+        code:
+          failed || outcome.repair.stopReason === "validation-error"
+            ? 1
+            : partiallyTranslated
+              ? 3
+              : 0,
+        stdout: `${summarize({ report: outcome.report, files: new Map() })}\n${aiSummary}${outcome.summary}\n`,
+        stderr: "",
+      };
+    }
     const outcome =
       command === "check"
         ? await checkPath(sourcePath, target, intMode, ai?.resolver)
@@ -155,9 +206,17 @@ export function runnerToolchain(): { nodeModulesPath: string; vitestEntryPath: s
 }
 
 async function runProjectCommand(rest: readonly string[]): Promise<CliResult> {
-  const { positional, to, out, intMode, noTests, aiProvider, aiModel, aiBaseUrl } =
+  const { positional, to, out, intMode, noTests, repair, aiProvider, aiModel, aiBaseUrl } =
     parseOptions(rest);
   const sourceRoot = positional[0];
+  if (repair) {
+    return {
+      code: 2,
+      stdout: "",
+      stderr:
+        "ctrans: --repair is not available for `project` yet (S5/S6 sandbox re-validation is required first)\n",
+    };
+  }
   if (
     sourceRoot === undefined ||
     (to !== "ts" && to !== "js" && to !== "py") ||

@@ -11,6 +11,7 @@ import {
   type AiCaps,
   type ChatModel,
 } from "@ctrans/ai";
+import { AiRepairProposer } from "@ctrans/repair";
 
 export interface AiFlags {
   // "openai" (OpenAI-compatible: OpenAI, vLLM, llama.cpp server, Ollama) or
@@ -24,6 +25,9 @@ export interface AiFlags {
 
 export interface AiWiring {
   readonly resolver: AiAmbiguityResolver;
+  // M9: the repair proposer shares the SAME model, caps, gate, and cache stack as
+  // ambiguity resolution — there is no second client implementation.
+  readonly repairProposer: AiRepairProposer;
   readonly journal: AiJournal;
   readonly provider: string;
   readonly model: string;
@@ -62,6 +66,10 @@ export function buildAiWiring(flags: AiFlags, caps?: Partial<AiCaps>): AiWiring 
         journal,
         ...(caps === undefined ? {} : { caps }),
       }),
+      repairProposer: new AiRepairProposer({
+        model: scripted,
+        ...(caps === undefined ? {} : { caps }),
+      }),
       journal,
       provider,
       model,
@@ -90,6 +98,10 @@ export function buildAiWiring(flags: AiFlags, caps?: Partial<AiCaps>): AiWiring 
     resolver: new AiAmbiguityResolver({
       model: modelAdapter,
       journal,
+      ...(caps === undefined ? {} : { caps }),
+    }),
+    repairProposer: new AiRepairProposer({
+      model: modelAdapter,
       ...(caps === undefined ? {} : { caps }),
     }),
     journal,

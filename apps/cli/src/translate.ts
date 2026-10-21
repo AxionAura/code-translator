@@ -1,7 +1,9 @@
 // Pipeline wiring for the CLI (docs/roadmap.md M4/M7): owns the parser/codegen
 // dispatch per translation direction and the bridge spawn lifecycle, then delegates
 // to the core pipeline. `check` runs the full pipeline in memory; `translate`
-// additionally writes the target files and the `.ctrans/` artifacts.
+// additionally writes the target files and the `.ctrans/` artifacts. The repair
+// path (M9) reuses the SAME validators through `runTranslation` — never a second,
+// weaker validation wiring.
 import { mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
 
@@ -10,10 +12,13 @@ import {
   directionFor,
   runPipeline,
   sourceLanguageOf,
+  targetModulePath,
+  validateDependencies,
   type AmbiguityResolver,
   type PipelineInput,
   type PipelineResult,
   type SourceLanguage,
+  type StageResult,
   type SyntaxValidator,
   type TargetLanguage,
   type UnitTranslator,
@@ -33,13 +38,22 @@ export interface CheckOutcome {
   readonly files: ReadonlyMap<string, string>; // target path -> content (in memory for check)
 }
 
+// One translation run plus everything the repair loop needs to re-validate
+// candidates with the same validators and the same S3 context.
+export interface TranslationRun {
+  readonly result: PipelineResult;
+  // Source module id -> original source text (never persisted by repair).
+  readonly sources: ReadonlyMap<string, string>;
+  readonly validateEmitted: (files: ReadonlyMap<string, string>) => Promise<readonly StageResult[]>;
+}
+
 export async function checkPath(
   inputPath: string,
   target: TargetLanguage,
   intMode: "number" | "bigint" = "number",
   resolver?: AmbiguityResolver,
 ): Promise<CheckOutcome> {
-  const result = await runOnPath(inputPath, target, intMode, resolver);
+  const { result } = await runTranslation(inputPath, target, intMode, resolver);
   const files = new Map<string, string>();
   for (const file of result.emittedFiles) files.set(file.targetPath, file.content);
   return { report: result.report, files };
@@ -52,28 +66,41 @@ export async function translatePath(
   intMode: "number" | "bigint" = "number",
   resolver?: AmbiguityResolver,
 ): Promise<CheckOutcome> {
-  const result = await runOnPath(inputPath, target, intMode, resolver);
-  for (const file of result.emittedFiles) {
-    const destination = join(outputDir, file.targetPath);
-    mkdirSync(join(destination, ".."), { recursive: true });
-    writeFileSync(destination, file.content);
-  }
-  const ctransDir = join(outputDir, ".ctrans");
-  mkdirSync(ctransDir, { recursive: true });
-  writeFileSync(join(ctransDir, "ledger.json"), JSON.stringify(result.ledger, null, 2) + "\n");
-  writeFileSync(join(ctransDir, "report.json"), JSON.stringify(result.report, null, 2) + "\n");
+  const { result } = await runTranslation(inputPath, target, intMode, resolver);
+  writeTranslationArtifacts(result, outputDir);
   return {
     report: result.report,
     files: new Map(result.emittedFiles.map((f) => [f.targetPath, f.content])),
   };
 }
 
-async function runOnPath(
+// Writes the emitted files and the standard `.ctrans/` artifacts. Shared with the
+// repair path so both modes produce identical layouts; `files` defaults to the
+// pipeline's emitted content and, after repair, carries the accepted state.
+export function writeTranslationArtifacts(
+  result: PipelineResult,
+  outputDir: string,
+  files?: ReadonlyMap<string, string>,
+): void {
+  const contents =
+    files ?? new Map(result.emittedFiles.map((file) => [file.targetPath, file.content]));
+  for (const [targetPath, content] of contents) {
+    const destination = join(outputDir, targetPath);
+    mkdirSync(join(destination, ".."), { recursive: true });
+    writeFileSync(destination, content);
+  }
+  const ctransDir = join(outputDir, ".ctrans");
+  mkdirSync(ctransDir, { recursive: true });
+  writeFileSync(join(ctransDir, "ledger.json"), JSON.stringify(result.ledger, null, 2) + "\n");
+  writeFileSync(join(ctransDir, "report.json"), JSON.stringify(result.report, null, 2) + "\n");
+}
+
+export async function runTranslation(
   inputPath: string,
   target: TargetLanguage,
   intMode: "number" | "bigint",
   resolver?: AmbiguityResolver,
-): Promise<PipelineResult> {
+): Promise<TranslationRun> {
   const files = collectSourceFiles(inputPath);
   if (files.length === 0) {
     throw new Error(`no translatable source files found under "${inputPath}"`);
@@ -85,48 +112,88 @@ async function runOnPath(
   if (direction === null) {
     throw new Error(`no translation direction from ${sourceLanguage} to ${target}`);
   }
+  const sources = new Map<string, string>();
   const inputs: PipelineInput[] = [];
   for (const file of files) {
+    const content = readFileSync(file.path, "utf8");
+    sources.set(file.moduleId, content);
     const language = languageForFilename(file.moduleId);
     inputs.push({
       filename: file.moduleId,
-      parseResult: await parseSource(language, file.path, file.moduleId),
+      parseResult: await parseSource(language, content, file.moduleId),
     });
   }
-  return runPipeline(
+  const validateSyntax = await syntaxValidatorFor(target);
+  // S2: the oracle for TS output; the pinned pyright CLI for Python output.
+  const validateTypes =
+    target === "typescript"
+      ? new OracleTypeValidator()
+      : target === "python"
+        ? new PyrightTypeValidator({
+            pyrightPath: pyrightEntryPath(import.meta.url),
+            nodePath: process.execPath,
+          })
+        : null;
+  const s3 = {
+    // S3 (WS G): the graph-derived import map feeds dependency validation.
+    sourceImports: collectSourceImports(inputs),
+    mappedModules: new Set(
+      MODULE_MAPPINGS.filter((m) => m.syncAsync !== undefined || m.emit.kind === "rewrite").map(
+        (m) => m.module,
+      ),
+    ),
+    unsupportedModules: new Set(["ctypes", "curses", "tkinter"]),
+  };
+  const result = await runPipeline(
     inputs,
     {
       target,
       intMode,
       translateUnit: await translatorFor(direction, intMode),
-      validateSyntax: await syntaxValidatorFor(target),
-      // S2: the oracle for TS output; the pinned pyright CLI for Python output
-      // (it materializes the emitted project into its own workspace, so it runs
-      // for both check and translate modes).
-      ...(target === "typescript"
-        ? { validateTypes: new OracleTypeValidator() as never }
-        : target === "python"
-          ? {
-              validateTypes: new PyrightTypeValidator({
-                pyrightPath: pyrightEntryPath(import.meta.url),
-                nodePath: process.execPath,
-              }) as never,
-            }
-          : {}),
+      validateSyntax,
+      ...(validateTypes === null ? {} : { validateTypes: validateTypes as never }),
       asyncBoundaryModules: ["requests"],
       ...(resolver === undefined ? {} : { resolveAmbiguity: resolver }),
     },
-    {
-      // S3 (WS G): the graph-derived import map feeds dependency validation.
-      sourceImports: collectSourceImports(inputs),
-      mappedModules: new Set(
-        MODULE_MAPPINGS.filter((m) => m.syncAsync !== undefined || m.emit.kind === "rewrite").map(
-          (m) => m.module,
-        ),
-      ),
-      unsupportedModules: new Set(["ctypes", "curses", "tkinter"]),
-    },
+    s3,
   );
+  const extension = target === "typescript" ? ".ts" : target === "python" ? ".py" : ".js";
+  // Candidate re-validation for the repair loop: the same stages, in the same
+  // order, with the same validators as the pipeline run above.
+  const validateEmitted = async (
+    emitted: ReadonlyMap<string, string>,
+  ): Promise<readonly StageResult[]> => {
+    const list = [...emitted.entries()].map(([path, content]) => ({ path, content }));
+    const stages: StageResult[] = [
+      await validateSyntax.validate(list.map((file) => ({ ...file, language: target }))),
+    ];
+    stages.push(
+      validateTypes === null
+        ? {
+            stage: "S2-types",
+            status: "skipped",
+            reason:
+              target === "javascript"
+                ? "no JavaScript type checker exists (S2 is TypeScript-only)"
+                : "no type validator wired",
+            details: [],
+          }
+        : await validateTypes.validate(list),
+    );
+    if (emitted.size > 0) {
+      stages.push(
+        validateDependencies({
+          files: emitted,
+          mappedModules: s3.mappedModules,
+          unsupportedModules: s3.unsupportedModules,
+          sourceImports: s3.sourceImports,
+          targetPathFor: (sourceModuleId: string) => targetModulePath(sourceModuleId, extension),
+        }),
+      );
+    }
+    return stages;
+  };
+  return { result, sources, validateEmitted };
 }
 
 function languageForFilename(filename: string): SourceLanguage {
@@ -138,10 +205,9 @@ function languageForFilename(filename: string): SourceLanguage {
 
 async function parseSource(
   language: SourceLanguage,
-  path: string,
+  content: string,
   moduleId: string,
 ): Promise<PipelineInput["parseResult"]> {
-  const content = readFileSync(path, "utf8");
   if (language === "python") {
     const parser = await createPythonBridgeParser();
     return parser.parse(content, { filename: moduleId });

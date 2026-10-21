@@ -1,6 +1,6 @@
 # Validation
 
-Status: S1–S3 **implemented (M4/M5)**, S5/S6 **implemented (M6)**, S2-for-Python **implemented (M7, pyright)**, S4/S7 and the repair-loop integration still **blueprint**. The validation engine is the product's trust boundary: it decides what the tool is allowed to claim.
+Status: S1–S3 **implemented (M4/M5)**, S5/S6 **implemented (M6)**, S2-for-Python **implemented (M7, pyright)**, the bounded repair integration **implemented (M9)** for the `translate` path (S1–S3 re-validation); S4/S7 and S5/S6-driven repair remain **blueprint**. The validation engine is the product's trust boundary: it decides what the tool is allowed to claim.
 
 ## 1. Stage pipeline
 
@@ -71,9 +71,23 @@ Missing capabilities produce skipped stages — with reasons in the report. No c
 - Claim-ladder computation is unit-tested as a pure function.
 - Any change to stage semantics requires updating `docs/validation.md` in the same change (AGENTS.md §8).
 
-## 7. Repair loop integration
+## 7. Repair loop integration (implemented, M9)
 
-S1–S6 failures flow to `@ctrans/repair` with structured classification (§8). The loop re-runs validation after each accepted patch. Validation results are **monotone within a run**: a patch that breaks a previously passing stage is reverted automatically (change tracking in `.ctrans/repairs/`).
+S1–S6 failures flow to `@ctrans/repair` with structured classification (§8). The loop is **bounded and observable**:
+
+1. **Classify** the stages the engine actually executed (`classifyFailures`). `pass`/`warn` are not failures; `skipped` is inconclusive and never becomes a pass; infrastructure evidence (timeout/spawn/isolation/unavailable) is `V-S<stage>-INFRA` and is **never** repair-eligible; unsupported ledger entries are `V-UNSUPPORTED` and also never eligible.
+2. **Attribute** failures to a unit only by exact target-path prefix in the stage details. Unattributable failures are never guessed onto a unit. Test modules and generated shared artifacts (no source text) are never exposed to the model.
+3. **Propose** one unit-scoped unified diff through the existing `ChatModel` stack (secret gate → M8 caps → cache → provider). The diff must parse under the restricted grammar, name only the scoped target, apply content-exactly to the current unit text, and pass the policy guard (no `@ts-ignore`/`@ts-nocheck`/`declare module`/lint-coverage suppression/test `.skip`/`.only` additions). Invalid output gets ONE bounded re-ask, then a typed failure. `""` is an explicit decline.
+4. **Re-validate** the candidate file map with the caller's real validators (the CLI reuses the same S1/S2/S3 wiring as the pipeline — never fresh "pass" defaults).
+5. **Accept monotonically**: no stage that passed at baseline may become non-pass (including pass→skipped), and the candidate's `computeClaimLevel` must be **strictly higher** than the baseline's. Equal level = rejected ("no demonstrated improvement"). Skipped stages cannot lift the claim.
+6. **Roll back exactly**: the baseline file map is never mutated. Rejected candidates exist only in the loop's local copy, so the written state is byte-identical to the baseline (verified by state hashes).
+7. **Stop** with a typed reason: `no-failures`, `success`, `no-eligible-failures`, `repair-unavailable`, `declined`, `attempts-exhausted`, `run-cap`, `loop-detected`, `validation-error`.
+
+Caps are enforced centrally in the orchestrator: **3 attempts/unit and 8 attempts/run**; callers may tighten but never raise them. Identical patch hashes are rejected as duplicates; a candidate state equal to any already-seen state stops the run with `loop-detected`. A thrown validator stops the run with `validation-error` and the exact baseline state. Model success is never treated as repair success — only the engine's re-validation decides.
+
+History is hash-only at `.ctrans/repairs/repairs.json` (see security.md §6): per attempt the unit/target path, attempt number, failure code/category, baseline/candidate state hashes, patch hash, proposal outcome, decision + reason, stage snapshot, provider/model, token counts, secret-rule ids, timestamp; per run the stop reason, state hashes, accepted units, files changed. Diffs, prompts, model responses, and source content are never persisted. Corrupt/partial journals are recovered with the unreadable file preserved aside, and a journal write failure surfaces as an error (it is never reported as a successful repair).
+
+The CLI writes only the accepted state and regenerates `.ctrans/report.json` from the final stages (claim level recomputed), recording `repairJournal`. `--repair` is available for `translate`; project mode (`project`) rejects the flag until S5/S6 re-validation is wired (M10).
 
 ## 8. Failure classification (input to repair)
 
@@ -81,8 +95,9 @@ S1–S6 failures flow to `@ctrans/repair` with structured classification (§8). 
 | --- | --- | --- |
 | `V-S1-PARSE` | S1 | yes (AI patch) |
 | `V-S2-TYPE` | S2 | yes (AI patch) |
-| `V-S3-IMPORT` | S3 | deterministic first (registry lookup), AI fallback |
-| `V-S4-BUILD` | S4 | yes (AI patch) |
-| `V-S5-TEST` | S5 | yes, after divergence triage |
-| `V-S6-DIVERGE` | S6 | yes — highest value; triage artifact attached |
-| `V-*-TIMEOUT` | any | classification first (test too slow vs infinite loop); never blind-retry |
+| `V-S3-IMPORT` | S3 | yes (AI patch); deterministic registry lookup is the preferred future strategy |
+| `V-S4-BUILD` | S4 | classifier supports it; no S4 stage is wired yet |
+| `V-S5-TEST` | S5 | classifier supports it; CLI repair currently re-validates S1–S3 only |
+| `V-S6-DIVERGE` | S6 | classifier supports it; needs the triage artifact wired (M10) |
+| `V-S<stage>-INFRA` | any | **never** — timeout/spawn/isolation/crash evidence is classified first (slow vs infinite loop), never blind-retried |
+| `V-UNSUPPORTED` | ledger | **never** — the engine cannot emit behavior it does not support |

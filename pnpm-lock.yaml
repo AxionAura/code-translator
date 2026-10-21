@@ -83,6 +83,9 @@ importers:
       '@ctrans/registry':
         specifier: workspace:*
         version: link:../../packages/registry
+      '@ctrans/repair':
+        specifier: workspace:*
+        version: link:../../packages/repair
       '@ctrans/sandbox':
         specifier: workspace:*
         version: link:../../packages/sandbox
@@ -158,7 +161,24 @@ importers:
         specifier: workspace:*
         version: link:../core
 
-  packages/repair: {}
+  packages/repair:
+    dependencies:
+      '@ctrans/ai':
+        specifier: workspace:*
+        version: link:../ai
+      '@ctrans/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@ctrans/codegen-js':
+        specifier: workspace:*
+        version: link:../codegen-js
+      '@ctrans/parser-js':
+        specifier: workspace:*
+        version: link:../parser-js
+      '@ctrans/parser-py':
+        specifier: workspace:*
+        version: link:../parser-py
 
   packages/sandbox:
     dependencies:

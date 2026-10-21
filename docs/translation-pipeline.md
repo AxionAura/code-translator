@@ -62,7 +62,7 @@ Failure posture: a unit with `unsupported` constructs is still emitted (markers 
 - `.ctrans/source-map.json` — target span → source span (both files' spans are byte-offset based; all four front-end/back-end components provide exact positions).
 - `.ctrans/ledger.json` — full decision ledger (schema above).
 - `.ctrans/validation.json` — ValidationReport.
-- `.ctrans/repairs/NNN.patch` — every AI repair patch as a unified diff with its classification and re-validation outcome.
+- `.ctrans/repairs/repairs.json` — hash-only repair history (M9): per-attempt classification, state/patch hashes, decision + reason, stage snapshot; per-run stop reason, files changed, state hashes. Diffs, prompts, and source content are deliberately NOT persisted (security.md §4); a corrupt file is preserved as `repairs.corrupt.json` and recovery is reported.
 - Provenance header comment in each emitted file: generator, direction, ledger ref, generator version. Suppressed with `--no-provenance`.
 
 ## 6. Determinism guarantees

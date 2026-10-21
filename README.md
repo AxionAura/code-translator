@@ -2,7 +2,7 @@
 
 A behavior-preserving source-code translator for **Python ↔ JavaScript ↔ TypeScript**, designed to translate whole projects — not just snippets — with explicit, honest reporting of what was translated deterministically, what was adapted semantically, what was ambiguous, and what was not supported.
 
-**Status: M7 complete — all four reverse directions live** (JS/TS → Python, TS → JS, JS → TS) alongside whole-project Python → TypeScript with sandboxed validation (M6) and M5's registry/async/bigint/string semantics. Whole projects translate end-to-end — including pytest test modules to vitest — and every run is validated in an isolated sandbox: the translated suite executes (S5) and the source suite runs in the same sandbox for a per-test differential comparison (S6), supporting claim-ladder level 5. Reverse directions are next; see [docs/roadmap.md](docs/roadmap.md) and [PROJECT_STATE.md](PROJECT_STATE.md).
+**Status: M9 complete — bounded repair loop live.** Six translation directions (M7), whole-project Python → TypeScript with sandboxed validation to claim level 5 (M6), the provider-agnostic AI layer (M8), and now a bounded, observable repair loop over the SAME model/secret-gate/caps/cache stack (M9): failures are classified, one unit gets a strict unified-diff proposal, the engine re-runs the real validators, and only a monotone claim improvement is accepted (otherwise the baseline is restored exactly). History is hash-only under `.ctrans/repairs/`. AI stays off by default. See [docs/roadmap.md](docs/roadmap.md) and [PROJECT_STATE.md](PROJECT_STATE.md).
 
 ## Quickstart
 
@@ -32,6 +32,15 @@ node apps/cli/bin/ctrans.mjs translate app.js --to ts -o out-ts/     # honest un
 # applies when the provider is unavailable or the answer is not an offered option.
 CTRANS_AI_KEY=... node apps/cli/bin/ctrans.mjs check mod.py --to ts \
   --ai-provider openai --ai-model gpt-4o-mini   # or --ai-provider anthropic
+
+# M9: bounded repair after translation (translate only). The model may propose ONE
+# unit-scoped unified diff per attempt (3/unit, 8/run); the engine re-runs the same
+# S1–S3 validators and accepts only a strictly higher claim level with no passing
+# stage regressed. Rejected patches are discarded exactly; the journal records hashes
+# only. Without --ai-provider the run reports `repair-unavailable` and writes the
+# deterministic output unchanged.
+CTRANS_AI_KEY=... node apps/cli/bin/ctrans.mjs translate mod.py --to ts -o out/ \
+  --ai-provider openai --repair
 ```
 
 The CLI prints the claim-ladder level (what validation actually proved), per-file status, and decision counts. Translated output is finalized through Prettier; runtime helpers land in a generated `__ctrans_runtime.ts|js` that carries **zero** dependencies.
@@ -65,7 +74,7 @@ The CLI prints the claim-ladder level (what validation actually proved), per-fil
 
 ## Development
 
-Prerequisites: Node.js ≥ 22.12 with Corepack (the pnpm version is pinned via the `packageManager` field).
+Prerequisites: Node.js ≥ 22.18 with Corepack (the pnpm version is pinned via the `packageManager` field).
 
 ```bash
 corepack enable        # first use of pnpm may ask to download the pinned version

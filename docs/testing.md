@@ -14,6 +14,8 @@ Status: **approved blueprint**. Governs all test code from M1 onward.
 | Dependency tests | registry entries behave as claimed (usage tests) | `packages/registry/tests/` |
 | Validation tests | stage pipeline produces exactly the expected verdicts (positive + negative) | `packages/validator/test/` |
 | Repair tests | classification, caps, loop detection, revert-on-regression with FakeChatModel | `packages/repair/test/` |
+| Repair E2E | real pipeline + real S1/S2 validators, scripted model; accepted and rejected outcomes | `packages/repair/test/pipeline-repair.test.ts` |
+| Repair CLI | `--repair` journal/report wiring, no-AI degradation, rejected patch leaves baseline | `apps/cli/test/repair-cli.test.ts` |
 | E2E | CLI runs against fixture projects, produces reports | `tests/e2e/` |
 | Benchmarks | aggregate quality/perf over time (not pass/fail per commit) | `benchmarks/` |
 
@@ -38,6 +40,7 @@ Rules:
 - **Behavior differentials (M7):** `apps/cli/test/directions-behavior.test.ts` executes SOURCE and GENERATED code under the same sandbox with an identical call harness (JS→Py, TS→JS via Node type stripping, JS→TS via stripped execution) and compares JSON results; `tests/round-trip.test.ts` executes Python→TS→Python output against the original. Every execution path goes through `@ctrans/sandbox`.
 - **Project goldens (M6):** fixtures named `project-*` are whole mini-projects run through the project runner (`tests/golden-projects.test.ts`), not the single-unit pipeline: they are translated, their translated vitest suites run in the sandbox (S5), the source suites run in the same sandbox (S6), and the manifests pin the claim level (5), the differential matched-name list, and the emitted tree incl. `.ctrans/` artifacts. Accept mode: `FIXTURES_ACCEPT_PROJECTS=1 vitest run tests/golden-projects.test.ts`. On hosts without enforced network isolation (bwrap) or python3, the runner asserts the honest refusal path (S5/S6 skipped-with-reason) instead of the level-5 claims.
 - **Regression rule:** every bug fix lands with a fixture (or ConstructMatrix entry) that failed before and passes after.
+- **Repair tests (M9):** deterministic only — `FakeChatModel` or scripted proposers, no live provider. Coverage: every `V-*` category + unknown input, infrastructure refusal, valid/malformed/out-of-scope/binary/combined diffs, policy-guard rejections, AI-disabled/provider-error/timeout/decline/cap/oversized-packet outcomes, 3-per-unit and 8-per-run caps, duplicate patches, state-hash loop detection, monotone acceptance (improve/equal/regress/pass→skipped), exact rollback (content + state hash) after rejection and after validator exceptions, journal creation/round-trip/corruption recovery/sanitization/path containment, and M8 regression (ambiguity resolution through the same model contract). Translated code is never executed by these tests; the CLI/repair E2E uses real validators but no execution.
 
 ## 3. ConstructMatrix
 

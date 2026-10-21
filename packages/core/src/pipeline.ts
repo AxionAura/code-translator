@@ -158,6 +158,9 @@ export interface PipelineResult {
   readonly report: TranslationReport;
   readonly emittedFiles: readonly EmittedFile[];
   readonly ledger: readonly LedgerEntry[];
+  // Full executed-stage evidence (details included). The report carries the
+  // summary for humans; repair classification needs the details.
+  readonly validationStages: readonly StageResult[];
 }
 
 // Claim ladder (docs/validation.md §2): 0 generated, 1 syntax-valid, 2 type-valid,
@@ -489,5 +492,6 @@ export async function runPipeline(
     report,
     emittedFiles,
     ledger: validateLedgerEntries(ledger),
+    validationStages: stages,
   };
 }

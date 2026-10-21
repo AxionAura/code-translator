@@ -1,10 +1,12 @@
 # AI Architecture
 
-Status: port 1 (`resolveAmbiguity`), the secret gate, caps/cache/journal, and the pipeline/CLI integration are **implemented (M8)**; port 2 (`proposeRepairPatch`) is the M9 repair loop; `polishIdioms` stays deferred. Governing rules: AI is an *escalation resolver*, never the translation engine (AGENTS.md §9; OWASP LLM v2 mitigations apply).
+Status: port 1 (`resolveAmbiguity`), port 2 (`proposeRepairPatch`), the secret gate, caps/cache/journals, and the pipeline/CLI integrations are **implemented (M8/M9)**; `polishIdioms` stays deferred. Governing rules: AI is an *escalation resolver*, never the translation engine (AGENTS.md §9; OWASP LLM v2 mitigations apply).
 
-## 0. Implementation status (M8, 2026-10-21)
+## 0. Implementation status (M9, 2026-10-21)
 
-`@ctrans/ai` implements the `ChatModel` contract from §2 with adapters for OpenAI-compatible endpoints (OpenAI, vLLM, llama.cpp server, Ollama's OpenAI endpoint, LM Studio via `baseUrl`), Anthropic Messages, and a user-templated custom endpoint; `FakeChatModel` is the only model the deterministic suites use. `AiAmbiguityResolver` implements the core `AmbiguityResolver` port: packer (§3) → secretlint hard gate → caps → cache → model → strict JSON option validation with ONE bounded re-ask → decision (`{optionId, escalation}`) or `null` (heuristic fallback). Escalation requests reach it only for constructs the ENGINE classified `ambiguous` with more than one emitted strategy — currently Python `match` with literal/capture cases (language-support §2.4: `if-chain` heuristic vs `switch`). The pipeline resolves ambiguities BEFORE lowering (translation stays synchronous/deterministic), validates the chosen id against the offered set (`validateAmbiguityDecision`), and records `candidates` + `escalation` in the ledger. CLI: `--ai-provider openai|anthropic`, `--ai-model`, `--ai-base-url`, key from `CTRANS_AI_KEY`; journal at `.ctrans/ai-journal.json`. Caps default to 20 calls / 50k tokens / 60 s per request / 300 s run. Providers report usage; USD caps enforce only when reported. See ADR D-025.
+**Port 1 — implemented (M8).** `@ctrans/ai` implements the `ChatModel` contract from §2 with adapters for OpenAI-compatible endpoints (OpenAI, vLLM, llama.cpp server, Ollama's OpenAI endpoint, LM Studio via `baseUrl`), Anthropic Messages, and a user-templated custom endpoint; `FakeChatModel` is the only model the deterministic suites use. `AiAmbiguityResolver` implements the core `AmbiguityResolver` port: packer (§3) → secretlint hard gate → caps → cache → model → strict JSON option validation with ONE bounded re-ask → decision (`{optionId, escalation}`) or `null` (heuristic fallback). Escalation requests reach it only for constructs the ENGINE classified `ambiguous` with more than one emitted strategy — currently Python `match` with literal/capture cases (language-support §2.4: `if-chain` heuristic vs `switch`). The pipeline resolves ambiguities BEFORE lowering (translation stays synchronous/deterministic), validates the chosen id against the offered set (`validateAmbiguityDecision`), and records `candidates` + `escalation` in the ledger. CLI: `--ai-provider openai|anthropic`, `--ai-model`, `--ai-base-url`, key from `CTRANS_AI_KEY`; journal at `.ctrans/ai-journal.json`. Caps default to 20 calls / 50k tokens / 60 s per request / 300 s run.
+
+**Port 2 — implemented (M9).** `@ctrans/repair` classifies failed validation stages (validation.md §8), scopes one unit, and asks `AiRepairProposer` for a unified diff. The proposer reuses the **same** M8 stack (`ChatModel`, secret gate on every payload including the re-ask, `AiBudget` shared across the whole repair run, `ResponseCache`, typed `ChatError` handling) — there is no second model client. Reply shape is strict JSON `{unit, diff, rationale}`; `unit` must equal the requested unit; `rationale` ≤ 2000 chars; diff ≤ 64 KiB; the diff must parse under the restricted grammar (no binary/rename/new-file/combined diffs, `---`/`+++` headers only for the scoped target, content-exact old lines with patch(1)-style offset tolerance) and must pass the policy guard (no added `@ts-ignore`/`@ts-nocheck`/`@ts-expect-error`, `declare module/global`, lint/coverage suppression, or test `.skip`/`.only`). `""` is an explicit decline. One bounded re-ask carries the rejection reason (re-scanned by the gate), then the outcome is typed (`declined`, `invalid-output`, `provider-error`, `cap-exhausted`, `packet-too-large`, `blocked-secret`). The orchestrator owns the bounds: 3 attempts/unit, 8/run, duplicate-patch rejection, state-hash loop detection, monotone acceptance with strictly higher claim level, and exact rollback. History is hash-only at `.ctrans/repairs/repairs.json`. CLI: `translate --repair` (AI optional; disabled ⇒ `repair-unavailable` with the deterministic output untouched). See ADR D-026.
 
 ## 1. What AI is used for — exactly three ports
 
@@ -45,7 +47,7 @@ Unlimited project context ≠ unlimited model context. Escalation payloads are a
 3. Failure diagnostics with span→source mapping.
 4. A budget: hard token cap per payload; overflow drops lowest-priority contracts first (farthest in topo order). The packer is deterministic and unit-tested with a fake tokenizer-like counter (no live calls).
 
-Whole-project prompts are forbidden. If a fix needs more context than the budget allows, that is itself a diagnostic ("fix requires cross-unit change") and the repair loop escalates to a multi-unit plan — still per-unit patched.
+Whole-project prompts are forbidden. If a fix needs more context than the budget allows, that is itself a diagnostic ("fix requires cross-unit change"). M9 patches are strictly **single-unit**: a patch can change one emitted file only, and cross-unit repairs are out of scope (reported as no eligible repair or patch rejection, never approximated by editing other files).
 
 ## 4. Prompt-injection and data protection (OWASP LLM v2 mapping)
 
@@ -59,10 +61,18 @@ Whole-project prompts are forbidden. If a fix needs more context than the budget
 ## 5. Caching, cost, determinism
 
 - Response cache keyed by (model id, prompt hash, params): identical escalations within/across runs are free.
-- All AI interactions are journaled (prompt hash, not full prompt, to avoid storing user code; full prompt optionally kept with explicit `--journal-prompts`).
+- All AI interactions are journaled by prompt hash, never full prompt text: `.ctrans/ai-journal.json` for ambiguity escalations and the hash-only `.ctrans/repairs/repairs.json` for repair attempts (no diffs, responses, or source content). Full-prompt journaling is not implemented.
 - Benchmarks and fixture CI never enable AI (`deterministic CI` rule) — AI-assisted runs are measured separately and reported as such.
 
 ## 6. Testing the AI layer without AI
 
 - `FakeChatModel` implements `ChatModel` with scripted responses (successes, malformed JSON, injection attempts, budget exhaustion). All engine-side logic (packing, caps, cache, validation-after-AI, repair-loop bookkeeping) is tested against fakes only.
 - Live-provider smoke tests exist behind an explicit env flag and are never part of default CI.
+
+## 7. Repair loop guarantees and limits (M9)
+
+- **Provenance:** a repair patch is never a new source of truth — it is a candidate file map that must pass the real validators again. The Transformation Ledger is not rewritten by a repair; the unit's emitted text changes, its ledger entries remain the deterministic engine's provenance. (Repairing a construct the ledger classifies `unsupported` is refused outright.)
+- **Acceptance is necessary, not sufficient:** the guard proves no previously passing stage regressed and the claim level strictly improved. It cannot prove semantic equivalence of added/removed code — S5/S6 remain the only behavioral evidence. A patch that makes types pass by deleting behavior can still satisfy S1–S3; this is why project-mode repair (S5/S6 re-validation) is deferred rather than approximated.
+- **No test/config edits:** test modules, generated shared artifacts (no source text), and any path outside the unit's emitted target are not patchable. The policy guard rejects suppression constructs.
+- **Budgets:** one `AiBudget` per proposer (= per run) governs calls/tokens/wall-clock; the orchestrator caps attempts centrally. Replays of identical requests are served from the response cache and re-validated.
+- **Failure is degrading, never fatal:** AI disabled, gate-blocked, provider errors, declines, caps, oversized packets, and invalid output all leave the deterministic output untouched and are reported with typed outcomes/stop reasons.

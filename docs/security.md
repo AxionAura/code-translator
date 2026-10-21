@@ -14,7 +14,8 @@ Status: **approved blueprint**. Local-first; user code is untrusted; execution i
 | T6 Supply chain | our npm deps; lifecycle scripts | lockfile pinned, pnpm script-block on, license allowlist, no trufflehog-style AGPL embedding, provenance noted as insufficient alone (2026-05-19 bypass) |
 | T7 Sandbox escape / resource abuse | translated code consuming CPU/mem/net | hardened spawn + optional bwrap/docker (§3); timeouts; output caps; no network by default |
 | T8 Path traversal / file bombs | input archives, deep trees | output confined to declared out-dir; entry count/size caps; symlink policy (no following out-of-root) |
-| T9 Model cost abuse (self-DoS) | repair loops | hard caps per run (calls/tokens/USD/wall-clock); loop detection |
+| T9 Model cost abuse (self-DoS) | repair loops | hard caps per run (calls/tokens/USD/wall-clock); central attempt caps (3/unit, 8/run); patch dedupe + state-hash loop detection |
+| T10 Model-driven validation weakening | repair patches | unit-scoped diff grammar; policy guard on added lines (`@ts-ignore`/`@ts-nocheck`/`declare module`/lint suppression/test `.skip`/`.only`); tests and generated artifacts are not patchable; real validators re-run |
 
 ## 2. Translation path (no execution)
 
@@ -42,6 +43,7 @@ Status: **approved blueprint**. Local-first; user code is untrusted; execution i
 - Embedded secret scanning (secretlint rules, MIT) before any AI request and optionally on input projects (`--scan-secrets`): findings block the request with a report. **Implemented (M8):** the gate (`packages/ai/src/secret-gate.ts`) scans the exact outgoing payload with `@secretlint/core` + the recommended preset; a finding, a scanner exception, or an empty rule set BLOCKS the call (fail-closed, never bypassed), and journal entries record rule ids/locations only — never matching text.
 - Key storage: OS keychain via CLI shelling (macOS `security`, Linux `secret-tool`, Windows CredMan) → fallback `~/.config/ctrans/keys.json` at 0600 with a warning banner, mirroring the gh CLI model. Env-var reference (`CTRANS_OPENAI_KEY`) supported for CI. **M8 ships the env-var path only (`CTRANS_AI_KEY`)** — keys never enter flags, config files, logs, journals, or cache keys; keychain/file storage remains the M11 hardening scope.
 - Logs/reports/ledger never contain key material, source contents, or absolute paths outside the project root.
+- **Repair journal (M9):** `.ctrans/repairs/repairs.json` at a FIXED path (unit ids are never used as path segments, so traversal is impossible by construction; the writer additionally containment-checks against the output root, creates the directory, and writes mode 0600). It is hash-only provenance: unit/target path, attempt number, failure code/category, baseline/candidate state hashes, patch hash, proposal outcome, decision + bounded reason, stage snapshot, provider/model names, token counts, and secret-rule ids. Diffs, prompts, model responses, and source text are never written. The loader tolerates malformed/partial files (unreadable data is preserved as `repairs.corrupt.json` and recovery is reported), and a write failure raises a typed error instead of being presented as a successful repair. Journal write failures never silently discard acceptance state: the CLI exits non-zero with the error.
 
 ## 5. Generated project policy
 
@@ -54,4 +56,4 @@ Defaults (configurable, never unlimited): 25k files/project, 5 MB/file, 400 MB/p
 
 ## 7. Responsible AI usage summary
 
-Provider-agnostic adapters; no provider SDK coupling; code-as-data; outputs are option-choices or validated patches; caps in code; prompts journaled by hash; deterministic CI never calls providers. OWASP LLM v2 mapping table lives in [ai-architecture.md](ai-architecture.md) §4.
+Provider-agnostic adapters; no provider SDK coupling; code-as-data; outputs are option-choices or validated, unit-scoped patches (grammar + scope + policy guarded, then re-validated by the engine); caps in code; prompts journaled by hash, repair history by state/patch hash; no test/config edits through repair; deterministic CI never calls providers. OWASP LLM v2 mapping table lives in [ai-architecture.md](ai-architecture.md) §4.
