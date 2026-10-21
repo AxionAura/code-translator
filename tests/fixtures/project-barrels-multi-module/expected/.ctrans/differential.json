@@ -1,0 +1,30 @@
+{
+  "stage": "S6-differential",
+  "status": "pass",
+  "matched": [
+    {
+      "name": "TestBook.test_blurb",
+      "outcome": "passed"
+    },
+    {
+      "name": "test_add_tracks_count",
+      "outcome": "passed"
+    },
+    {
+      "name": "test_find_present_and_missing",
+      "outcome": "passed"
+    },
+    {
+      "name": "test_titles_order",
+      "outcome": "passed"
+    },
+    {
+      "name": "test_total_pages",
+      "outcome": "passed"
+    }
+  ],
+  "mismatched": [],
+  "sourceOnly": [],
+  "targetOnly": [],
+  "flaky": []
+}

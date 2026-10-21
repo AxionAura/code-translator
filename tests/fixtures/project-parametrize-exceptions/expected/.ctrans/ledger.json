@@ -1,0 +1,3215 @@
+[
+  {
+    "id": "textutil.py#001",
+    "unit": "textutil.py",
+    "span": null,
+    "sourceKind": "py.Expr(docstring)",
+    "rule": "py.docstring→comment",
+    "decision": "deterministic",
+    "rationale": "docstrings are documentation, not behavior",
+    "adaptation": null,
+    "targetSummary": "block comment",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#002",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 2,
+        "column": 9
+      },
+      "end": {
+        "line": 2,
+        "column": 9
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.List",
+    "rule": "py.list→js.array",
+    "decision": "deterministic",
+    "rationale": "array literal preserves order, indexing and mutation",
+    "adaptation": null,
+    "targetSummary": "array literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#003",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 2,
+        "column": 10
+      },
+      "end": {
+        "line": 2,
+        "column": 10
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#004",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 2,
+        "column": 15
+      },
+      "end": {
+        "line": 2,
+        "column": 15
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#005",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 2,
+        "column": 20
+      },
+      "end": {
+        "line": 2,
+        "column": 20
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#006",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 2,
+        "column": 25
+      },
+      "end": {
+        "line": 2,
+        "column": 25
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#007",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 2,
+        "column": 30
+      },
+      "end": {
+        "line": 2,
+        "column": 30
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#008",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 2,
+        "column": 35
+      },
+      "end": {
+        "line": 2,
+        "column": 35
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#009",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 2,
+        "column": 40
+      },
+      "end": {
+        "line": 2,
+        "column": 40
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#010",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 2,
+        "column": 45
+      },
+      "end": {
+        "line": 2,
+        "column": 45
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#011",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 2,
+        "column": 50
+      },
+      "end": {
+        "line": 2,
+        "column": 50
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#012",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 2,
+        "column": 55
+      },
+      "end": {
+        "line": 2,
+        "column": 55
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#013",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 2,
+        "column": 0
+      },
+      "end": {
+        "line": 2,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Assign",
+    "rule": "py.assign→js.let/assign",
+    "decision": "deterministic",
+    "rationale": "binding declared with let (Python bindings are rebindable)",
+    "adaptation": null,
+    "targetSummary": "DIGITS = ...",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#014",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 5,
+        "column": 0
+      },
+      "end": {
+        "line": 5,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.FunctionDef",
+    "rule": "py.function→js.function",
+    "decision": "deterministic",
+    "rationale": "function correspondence (closures via JS scoping; async syntax corresponds)",
+    "adaptation": null,
+    "targetSummary": "function parse_int",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#015",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 6,
+        "column": 31
+      },
+      "end": {
+        "line": 6,
+        "column": 31
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#016",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 6,
+        "column": 15
+      },
+      "end": {
+        "line": 6,
+        "column": 15
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.string-method→js.str.startswith",
+    "decision": "deterministic",
+    "rationale": "registry v1 mapping (str.startswith): identical semantics",
+    "adaptation": "startsWith",
+    "targetSummary": "text.startsWith(\"-\")",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#017",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 6,
+        "column": 4
+      },
+      "end": {
+        "line": 6,
+        "column": 4
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Assign",
+    "rule": "py.assign→js.let/assign",
+    "decision": "deterministic",
+    "rationale": "binding declared with let (Python bindings are rebindable)",
+    "adaptation": null,
+    "targetSummary": "negative = ...",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#018",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 7,
+        "column": 11
+      },
+      "end": {
+        "line": 7,
+        "column": 11
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Subscript(slice)",
+    "rule": "py.slice→js.slice",
+    "decision": "deterministic",
+    "rationale": "non-negative constant-bound slices map to Array/String.prototype.slice (receiver is statically typed)",
+    "adaptation": null,
+    "targetSummary": ".slice(1, )",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#019",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 7,
+        "column": 11
+      },
+      "end": {
+        "line": 7,
+        "column": 11
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.IfExp",
+    "rule": "py.conditional→js.ternary+truthy",
+    "decision": "semantic",
+    "rationale": "Python test truthiness differs from JS coercion; helper applies Python rules",
+    "adaptation": "test wrapped in __ctrans_truthy",
+    "targetSummary": "truthy(negative) ? text.slice(1) : text",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#020",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 7,
+        "column": 4
+      },
+      "end": {
+        "line": 7,
+        "column": 4
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Assign",
+    "rule": "py.assign→js.let/assign",
+    "decision": "deterministic",
+    "rationale": "binding declared with let (Python bindings are rebindable)",
+    "adaptation": null,
+    "targetSummary": "body = ...",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#021",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 8,
+        "column": 15
+      },
+      "end": {
+        "line": 8,
+        "column": 15
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#022",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 8,
+        "column": 15
+      },
+      "end": {
+        "line": 8,
+        "column": 15
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Compare(Eq)",
+    "rule": "py.eq→__ctrans.eq",
+    "decision": "semantic",
+    "rationale": "Python == compares sequences elementwise; JS === does not",
+    "adaptation": "equality via __ctrans_eq",
+    "targetSummary": "eq(left, right)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#023",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 8,
+        "column": 7
+      },
+      "end": {
+        "line": 8,
+        "column": 7
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.If",
+    "rule": "py.test→js.native",
+    "decision": "deterministic",
+    "rationale": "statically provable that JS truthiness equals Python truthiness for this expression (boolean/string/null/int/bigint/comparison)",
+    "adaptation": null,
+    "targetSummary": "native test",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#024",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 8,
+        "column": 4
+      },
+      "end": {
+        "line": 8,
+        "column": 4
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.If",
+    "rule": "py.if→js.if",
+    "decision": "deterministic",
+    "rationale": "branching correspondence (elif chains become nested else-blocks - semantically identical)",
+    "adaptation": null,
+    "targetSummary": "if/else",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#025",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 9,
+        "column": 25
+      },
+      "end": {
+        "line": 9,
+        "column": 25
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#026",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 9,
+        "column": 8
+      },
+      "end": {
+        "line": 9,
+        "column": 8
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Raise",
+    "rule": "py.raise→js.throw",
+    "decision": "deterministic",
+    "rationale": "raise corresponds to throwing a generated Python-exception-hierarchy instance",
+    "adaptation": null,
+    "targetSummary": "throw new ValueError(\"empty number\");",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#027",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 10,
+        "column": 12
+      },
+      "end": {
+        "line": 10,
+        "column": 12
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "0",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#028",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 10,
+        "column": 4
+      },
+      "end": {
+        "line": 10,
+        "column": 4
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Assign",
+    "rule": "py.assign→js.let/assign",
+    "decision": "deterministic",
+    "rationale": "binding declared with let (Python bindings are rebindable)",
+    "adaptation": null,
+    "targetSummary": "total = ...",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#029",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 11,
+        "column": 4
+      },
+      "end": {
+        "line": 11,
+        "column": 4
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.For(unknown)",
+    "rule": "py.for→__ctrans.iter",
+    "decision": "semantic",
+    "rationale": "iterable type is statically unknown; TS cannot for-of unknown and Python iteration (dict keys/code points) is applied by __ctrans_iter",
+    "adaptation": "__ctrans_iter",
+    "targetSummary": "for-of over iter(...)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#030",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 12,
+        "column": 28
+      },
+      "end": {
+        "line": 12,
+        "column": 28
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Compare(NotIn)",
+    "rule": "py.notin→!__ctrans.contains",
+    "decision": "semantic",
+    "rationale": "negated membership with == semantics",
+    "adaptation": "negated __ctrans_contains",
+    "targetSummary": "!contains(container, item)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#031",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 12,
+        "column": 11
+      },
+      "end": {
+        "line": 12,
+        "column": 11
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.If",
+    "rule": "py.test→js.native",
+    "decision": "deterministic",
+    "rationale": "statically provable that JS truthiness equals Python truthiness for this expression (boolean/string/null/int/bigint/comparison)",
+    "adaptation": null,
+    "targetSummary": "native test",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#032",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 12,
+        "column": 8
+      },
+      "end": {
+        "line": 12,
+        "column": 8
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.If",
+    "rule": "py.if→js.if",
+    "decision": "deterministic",
+    "rationale": "branching correspondence (elif chains become nested else-blocks - semantically identical)",
+    "adaptation": null,
+    "targetSummary": "if/else",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#033",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 13,
+        "column": 29
+      },
+      "end": {
+        "line": 13,
+        "column": 29
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#034",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 13,
+        "column": 12
+      },
+      "end": {
+        "line": 13,
+        "column": 12
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Raise",
+    "rule": "py.raise→js.throw",
+    "decision": "deterministic",
+    "rationale": "raise corresponds to throwing a generated Python-exception-hierarchy instance",
+    "adaptation": null,
+    "targetSummary": "throw new ValueError(\"bad digit\");",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#035",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 14,
+        "column": 24
+      },
+      "end": {
+        "line": 14,
+        "column": 24
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "10",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#036",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 14,
+        "column": 16
+      },
+      "end": {
+        "line": 14,
+        "column": 16
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.BinOp(Mult)",
+    "rule": "py.mul→js.*",
+    "decision": "deterministic",
+    "rationale": "numeric multiplication correspondence",
+    "adaptation": null,
+    "targetSummary": "total * 10",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#037",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 14,
+        "column": 29
+      },
+      "end": {
+        "line": 14,
+        "column": 29
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.array-method→__ctrans.listIndex",
+    "decision": "semantic",
+    "rationale": "registry v1 mapping (list.index): Python index uses == and raises ValueError when absent; JS indexOf uses === and returns -1",
+    "adaptation": "__ctrans_listIndex",
+    "targetSummary": "listIndex(receiver, ...)",
+    "warnings": [
+      "CTW-METHOD-ADAPTED"
+    ],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#038",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 14,
+        "column": 16
+      },
+      "end": {
+        "line": 14,
+        "column": 16
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.BinOp(Add)",
+    "rule": "py.add→js.+",
+    "decision": "deterministic",
+    "rationale": "numeric addition correspondence",
+    "adaptation": null,
+    "targetSummary": "(total * 10) + __ctrans_listIndex(DIGITS, character)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#039",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 14,
+        "column": 8
+      },
+      "end": {
+        "line": 14,
+        "column": 8
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Assign",
+    "rule": "py.assign→js.let/assign",
+    "decision": "deterministic",
+    "rationale": "rebinding assignment",
+    "adaptation": null,
+    "targetSummary": "total = ...",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#040",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 15,
+        "column": 4
+      },
+      "end": {
+        "line": 15,
+        "column": 4
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Return",
+    "rule": "py.return→js.return",
+    "decision": "deterministic",
+    "rationale": "return correspondence",
+    "adaptation": null,
+    "targetSummary": "return value;",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#041",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 15,
+        "column": 11
+      },
+      "end": {
+        "line": 15,
+        "column": 11
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.UnaryOp(USub)",
+    "rule": "py.unary→__ctrans.neg",
+    "decision": "semantic",
+    "rationale": "operand is statically unknown; Python raises TypeError for non-numbers while JS coerces",
+    "adaptation": "__ctrans_neg",
+    "targetSummary": "__ctrans_neg(total)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#042",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 15,
+        "column": 11
+      },
+      "end": {
+        "line": 15,
+        "column": 11
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.IfExp",
+    "rule": "py.conditional→js.ternary+truthy",
+    "decision": "semantic",
+    "rationale": "Python test truthiness differs from JS coercion; helper applies Python rules",
+    "adaptation": "test wrapped in __ctrans_truthy",
+    "targetSummary": "truthy(negative) ? __ctrans_neg(total) : total",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#043",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 18,
+        "column": 0
+      },
+      "end": {
+        "line": 18,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.FunctionDef",
+    "rule": "py.function→js.function",
+    "decision": "deterministic",
+    "rationale": "function correspondence (closures via JS scoping; async syntax corresponds)",
+    "adaptation": null,
+    "targetSummary": "function word_count",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#044",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 19,
+        "column": 4
+      },
+      "end": {
+        "line": 19,
+        "column": 4
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Return",
+    "rule": "py.return→js.return",
+    "decision": "deterministic",
+    "rationale": "return correspondence",
+    "adaptation": null,
+    "targetSummary": "return value;",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#045",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 19,
+        "column": 11
+      },
+      "end": {
+        "line": 19,
+        "column": 11
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call(len)",
+    "rule": "py.len→__ctrans.len",
+    "decision": "semantic",
+    "rationale": "length/size surface differs across JS types",
+    "adaptation": "__ctrans_len",
+    "targetSummary": "len(x)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#046",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 19,
+        "column": 44
+      },
+      "end": {
+        "line": 19,
+        "column": 44
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#047",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 19,
+        "column": 33
+      },
+      "end": {
+        "line": 19,
+        "column": 33
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.string-method→__ctrans.strSplit",
+    "decision": "semantic",
+    "rationale": "registry v1 mapping (str.split): Python split() with no separator splits on whitespace runs; split(sep) maps to JS split(sep)",
+    "adaptation": "__ctrans_strSplit",
+    "targetSummary": "strSplit(receiver, ...)",
+    "warnings": [
+      "CTW-METHOD-ADAPTED"
+    ],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#048",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 19,
+        "column": 60
+      },
+      "end": {
+        "line": 19,
+        "column": 60
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#049",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 19,
+        "column": 60
+      },
+      "end": {
+        "line": 19,
+        "column": 60
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Compare(NotEq)",
+    "rule": "py.ne→!__ctrans.eq",
+    "decision": "semantic",
+    "rationale": "Python != is the negation of value equality",
+    "adaptation": "negated __ctrans_eq",
+    "targetSummary": "!eq(left, right)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#050",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 19,
+        "column": 15
+      },
+      "end": {
+        "line": 19,
+        "column": 15
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.ListComp",
+    "rule": "py.listcomp→js.map/filter",
+    "decision": "semantic",
+    "rationale": "single-for comprehension over a non-array iterable: Python iteration (dict keys, code points, any iterable) applied via a rerouted source sequence",
+    "adaptation": "rerouted iterable",
+    "targetSummary": "map/filter chain",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#051",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 22,
+        "column": 0
+      },
+      "end": {
+        "line": 22,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.FunctionDef",
+    "rule": "py.function→js.function",
+    "decision": "deterministic",
+    "rationale": "function correspondence (closures via JS scoping; async syntax corresponds)",
+    "adaptation": null,
+    "targetSummary": "function is_palindrome",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#052",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 23,
+        "column": 14
+      },
+      "end": {
+        "line": 23,
+        "column": 14
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.string-method→js.str.lower",
+    "decision": "deterministic",
+    "rationale": "registry v1 mapping (str.lower): identical semantics",
+    "adaptation": "toLowerCase",
+    "targetSummary": "text.toLowerCase()",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#053",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 23,
+        "column": 4
+      },
+      "end": {
+        "line": 23,
+        "column": 4
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Assign",
+    "rule": "py.assign→js.let/assign",
+    "decision": "deterministic",
+    "rationale": "binding declared with let (Python bindings are rebindable)",
+    "adaptation": null,
+    "targetSummary": "lowered = ...",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#054",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 24,
+        "column": 31
+      },
+      "end": {
+        "line": 24,
+        "column": 31
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#055",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 24,
+        "column": 36
+      },
+      "end": {
+        "line": 24,
+        "column": 36
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#056",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 24,
+        "column": 15
+      },
+      "end": {
+        "line": 24,
+        "column": 15
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call→__ctrans.callMethod",
+    "decision": "semantic",
+    "rationale": "receiver type is statically unknown; TS cannot infer the member and Python's AttributeError/TypeError behavior is preserved via __ctrans_callMethod",
+    "adaptation": "__ctrans_callMethod",
+    "targetSummary": "callMethod(lowered, \"replace\", ...)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#057",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 24,
+        "column": 4
+      },
+      "end": {
+        "line": 24,
+        "column": 4
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Assign",
+    "rule": "py.assign→js.let/assign",
+    "decision": "deterministic",
+    "rationale": "binding declared with let (Python bindings are rebindable)",
+    "adaptation": null,
+    "targetSummary": "stripped = ...",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#058",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 25,
+        "column": 4
+      },
+      "end": {
+        "line": 25,
+        "column": 4
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Return",
+    "rule": "py.return→js.return",
+    "decision": "deterministic",
+    "rationale": "return correspondence",
+    "adaptation": null,
+    "targetSummary": "return value;",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#059",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 25,
+        "column": 23
+      },
+      "end": {
+        "line": 25,
+        "column": 23
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Subscript(slice)",
+    "rule": "py.slice→__ctrans.slice",
+    "decision": "semantic",
+    "rationale": "negative bounds/steps have no JS equivalent, or the receiver type is unknown - __ctrans_slice reproduces Python clamping",
+    "adaptation": "__ctrans_slice (clamping + step loop)",
+    "targetSummary": "slice(...)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#060",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 25,
+        "column": 35
+      },
+      "end": {
+        "line": 25,
+        "column": 35
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "1",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#061",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 25,
+        "column": 34
+      },
+      "end": {
+        "line": 25,
+        "column": 34
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.UnaryOp(USub)",
+    "rule": "py.unary→js.unary",
+    "decision": "deterministic",
+    "rationale": "unary operator correspondence (number-typed operand)",
+    "adaptation": null,
+    "targetSummary": "-1",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#062",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 25,
+        "column": 23
+      },
+      "end": {
+        "line": 25,
+        "column": 23
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Compare(Eq)",
+    "rule": "py.eq→__ctrans.eq",
+    "decision": "semantic",
+    "rationale": "Python == compares sequences elementwise; JS === does not",
+    "adaptation": "equality via __ctrans_eq",
+    "targetSummary": "eq(left, right)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#063",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 28,
+        "column": 0
+      },
+      "end": {
+        "line": 28,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.FunctionDef",
+    "rule": "py.function→js.function",
+    "decision": "deterministic",
+    "rationale": "function correspondence (closures via JS scoping; async syntax corresponds)",
+    "adaptation": null,
+    "targetSummary": "function initials",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#064",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 29,
+        "column": 24
+      },
+      "end": {
+        "line": 29,
+        "column": 24
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#065",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 29,
+        "column": 12
+      },
+      "end": {
+        "line": 29,
+        "column": 12
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.string-method→__ctrans.strSplit",
+    "decision": "semantic",
+    "rationale": "registry v1 mapping (str.split): Python split() with no separator splits on whitespace runs; split(sep) maps to JS split(sep)",
+    "adaptation": "__ctrans_strSplit",
+    "targetSummary": "strSplit(receiver, ...)",
+    "warnings": [
+      "CTW-METHOD-ADAPTED"
+    ],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#066",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 29,
+        "column": 4
+      },
+      "end": {
+        "line": 29,
+        "column": 4
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Assign",
+    "rule": "py.assign→js.let/assign",
+    "decision": "deterministic",
+    "rationale": "binding declared with let (Python bindings are rebindable)",
+    "adaptation": null,
+    "targetSummary": "parts = ...",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#067",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 30,
+        "column": 12
+      },
+      "end": {
+        "line": 30,
+        "column": 12
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Subscript(index)",
+    "rule": "py.index→__ctrans.index",
+    "decision": "semantic",
+    "rationale": "negative/out-of-range indices raise IndexError and mappings raise KeyError in Python while JS returns undefined; __ctrans_index reproduces both",
+    "adaptation": "__ctrans_index",
+    "targetSummary": "index(value, key)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#068",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 30,
+        "column": 17
+      },
+      "end": {
+        "line": 30,
+        "column": 17
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "0",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#069",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 30,
+        "column": 49
+      },
+      "end": {
+        "line": 30,
+        "column": 49
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#070",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 30,
+        "column": 49
+      },
+      "end": {
+        "line": 30,
+        "column": 49
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Compare(NotEq)",
+    "rule": "py.ne→!__ctrans.eq",
+    "decision": "semantic",
+    "rationale": "Python != is the negation of value equality",
+    "adaptation": "negated __ctrans_eq",
+    "targetSummary": "!eq(left, right)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#071",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 30,
+        "column": 11
+      },
+      "end": {
+        "line": 30,
+        "column": 11
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.ListComp",
+    "rule": "py.listcomp→js.map/filter",
+    "decision": "semantic",
+    "rationale": "single-for comprehension over a non-array iterable: Python iteration (dict keys, code points, any iterable) applied via a rerouted source sequence",
+    "adaptation": "rerouted iterable",
+    "targetSummary": "map/filter chain",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#072",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 30,
+        "column": 4
+      },
+      "end": {
+        "line": 30,
+        "column": 4
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Assign",
+    "rule": "py.assign→js.let/assign",
+    "decision": "deterministic",
+    "rationale": "binding declared with let (Python bindings are rebindable)",
+    "adaptation": null,
+    "targetSummary": "kept = ...",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#073",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 31,
+        "column": 16
+      },
+      "end": {
+        "line": 31,
+        "column": 16
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#074",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 31,
+        "column": 4
+      },
+      "end": {
+        "line": 31,
+        "column": 4
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Assign",
+    "rule": "py.assign→js.let/assign",
+    "decision": "deterministic",
+    "rationale": "binding declared with let (Python bindings are rebindable)",
+    "adaptation": null,
+    "targetSummary": "separator = ...",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#075",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 32,
+        "column": 4
+      },
+      "end": {
+        "line": 32,
+        "column": 4
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Return",
+    "rule": "py.return→js.return",
+    "decision": "deterministic",
+    "rationale": "return correspondence",
+    "adaptation": null,
+    "targetSummary": "return value;",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#076",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 32,
+        "column": 11
+      },
+      "end": {
+        "line": 32,
+        "column": 11
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.string-method→__ctrans.strJoin",
+    "decision": "semantic",
+    "rationale": "registry v1 mapping (str.join): Python join accepts any iterable of strings",
+    "adaptation": "__ctrans_strJoin",
+    "targetSummary": "strJoin(receiver, ...)",
+    "warnings": [
+      "CTW-METHOD-ADAPTED"
+    ],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#077",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 32,
+        "column": 34
+      },
+      "end": {
+        "line": 32,
+        "column": 34
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "textutil.py#078",
+    "unit": "textutil.py",
+    "span": {
+      "start": {
+        "line": 32,
+        "column": 11
+      },
+      "end": {
+        "line": 32,
+        "column": 11
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.BinOp(Add)",
+    "rule": "py.add→js.+",
+    "decision": "deterministic",
+    "rationale": "string concatenation correspondence (both operands statically str)",
+    "adaptation": null,
+    "targetSummary": "__ctrans_strJoin(separator, kept) + \".\"",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#001",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 7,
+        "column": 11
+      },
+      "end": {
+        "line": 7,
+        "column": 11
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call→js.call",
+    "decision": "deterministic",
+    "rationale": "call correspondence (function declarations hoist like Python's late resolution)",
+    "adaptation": null,
+    "targetSummary": "parse_int(text)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#002",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 7,
+        "column": 0
+      },
+      "end": {
+        "line": 7,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.assert",
+    "rule": "pytest.assert→vitest.expect.toEqual",
+    "decision": "deterministic",
+    "rationale": "== maps to deep equality (Python == semantics for sequences and primitives)",
+    "adaptation": null,
+    "targetSummary": "parse_int(text)).toEqual(expected",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#003",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 5,
+        "column": 44
+      },
+      "end": {
+        "line": 5,
+        "column": 44
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#004",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 5,
+        "column": 49
+      },
+      "end": {
+        "line": 5,
+        "column": 49
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "7",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#005",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 5,
+        "column": 54
+      },
+      "end": {
+        "line": 5,
+        "column": 54
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#006",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 5,
+        "column": 62
+      },
+      "end": {
+        "line": 5,
+        "column": 62
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "42",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#007",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 5,
+        "column": 61
+      },
+      "end": {
+        "line": 5,
+        "column": 61
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.UnaryOp(USub)",
+    "rule": "py.unary→js.unary",
+    "decision": "deterministic",
+    "rationale": "unary operator correspondence (number-typed operand)",
+    "adaptation": null,
+    "targetSummary": "-42",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#008",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 5,
+        "column": 68
+      },
+      "end": {
+        "line": 5,
+        "column": 68
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#009",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 5,
+        "column": 73
+      },
+      "end": {
+        "line": 5,
+        "column": 73
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "0",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#010",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 6,
+        "column": 0
+      },
+      "end": {
+        "line": 6,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.parametrize",
+    "rule": "pytest.parametrize→vitest.each",
+    "decision": "semantic",
+    "rationale": "parametrize maps to vitest it.each with object cases; test names carry the parameter values (differential matching uses the test-name prefix)",
+    "adaptation": "it.each object cases",
+    "targetSummary": "it.each(3 cases)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#011",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 13,
+        "column": 8
+      },
+      "end": {
+        "line": 13,
+        "column": 8
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Expr",
+    "rule": "py.expr-stmt→js.expr-stmt",
+    "decision": "deterministic",
+    "rationale": "expression statement correspondence",
+    "adaptation": null,
+    "targetSummary": "expression statement",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#012",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 13,
+        "column": 8
+      },
+      "end": {
+        "line": 13,
+        "column": 8
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call→js.call",
+    "decision": "deterministic",
+    "rationale": "call correspondence (function declarations hoist like Python's late resolution)",
+    "adaptation": null,
+    "targetSummary": "parse_int(text)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#013",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 12,
+        "column": 0
+      },
+      "end": {
+        "line": 12,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.raises",
+    "rule": "pytest.raises→vitest.toThrow",
+    "decision": "semantic",
+    "rationale": "pytest.raises(E) maps to expect(fn).toThrow(E); the generated exception hierarchy preserves the class identity",
+    "adaptation": "toThrow",
+    "targetSummary": "toThrow(ValueError)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#014",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 10,
+        "column": 34
+      },
+      "end": {
+        "line": 10,
+        "column": 34
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#015",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 10,
+        "column": 41
+      },
+      "end": {
+        "line": 10,
+        "column": 41
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#016",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 10,
+        "column": 46
+      },
+      "end": {
+        "line": 10,
+        "column": 46
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#017",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 11,
+        "column": 0
+      },
+      "end": {
+        "line": 11,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.parametrize",
+    "rule": "pytest.parametrize→vitest.each",
+    "decision": "semantic",
+    "rationale": "parametrize maps to vitest it.each with object cases; test names carry the parameter values (differential matching uses the test-name prefix)",
+    "adaptation": "it.each object cases",
+    "targetSummary": "it.each(3 cases)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#018",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 18,
+        "column": 8
+      },
+      "end": {
+        "line": 18,
+        "column": 8
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Expr",
+    "rule": "py.expr-stmt→js.expr-stmt",
+    "decision": "deterministic",
+    "rationale": "expression statement correspondence",
+    "adaptation": null,
+    "targetSummary": "expression statement",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#019",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 18,
+        "column": 18
+      },
+      "end": {
+        "line": 18,
+        "column": 18
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#020",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 18,
+        "column": 8
+      },
+      "end": {
+        "line": 18,
+        "column": 8
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call→js.call",
+    "decision": "deterministic",
+    "rationale": "call correspondence (function declarations hoist like Python's late resolution)",
+    "adaptation": null,
+    "targetSummary": "parse_int(\"\")",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#021",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 17,
+        "column": 0
+      },
+      "end": {
+        "line": 17,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.raises",
+    "rule": "pytest.raises→vitest.toThrow",
+    "decision": "semantic",
+    "rationale": "pytest.raises(E) maps to expect(fn).toThrow(E); the generated exception hierarchy preserves the class identity",
+    "adaptation": "toThrow",
+    "targetSummary": "toThrow(ValueError)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#022",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 16,
+        "column": 0
+      },
+      "end": {
+        "line": 16,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.test",
+    "rule": "pytest.test→vitest.it",
+    "decision": "deterministic",
+    "rationale": "test function correspondence (name preserved for differential matching)",
+    "adaptation": null,
+    "targetSummary": "it(\"test_parse_int_empty_raises\")",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#023",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 22,
+        "column": 22
+      },
+      "end": {
+        "line": 22,
+        "column": 22
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#024",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 22,
+        "column": 11
+      },
+      "end": {
+        "line": 22,
+        "column": 11
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call→js.call",
+    "decision": "deterministic",
+    "rationale": "call correspondence (function declarations hoist like Python's late resolution)",
+    "adaptation": null,
+    "targetSummary": "word_count(\"a b  c\")",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#025",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 22,
+        "column": 35
+      },
+      "end": {
+        "line": 22,
+        "column": 35
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "3",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#026",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 22,
+        "column": 0
+      },
+      "end": {
+        "line": 22,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.assert",
+    "rule": "pytest.assert→vitest.expect.toEqual",
+    "decision": "deterministic",
+    "rationale": "== maps to deep equality (Python == semantics for sequences and primitives)",
+    "adaptation": null,
+    "targetSummary": "word_count(\"a b  c\")).toEqual(3",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#027",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 23,
+        "column": 22
+      },
+      "end": {
+        "line": 23,
+        "column": 22
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#028",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 23,
+        "column": 11
+      },
+      "end": {
+        "line": 23,
+        "column": 11
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call→js.call",
+    "decision": "deterministic",
+    "rationale": "call correspondence (function declarations hoist like Python's late resolution)",
+    "adaptation": null,
+    "targetSummary": "word_count(\"\")",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#029",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 23,
+        "column": 29
+      },
+      "end": {
+        "line": 23,
+        "column": 29
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "0",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#030",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 23,
+        "column": 0
+      },
+      "end": {
+        "line": 23,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.assert",
+    "rule": "pytest.assert→vitest.expect.toEqual",
+    "decision": "deterministic",
+    "rationale": "== maps to deep equality (Python == semantics for sequences and primitives)",
+    "adaptation": null,
+    "targetSummary": "word_count(\"\")).toEqual(0",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#031",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 21,
+        "column": 0
+      },
+      "end": {
+        "line": 21,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.test",
+    "rule": "pytest.test→vitest.it",
+    "decision": "deterministic",
+    "rationale": "test function correspondence (name preserved for differential matching)",
+    "adaptation": null,
+    "targetSummary": "it(\"test_word_count\")",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#032",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 28,
+        "column": 11
+      },
+      "end": {
+        "line": 28,
+        "column": 11
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call→js.call",
+    "decision": "deterministic",
+    "rationale": "call correspondence (function declarations hoist like Python's late resolution)",
+    "adaptation": null,
+    "targetSummary": "is_palindrome(text)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#033",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 28,
+        "column": 34
+      },
+      "end": {
+        "line": 28,
+        "column": 34
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(bool)",
+    "rule": "py.bool→js.boolean",
+    "decision": "deterministic",
+    "rationale": "boolean literal correspondence",
+    "adaptation": null,
+    "targetSummary": "true",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#034",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 28,
+        "column": 0
+      },
+      "end": {
+        "line": 28,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.assert",
+    "rule": "pytest.assert→vitest.expect.toBe",
+    "decision": "deterministic",
+    "rationale": "is maps to identity (toBe)",
+    "adaptation": null,
+    "targetSummary": "is_palindrome(text)).toBe(true",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#035",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 26,
+        "column": 34
+      },
+      "end": {
+        "line": 26,
+        "column": 34
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#036",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 26,
+        "column": 45
+      },
+      "end": {
+        "line": 26,
+        "column": 45
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#037",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 26,
+        "column": 66
+      },
+      "end": {
+        "line": 26,
+        "column": 66
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#038",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 27,
+        "column": 0
+      },
+      "end": {
+        "line": 27,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.parametrize",
+    "rule": "pytest.parametrize→vitest.each",
+    "decision": "semantic",
+    "rationale": "parametrize maps to vitest it.each with object cases; test names carry the parameter values (differential matching uses the test-name prefix)",
+    "adaptation": "it.each object cases",
+    "targetSummary": "it.each(3 cases)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#039",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 33,
+        "column": 11
+      },
+      "end": {
+        "line": 33,
+        "column": 11
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call→js.call",
+    "decision": "deterministic",
+    "rationale": "call correspondence (function declarations hoist like Python's late resolution)",
+    "adaptation": null,
+    "targetSummary": "is_palindrome(text)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#040",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 33,
+        "column": 34
+      },
+      "end": {
+        "line": 33,
+        "column": 34
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(bool)",
+    "rule": "py.bool→js.boolean",
+    "decision": "deterministic",
+    "rationale": "boolean literal correspondence",
+    "adaptation": null,
+    "targetSummary": "false",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#041",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 33,
+        "column": 0
+      },
+      "end": {
+        "line": 33,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.assert",
+    "rule": "pytest.assert→vitest.expect.toBe",
+    "decision": "deterministic",
+    "rationale": "is maps to identity (toBe)",
+    "adaptation": null,
+    "targetSummary": "is_palindrome(text)).toBe(false",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#042",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 31,
+        "column": 34
+      },
+      "end": {
+        "line": 31,
+        "column": 34
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#043",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 31,
+        "column": 43
+      },
+      "end": {
+        "line": 31,
+        "column": 43
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#044",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 32,
+        "column": 0
+      },
+      "end": {
+        "line": 32,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.parametrize",
+    "rule": "pytest.parametrize→vitest.each",
+    "decision": "semantic",
+    "rationale": "parametrize maps to vitest it.each with object cases; test names carry the parameter values (differential matching uses the test-name prefix)",
+    "adaptation": "it.each object cases",
+    "targetSummary": "it.each(2 cases)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#045",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 37,
+        "column": 20
+      },
+      "end": {
+        "line": 37,
+        "column": 20
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#046",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 37,
+        "column": 11
+      },
+      "end": {
+        "line": 37,
+        "column": 11
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call→js.call",
+    "decision": "deterministic",
+    "rationale": "call correspondence (function declarations hoist like Python's late resolution)",
+    "adaptation": null,
+    "targetSummary": "initials(\"Ada Lovelace Byron\")",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#047",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 37,
+        "column": 45
+      },
+      "end": {
+        "line": 37,
+        "column": 45
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#048",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 37,
+        "column": 0
+      },
+      "end": {
+        "line": 37,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.assert",
+    "rule": "pytest.assert→vitest.expect.toEqual",
+    "decision": "deterministic",
+    "rationale": "== maps to deep equality (Python == semantics for sequences and primitives)",
+    "adaptation": null,
+    "targetSummary": "initials(\"Ada Lovelace Byron\")).toEqual(\"A.L.B.\"",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#049",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 36,
+        "column": 0
+      },
+      "end": {
+        "line": 36,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.test",
+    "rule": "pytest.test→vitest.it",
+    "decision": "deterministic",
+    "rationale": "test function correspondence (name preserved for differential matching)",
+    "adaptation": null,
+    "targetSummary": "it(\"test_initials\")",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#050",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 41,
+        "column": 11
+      },
+      "end": {
+        "line": 41,
+        "column": 11
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#051",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 41,
+        "column": 18
+      },
+      "end": {
+        "line": 41,
+        "column": 18
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#052",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 41,
+        "column": 0
+      },
+      "end": {
+        "line": 41,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.assert",
+    "rule": "pytest.assert→vitest.expect.contains",
+    "decision": "deterministic",
+    "rationale": "in maps to the Python-membership helper (== on members)",
+    "adaptation": null,
+    "targetSummary": "__ctrans_contains(\"123\", \"3\")).toBe(true",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#053",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 42,
+        "column": 11
+      },
+      "end": {
+        "line": 42,
+        "column": 11
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#054",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 42,
+        "column": 22
+      },
+      "end": {
+        "line": 42,
+        "column": 22
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#055",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 42,
+        "column": 0
+      },
+      "end": {
+        "line": 42,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.assert",
+    "rule": "pytest.assert→vitest.expect.not-contains",
+    "decision": "deterministic",
+    "rationale": "not in maps to the negated Python-membership helper",
+    "adaptation": null,
+    "targetSummary": "__ctrans_contains(\"123\", \"9\")).toBe(false",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_textutil.py#056",
+    "unit": "tests/test_textutil.py",
+    "span": {
+      "start": {
+        "line": 40,
+        "column": 0
+      },
+      "end": {
+        "line": 40,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.test",
+    "rule": "pytest.test→vitest.it",
+    "decision": "deterministic",
+    "rationale": "test function correspondence (name preserved for differential matching)",
+    "adaptation": null,
+    "targetSummary": "it(\"test_parse_int_digits_membership\")",
+    "warnings": [],
+    "escalation": null
+  }
+]

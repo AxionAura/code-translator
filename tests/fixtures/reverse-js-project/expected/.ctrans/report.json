@@ -1,0 +1,60 @@
+{
+  "generator": {
+    "name": "code-translator",
+    "version": "0.0.0"
+  },
+  "sourceLanguage": "javascript",
+  "targetLanguage": "python",
+  "files": [
+    {
+      "source": "src/math.js",
+      "target": "src/math.py",
+      "status": "translated",
+      "decisionCounts": {
+        "deterministic": 16,
+        "semantic": 4,
+        "ambiguous": 0,
+        "unsupported": 0
+      }
+    },
+    {
+      "source": "src/util/stats.js",
+      "target": "src/util/stats.py",
+      "status": "translated",
+      "decisionCounts": {
+        "deterministic": 20,
+        "semantic": 6,
+        "ambiguous": 0,
+        "unsupported": 0
+      }
+    }
+  ],
+  "decisionTotals": {
+    "deterministic": 36,
+    "semantic": 10,
+    "ambiguous": 0,
+    "unsupported": 0
+  },
+  "warnings": [],
+  "unsupported": [],
+  "ambiguous": [],
+  "validationStages": [
+    {
+      "stage": "S1-syntax",
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "stage": "S2-types",
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "stage": "S3-dependencies",
+      "status": "pass",
+      "reason": null
+    }
+  ],
+  "claimLevel": 3,
+  "repairJournal": null
+}

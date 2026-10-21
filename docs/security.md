@@ -12,10 +12,11 @@ Status: **approved blueprint**. Local-first; user code is untrusted; execution i
 | T4 Prompt injection via code | comments/docstrings instructing the model | code-as-data delimiting (per-request nonce), option-choice/patch-only outputs, no tool use, output re-validated (ai-architecture.md §4) |
 | T5 API key theft | config files, logs, repo | keychain-first storage, 0600 fallback + warning, keys banned from config/logs/reports/git |
 | T6 Supply chain | our npm deps; lifecycle scripts | lockfile pinned, pnpm script-block on, license allowlist, no trufflehog-style AGPL embedding, provenance noted as insufficient alone (2026-05-19 bypass) |
-| T7 Sandbox escape / resource abuse | translated code consuming CPU/mem/net | hardened spawn + optional bwrap/docker (§3); timeouts; output caps; no network by default |
-| T8 Path traversal / file bombs | input archives, deep trees | output confined to declared out-dir; entry count/size caps; symlink policy (no following out-of-root) |
+| T7 Sandbox escape / resource abuse | translated code consuming CPU/mem/net | hardened spawn + bwrap default; Docker/Podman strict driver with no network, read-only rootfs, dropped capabilities, cgroup limits, cleanup; timeouts; output caps |
+| T8 Path traversal / file bombs | input archives, deep trees | output confined to declared out-dir; entry count/size caps; symlink policy (no following out-of-root); S7 harness files workspace-relative with size/count caps |
 | T9 Model cost abuse (self-DoS) | repair loops | hard caps per run (calls/tokens/USD/wall-clock); central attempt caps (3/unit, 8/run); patch dedupe + state-hash loop detection |
 | T10 Model-driven validation weakening | repair patches | unit-scoped diff grammar; policy guard on added lines (`@ts-ignore`/`@ts-nocheck`/`declare module`/lint suppression/test `.skip`/`.only`); tests and generated artifacts are not patchable; real validators re-run |
+| T11 Fake capability / downgraded isolation | doctor, strict mode, stage skips | functional probes (daemon query, bwrap unshare run, tool execution); strict mode requires runtime+image and refuses without them; skipped stages never count as pass |
 
 ## 2. Translation path (no execution)
 
@@ -34,9 +35,9 @@ Status: **approved blueprint**. Local-first; user code is untrusted; execution i
 
 **Isolation layer (auto-detected, opt-in via `sandbox: "auto"`):**
 - **bubblewrap**: `--unshare-net --unshare-pid --die-with-parent --ro-bind / / --bind tmpfs /tmp` style profile; degrades gracefully (capability probe) where unprivileged user namespaces are disabled.
-- **Docker/Podman strict mode** (`sandbox: "strict"`): ephemeral container per run, no network, read-only rootfs + tmpfs workdir, cgroup caps; gVisor `runsc` used if configured. Requires daemon; refusal to run unsandboxed execution when `strict` is requested and unavailable — it errors, it does not silently downgrade.
+- **Docker/Podman strict mode (M10, implemented):** `project --strict` runs S4–S7 inside an ephemeral container per execution. The driver uses `docker run`/`podman run` with `--rm --pull=never --network none --read-only --cap-drop ALL --security-opt no-new-privileges --pids-limit 256 --memory 2g --cpus 2`, a tmpfs `/tmp`, the fresh workspace bind-mounted read-write (its only writable path), and tool-controlled toolchain mounts read-only. No host environment is forwarded (only `LANG`/`HOME` plus the spec's explicit additions), no container-engine socket or credential path is mounted, and the image entrypoint is replaced so argv semantics are explicit. A unique `--cidfile` plus `rm -f` cleanup runs after success, validation errors, timeouts, and interruptions; the runtime CLI itself is killed by the process-group timeout. Strict mode requires a usable runtime (daemon probe, not just a binary) AND an explicit image (`--sandbox-image` / `CTRANS_SANDBOX_IMAGE`) with the validation toolchain; pulls are disabled, so a missing image is a hard `container-error`/refusal, never a host fallback. gVisor is optional: `CTRANS_SANDBOX_GVISOR=1` adds `--runtime runsc` only when the `runsc` probe succeeded; requesting it when unavailable refuses the run, and doctor never reports it active unless detected.
 
-**Never:** `shell:true` with interpolated input; execution of `pre/post` lifecycle scripts from generated manifests; `pip install`/`npm install` of the *translated* project during validation without explicit `--consent-install`; execution outside the runner API (unit tests included).
+**Never:** `shell:true` with interpolated input; execution of `pre/post` lifecycle scripts from generated manifests; `pip install`/`npm install` of the *translated* project during validation without explicit `--consent-install`; execution outside the runner API (unit tests included); container image pulls during validation (`--pull=never`); mounting the container-engine socket, host credentials, or unrelated host paths.
 
 ## 4. Secrets and keys
 

@@ -55,6 +55,10 @@ export interface RepairLoopOptions {
   // May TIGHTEN the documented caps; values above are clamped to the defaults.
   readonly maxAttemptsPerUnit?: number;
   readonly maxAttemptsPerRun?: number;
+  // Stages that must be PASS in the BASELINE (not skipped) and in every accepted
+  // candidate. Project mode uses this to demand executable behavioral evidence
+  // (S5/S6); a candidate that leaves one inconclusive/failing is rejected.
+  readonly requirePassing?: readonly ValidationStageName[];
   readonly now?: () => Date;
 }
 
@@ -90,6 +94,24 @@ export async function runRepairLoop(
   // Candidate state is built alongside; only accepted candidates replace `current`.
   let current = new Map(input.files);
   let currentStages: readonly StageResult[] = input.stages;
+  const requiredPassing = options.requirePassing ?? [];
+
+  const unavailableRequired = requiredPassing.filter(
+    (stage) =>
+      !input.stages.some((result) => result.stage === stage && result.status !== "skipped"),
+  );
+  if (unavailableRequired.length > 0) {
+    // Mandatory behavioral validation could not be performed for the baseline:
+    // refuse repair instead of accepting S1-S3-only evidence.
+    return finish(
+      "validation-unavailable",
+      baselineHash,
+      current,
+      currentStages,
+      attempts,
+      acceptedUnits,
+    );
+  }
 
   const eligible = failures.filter(admittedForRepair);
   if (failures.length === 0) {
@@ -289,10 +311,20 @@ export async function runRepairLoop(
         break;
       }
       const verdict = acceptance(currentStages, candidateStages);
-      if (!verdict.accept) {
+      const missingRequired = requiredPassing.filter(
+        (stage) => candidateStages.find((result) => result.stage === stage)?.status !== "pass",
+      );
+      if (!verdict.accept || missingRequired.length > 0) {
         // Remember rejected states too: reproducing one later proves a loop.
         seenStates.add(candidateHash);
-        record("rejected", verdict.reason, candidateHash, candidateStages);
+        record(
+          "rejected",
+          verdict.accept
+            ? `required behavioral stage not passing: ${missingRequired.join(", ")}`
+            : verdict.reason,
+          candidateHash,
+          candidateStages,
+        );
         priorAttempts.push({ patchHash: proposal.patch.diffHash, outcome: "rejected" });
         continue;
       }

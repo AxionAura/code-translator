@@ -1,0 +1,3329 @@
+[
+  {
+    "id": "geometry.py#001",
+    "unit": "geometry.py",
+    "span": null,
+    "sourceKind": "py.Expr(docstring)",
+    "rule": "py.docstring→comment",
+    "decision": "deterministic",
+    "rationale": "docstrings are documentation, not behavior",
+    "adaptation": null,
+    "targetSummary": "block comment",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#002",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 2,
+        "column": 0
+      },
+      "end": {
+        "line": 2,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.ClassDef",
+    "rule": "py.class→js.class",
+    "decision": "semantic",
+    "rationale": "single-inheritance class correspondence; class attributes become static fields (instance access diverges - documented)",
+    "adaptation": "plain class",
+    "targetSummary": "class Point",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#003",
+    "unit": "geometry.py",
+    "span": null,
+    "sourceKind": "py.ClassDef(self-attr)",
+    "rule": "py.self-attr→js.field",
+    "decision": "semantic",
+    "rationale": "Python instance attributes are assigned dynamically; TS fields must be declared. Types come from the first assignment's annotation or conservative inference (else unknown). Fields assigned outside the constructor carry a definite-assignment assertion.",
+    "adaptation": "declared field (typed from first assignment, else unknown)",
+    "targetSummary": "field x",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#004",
+    "unit": "geometry.py",
+    "span": null,
+    "sourceKind": "py.ClassDef(self-attr)",
+    "rule": "py.self-attr→js.field",
+    "decision": "semantic",
+    "rationale": "Python instance attributes are assigned dynamically; TS fields must be declared. Types come from the first assignment's annotation or conservative inference (else unknown). Fields assigned outside the constructor carry a definite-assignment assertion.",
+    "adaptation": "declared field (typed from first assignment, else unknown)",
+    "targetSummary": "field y",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#005",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 3,
+        "column": 26
+      },
+      "end": {
+        "line": 3,
+        "column": 26
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.arg(annotation)",
+    "rule": "py.int-annotation→js.number",
+    "decision": "semantic",
+    "rationale": "Python int is arbitrary precision; JS number is float64 (D-006: intMode=bigint is the exact mode)",
+    "adaptation": "number with precision warning",
+    "targetSummary": "x: number",
+    "warnings": [
+      "CTW-NUM-INT-ARBITRARY-PRECISION"
+    ],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#006",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 3,
+        "column": 34
+      },
+      "end": {
+        "line": 3,
+        "column": 34
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.arg(annotation)",
+    "rule": "py.int-annotation→js.number",
+    "decision": "semantic",
+    "rationale": "Python int is arbitrary precision; JS number is float64 (D-006: intMode=bigint is the exact mode)",
+    "adaptation": "number with precision warning",
+    "targetSummary": "y: number",
+    "warnings": [
+      "CTW-NUM-INT-ARBITRARY-PRECISION"
+    ],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#007",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 3,
+        "column": 4
+      },
+      "end": {
+        "line": 3,
+        "column": 4
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.FunctionDef(method)",
+    "rule": "py.__init__→js.constructor",
+    "decision": "deterministic",
+    "rationale": "constructor correspondence (self dropped)",
+    "adaptation": null,
+    "targetSummary": "constructor(...)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#008",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 4,
+        "column": 8
+      },
+      "end": {
+        "line": 4,
+        "column": 8
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Assign(member)",
+    "rule": "py.member-assign→js.member-assign",
+    "decision": "deterministic",
+    "rationale": "member assignment correspondence (statically typed receiver)",
+    "adaptation": null,
+    "targetSummary": "this.x = ...",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#009",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 5,
+        "column": 8
+      },
+      "end": {
+        "line": 5,
+        "column": 8
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Assign(member)",
+    "rule": "py.member-assign→js.member-assign",
+    "decision": "deterministic",
+    "rationale": "member assignment correspondence (statically typed receiver)",
+    "adaptation": null,
+    "targetSummary": "this.y = ...",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#010",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 7,
+        "column": 29
+      },
+      "end": {
+        "line": 7,
+        "column": 29
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.arg(annotation)",
+    "rule": "py.int-annotation→js.number",
+    "decision": "semantic",
+    "rationale": "Python int is arbitrary precision; JS number is float64 (D-006: intMode=bigint is the exact mode)",
+    "adaptation": "number with precision warning",
+    "targetSummary": "dx: number",
+    "warnings": [
+      "CTW-NUM-INT-ARBITRARY-PRECISION"
+    ],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#011",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 7,
+        "column": 38
+      },
+      "end": {
+        "line": 7,
+        "column": 38
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.arg(annotation)",
+    "rule": "py.int-annotation→js.number",
+    "decision": "semantic",
+    "rationale": "Python int is arbitrary precision; JS number is float64 (D-006: intMode=bigint is the exact mode)",
+    "adaptation": "number with precision warning",
+    "targetSummary": "dy: number",
+    "warnings": [
+      "CTW-NUM-INT-ARBITRARY-PRECISION"
+    ],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#012",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 7,
+        "column": 4
+      },
+      "end": {
+        "line": 7,
+        "column": 4
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.FunctionDef(method)",
+    "rule": "py.method→js.method",
+    "decision": "deterministic",
+    "rationale": "method correspondence (self dropped; self references become this)",
+    "adaptation": null,
+    "targetSummary": "translated(...)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#013",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 8,
+        "column": 8
+      },
+      "end": {
+        "line": 8,
+        "column": 8
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Return",
+    "rule": "py.return→js.return",
+    "decision": "deterministic",
+    "rationale": "return correspondence",
+    "adaptation": null,
+    "targetSummary": "return value;",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#014",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 8,
+        "column": 21
+      },
+      "end": {
+        "line": 8,
+        "column": 21
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Attribute",
+    "rule": "py.attribute→js.member",
+    "decision": "deterministic",
+    "rationale": "member access correspondence (library method renames arrive with the registry, M5)",
+    "adaptation": null,
+    "targetSummary": "this.x",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#015",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 8,
+        "column": 21
+      },
+      "end": {
+        "line": 8,
+        "column": 21
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.BinOp(Add)",
+    "rule": "py.add→js.+",
+    "decision": "deterministic",
+    "rationale": "numeric addition correspondence",
+    "adaptation": null,
+    "targetSummary": "this.x + dx",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#016",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 8,
+        "column": 34
+      },
+      "end": {
+        "line": 8,
+        "column": 34
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Attribute",
+    "rule": "py.attribute→js.member",
+    "decision": "deterministic",
+    "rationale": "member access correspondence (library method renames arrive with the registry, M5)",
+    "adaptation": null,
+    "targetSummary": "this.y",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#017",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 8,
+        "column": 34
+      },
+      "end": {
+        "line": 8,
+        "column": 34
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.BinOp(Add)",
+    "rule": "py.add→js.+",
+    "decision": "deterministic",
+    "rationale": "numeric addition correspondence",
+    "adaptation": null,
+    "targetSummary": "this.y + dy",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#018",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 8,
+        "column": 15
+      },
+      "end": {
+        "line": 8,
+        "column": 15
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call-ctor→js.new",
+    "decision": "deterministic",
+    "rationale": "class construction correspondence (unit-local class)",
+    "adaptation": null,
+    "targetSummary": "new Point((this.x + dx), (this.y + dy))",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#019",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 10,
+        "column": 4
+      },
+      "end": {
+        "line": 10,
+        "column": 4
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.FunctionDef(method)",
+    "rule": "py.method→js.method",
+    "decision": "deterministic",
+    "rationale": "method correspondence (self dropped; self references become this)",
+    "adaptation": null,
+    "targetSummary": "key(...)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#020",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 11,
+        "column": 8
+      },
+      "end": {
+        "line": 11,
+        "column": 8
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Return",
+    "rule": "py.return→js.return",
+    "decision": "deterministic",
+    "rationale": "return correspondence",
+    "adaptation": null,
+    "targetSummary": "return value;",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#021",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 11,
+        "column": 15
+      },
+      "end": {
+        "line": 11,
+        "column": 15
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Tuple",
+    "rule": "py.tuple→js.array",
+    "decision": "semantic",
+    "rationale": "JS has no tuple type; immutability is not preserved (documented tradeoff)",
+    "adaptation": "tuple emitted as array",
+    "targetSummary": "array literal",
+    "warnings": [
+      "CTW-TUPLE-ARRAY"
+    ],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#022",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 11,
+        "column": 16
+      },
+      "end": {
+        "line": 11,
+        "column": 16
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Attribute",
+    "rule": "py.attribute→js.member",
+    "decision": "deterministic",
+    "rationale": "member access correspondence (library method renames arrive with the registry, M5)",
+    "adaptation": null,
+    "targetSummary": "this.x",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#023",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 11,
+        "column": 24
+      },
+      "end": {
+        "line": 11,
+        "column": 24
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Attribute",
+    "rule": "py.attribute→js.member",
+    "decision": "deterministic",
+    "rationale": "member access correspondence (library method renames arrive with the registry, M5)",
+    "adaptation": null,
+    "targetSummary": "this.y",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#024",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 14,
+        "column": 0
+      },
+      "end": {
+        "line": 14,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.ClassDef",
+    "rule": "py.class→js.class",
+    "decision": "semantic",
+    "rationale": "single-inheritance class correspondence; class attributes become static fields (instance access diverges - documented)",
+    "adaptation": "plain class",
+    "targetSummary": "class Rect",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#025",
+    "unit": "geometry.py",
+    "span": null,
+    "sourceKind": "py.ClassDef(self-attr)",
+    "rule": "py.self-attr→js.field",
+    "decision": "semantic",
+    "rationale": "Python instance attributes are assigned dynamically; TS fields must be declared. Types come from the first assignment's annotation or conservative inference (else unknown). Fields assigned outside the constructor carry a definite-assignment assertion.",
+    "adaptation": "declared field (typed from first assignment, else unknown)",
+    "targetSummary": "field h",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#026",
+    "unit": "geometry.py",
+    "span": null,
+    "sourceKind": "py.ClassDef(self-attr)",
+    "rule": "py.self-attr→js.field",
+    "decision": "semantic",
+    "rationale": "Python instance attributes are assigned dynamically; TS fields must be declared. Types come from the first assignment's annotation or conservative inference (else unknown). Fields assigned outside the constructor carry a definite-assignment assertion.",
+    "adaptation": "declared field (typed from first assignment, else unknown)",
+    "targetSummary": "field w",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#027",
+    "unit": "geometry.py",
+    "span": null,
+    "sourceKind": "py.ClassDef(self-attr)",
+    "rule": "py.self-attr→js.field",
+    "decision": "semantic",
+    "rationale": "Python instance attributes are assigned dynamically; TS fields must be declared. Types come from the first assignment's annotation or conservative inference (else unknown). Fields assigned outside the constructor carry a definite-assignment assertion.",
+    "adaptation": "declared field (typed from first assignment, else unknown)",
+    "targetSummary": "field x",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#028",
+    "unit": "geometry.py",
+    "span": null,
+    "sourceKind": "py.ClassDef(self-attr)",
+    "rule": "py.self-attr→js.field",
+    "decision": "semantic",
+    "rationale": "Python instance attributes are assigned dynamically; TS fields must be declared. Types come from the first assignment's annotation or conservative inference (else unknown). Fields assigned outside the constructor carry a definite-assignment assertion.",
+    "adaptation": "declared field (typed from first assignment, else unknown)",
+    "targetSummary": "field y",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#029",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 15,
+        "column": 26
+      },
+      "end": {
+        "line": 15,
+        "column": 26
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.arg(annotation)",
+    "rule": "py.int-annotation→js.number",
+    "decision": "semantic",
+    "rationale": "Python int is arbitrary precision; JS number is float64 (D-006: intMode=bigint is the exact mode)",
+    "adaptation": "number with precision warning",
+    "targetSummary": "x: number",
+    "warnings": [
+      "CTW-NUM-INT-ARBITRARY-PRECISION"
+    ],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#030",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 15,
+        "column": 34
+      },
+      "end": {
+        "line": 15,
+        "column": 34
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.arg(annotation)",
+    "rule": "py.int-annotation→js.number",
+    "decision": "semantic",
+    "rationale": "Python int is arbitrary precision; JS number is float64 (D-006: intMode=bigint is the exact mode)",
+    "adaptation": "number with precision warning",
+    "targetSummary": "y: number",
+    "warnings": [
+      "CTW-NUM-INT-ARBITRARY-PRECISION"
+    ],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#031",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 15,
+        "column": 42
+      },
+      "end": {
+        "line": 15,
+        "column": 42
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.arg(annotation)",
+    "rule": "py.int-annotation→js.number",
+    "decision": "semantic",
+    "rationale": "Python int is arbitrary precision; JS number is float64 (D-006: intMode=bigint is the exact mode)",
+    "adaptation": "number with precision warning",
+    "targetSummary": "w: number",
+    "warnings": [
+      "CTW-NUM-INT-ARBITRARY-PRECISION"
+    ],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#032",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 15,
+        "column": 50
+      },
+      "end": {
+        "line": 15,
+        "column": 50
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.arg(annotation)",
+    "rule": "py.int-annotation→js.number",
+    "decision": "semantic",
+    "rationale": "Python int is arbitrary precision; JS number is float64 (D-006: intMode=bigint is the exact mode)",
+    "adaptation": "number with precision warning",
+    "targetSummary": "h: number",
+    "warnings": [
+      "CTW-NUM-INT-ARBITRARY-PRECISION"
+    ],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#033",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 15,
+        "column": 4
+      },
+      "end": {
+        "line": 15,
+        "column": 4
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.FunctionDef(method)",
+    "rule": "py.__init__→js.constructor",
+    "decision": "deterministic",
+    "rationale": "constructor correspondence (self dropped)",
+    "adaptation": null,
+    "targetSummary": "constructor(...)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#034",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 16,
+        "column": 8
+      },
+      "end": {
+        "line": 16,
+        "column": 8
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Assign(member)",
+    "rule": "py.member-assign→js.member-assign",
+    "decision": "deterministic",
+    "rationale": "member assignment correspondence (statically typed receiver)",
+    "adaptation": null,
+    "targetSummary": "this.x = ...",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#035",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 17,
+        "column": 8
+      },
+      "end": {
+        "line": 17,
+        "column": 8
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Assign(member)",
+    "rule": "py.member-assign→js.member-assign",
+    "decision": "deterministic",
+    "rationale": "member assignment correspondence (statically typed receiver)",
+    "adaptation": null,
+    "targetSummary": "this.y = ...",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#036",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 18,
+        "column": 8
+      },
+      "end": {
+        "line": 18,
+        "column": 8
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Assign(member)",
+    "rule": "py.member-assign→js.member-assign",
+    "decision": "deterministic",
+    "rationale": "member assignment correspondence (statically typed receiver)",
+    "adaptation": null,
+    "targetSummary": "this.w = ...",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#037",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 19,
+        "column": 8
+      },
+      "end": {
+        "line": 19,
+        "column": 8
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Assign(member)",
+    "rule": "py.member-assign→js.member-assign",
+    "decision": "deterministic",
+    "rationale": "member assignment correspondence (statically typed receiver)",
+    "adaptation": null,
+    "targetSummary": "this.h = ...",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#038",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 21,
+        "column": 4
+      },
+      "end": {
+        "line": 21,
+        "column": 4
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.FunctionDef(method)",
+    "rule": "py.method→js.method",
+    "decision": "deterministic",
+    "rationale": "method correspondence (self dropped; self references become this)",
+    "adaptation": null,
+    "targetSummary": "contains(...)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#039",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 22,
+        "column": 15
+      },
+      "end": {
+        "line": 22,
+        "column": 15
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Attribute",
+    "rule": "py.attribute→js.member",
+    "decision": "deterministic",
+    "rationale": "member access correspondence (library method renames arrive with the registry, M5)",
+    "adaptation": null,
+    "targetSummary": "this.x",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#040",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 22,
+        "column": 25
+      },
+      "end": {
+        "line": 22,
+        "column": 25
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Attribute",
+    "rule": "py.attribute→js.member",
+    "decision": "deterministic",
+    "rationale": "member access correspondence (library method renames arrive with the registry, M5)",
+    "adaptation": null,
+    "targetSummary": "point.x",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#041",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 22,
+        "column": 25
+      },
+      "end": {
+        "line": 22,
+        "column": 25
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Compare(LtE)",
+    "rule": "py.lte→__ctrans.lte",
+    "decision": "semantic",
+    "rationale": "operands are statically unknown; JS relational operators coerce and TS cannot compile them on unknown - __ctrans_compare raises the Python TypeError for mixed types",
+    "adaptation": "__ctrans_lte",
+    "targetSummary": "__ctrans_lte(left, right)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#042",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 22,
+        "column": 37
+      },
+      "end": {
+        "line": 22,
+        "column": 37
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Attribute",
+    "rule": "py.attribute→js.member",
+    "decision": "deterministic",
+    "rationale": "member access correspondence (library method renames arrive with the registry, M5)",
+    "adaptation": null,
+    "targetSummary": "point.x",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#043",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 22,
+        "column": 47
+      },
+      "end": {
+        "line": 22,
+        "column": 47
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Attribute",
+    "rule": "py.attribute→js.member",
+    "decision": "deterministic",
+    "rationale": "member access correspondence (library method renames arrive with the registry, M5)",
+    "adaptation": null,
+    "targetSummary": "this.x",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#044",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 22,
+        "column": 56
+      },
+      "end": {
+        "line": 22,
+        "column": 56
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Attribute",
+    "rule": "py.attribute→js.member",
+    "decision": "deterministic",
+    "rationale": "member access correspondence (library method renames arrive with the registry, M5)",
+    "adaptation": null,
+    "targetSummary": "this.w",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#045",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 22,
+        "column": 47
+      },
+      "end": {
+        "line": 22,
+        "column": 47
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.BinOp(Add)",
+    "rule": "py.add→js.+",
+    "decision": "deterministic",
+    "rationale": "numeric addition correspondence",
+    "adaptation": null,
+    "targetSummary": "this.x + this.w",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#046",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 22,
+        "column": 47
+      },
+      "end": {
+        "line": 22,
+        "column": 47
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Compare(Lt)",
+    "rule": "py.lt→__ctrans.lt",
+    "decision": "semantic",
+    "rationale": "operands are statically unknown; JS relational operators coerce and TS cannot compile them on unknown - __ctrans_compare raises the Python TypeError for mixed types",
+    "adaptation": "__ctrans_lt",
+    "targetSummary": "__ctrans_lt(left, right)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#047",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 22,
+        "column": 15
+      },
+      "end": {
+        "line": 22,
+        "column": 15
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.BoolOp(And)",
+    "rule": "py.boolop→js.native",
+    "decision": "deterministic",
+    "rationale": "all operand truthinesses are provably equivalent, so native &&/|| preserves Python's operand-value semantics",
+    "adaptation": null,
+    "targetSummary": "native and-chain",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#048",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 22,
+        "column": 8
+      },
+      "end": {
+        "line": 22,
+        "column": 8
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Assign",
+    "rule": "py.assign→js.let/assign",
+    "decision": "deterministic",
+    "rationale": "binding declared with let (Python bindings are rebindable)",
+    "adaptation": null,
+    "targetSummary": "in_x = ...",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#049",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 23,
+        "column": 15
+      },
+      "end": {
+        "line": 23,
+        "column": 15
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Attribute",
+    "rule": "py.attribute→js.member",
+    "decision": "deterministic",
+    "rationale": "member access correspondence (library method renames arrive with the registry, M5)",
+    "adaptation": null,
+    "targetSummary": "this.y",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#050",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 23,
+        "column": 25
+      },
+      "end": {
+        "line": 23,
+        "column": 25
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Attribute",
+    "rule": "py.attribute→js.member",
+    "decision": "deterministic",
+    "rationale": "member access correspondence (library method renames arrive with the registry, M5)",
+    "adaptation": null,
+    "targetSummary": "point.y",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#051",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 23,
+        "column": 25
+      },
+      "end": {
+        "line": 23,
+        "column": 25
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Compare(LtE)",
+    "rule": "py.lte→__ctrans.lte",
+    "decision": "semantic",
+    "rationale": "operands are statically unknown; JS relational operators coerce and TS cannot compile them on unknown - __ctrans_compare raises the Python TypeError for mixed types",
+    "adaptation": "__ctrans_lte",
+    "targetSummary": "__ctrans_lte(left, right)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#052",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 23,
+        "column": 37
+      },
+      "end": {
+        "line": 23,
+        "column": 37
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Attribute",
+    "rule": "py.attribute→js.member",
+    "decision": "deterministic",
+    "rationale": "member access correspondence (library method renames arrive with the registry, M5)",
+    "adaptation": null,
+    "targetSummary": "point.y",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#053",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 23,
+        "column": 47
+      },
+      "end": {
+        "line": 23,
+        "column": 47
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Attribute",
+    "rule": "py.attribute→js.member",
+    "decision": "deterministic",
+    "rationale": "member access correspondence (library method renames arrive with the registry, M5)",
+    "adaptation": null,
+    "targetSummary": "this.y",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#054",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 23,
+        "column": 56
+      },
+      "end": {
+        "line": 23,
+        "column": 56
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Attribute",
+    "rule": "py.attribute→js.member",
+    "decision": "deterministic",
+    "rationale": "member access correspondence (library method renames arrive with the registry, M5)",
+    "adaptation": null,
+    "targetSummary": "this.h",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#055",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 23,
+        "column": 47
+      },
+      "end": {
+        "line": 23,
+        "column": 47
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.BinOp(Add)",
+    "rule": "py.add→js.+",
+    "decision": "deterministic",
+    "rationale": "numeric addition correspondence",
+    "adaptation": null,
+    "targetSummary": "this.y + this.h",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#056",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 23,
+        "column": 47
+      },
+      "end": {
+        "line": 23,
+        "column": 47
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Compare(Lt)",
+    "rule": "py.lt→__ctrans.lt",
+    "decision": "semantic",
+    "rationale": "operands are statically unknown; JS relational operators coerce and TS cannot compile them on unknown - __ctrans_compare raises the Python TypeError for mixed types",
+    "adaptation": "__ctrans_lt",
+    "targetSummary": "__ctrans_lt(left, right)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#057",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 23,
+        "column": 15
+      },
+      "end": {
+        "line": 23,
+        "column": 15
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.BoolOp(And)",
+    "rule": "py.boolop→js.native",
+    "decision": "deterministic",
+    "rationale": "all operand truthinesses are provably equivalent, so native &&/|| preserves Python's operand-value semantics",
+    "adaptation": null,
+    "targetSummary": "native and-chain",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#058",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 23,
+        "column": 8
+      },
+      "end": {
+        "line": 23,
+        "column": 8
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Assign",
+    "rule": "py.assign→js.let/assign",
+    "decision": "deterministic",
+    "rationale": "binding declared with let (Python bindings are rebindable)",
+    "adaptation": null,
+    "targetSummary": "in_y = ...",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#059",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 24,
+        "column": 8
+      },
+      "end": {
+        "line": 24,
+        "column": 8
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Return",
+    "rule": "py.return→js.return",
+    "decision": "deterministic",
+    "rationale": "return correspondence",
+    "adaptation": null,
+    "targetSummary": "return value;",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#060",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 24,
+        "column": 15
+      },
+      "end": {
+        "line": 24,
+        "column": 15
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.BoolOp(And)",
+    "rule": "py.boolop→js.ternary-truthy",
+    "decision": "semantic",
+    "rationale": "and/or return operand values gated on Python truthiness; JS &&/|| diverge for NaN/[]/{}",
+    "adaptation": "truthiness-gated ternary chain",
+    "targetSummary": "and-chain",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#061",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 26,
+        "column": 4
+      },
+      "end": {
+        "line": 26,
+        "column": 4
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.FunctionDef(method)",
+    "rule": "py.method→js.method",
+    "decision": "deterministic",
+    "rationale": "method correspondence (self dropped; self references become this)",
+    "adaptation": null,
+    "targetSummary": "area(...)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#062",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 27,
+        "column": 8
+      },
+      "end": {
+        "line": 27,
+        "column": 8
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Return",
+    "rule": "py.return→js.return",
+    "decision": "deterministic",
+    "rationale": "return correspondence",
+    "adaptation": null,
+    "targetSummary": "return value;",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#063",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 27,
+        "column": 15
+      },
+      "end": {
+        "line": 27,
+        "column": 15
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Attribute",
+    "rule": "py.attribute→js.member",
+    "decision": "deterministic",
+    "rationale": "member access correspondence (library method renames arrive with the registry, M5)",
+    "adaptation": null,
+    "targetSummary": "this.w",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#064",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 27,
+        "column": 24
+      },
+      "end": {
+        "line": 27,
+        "column": 24
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Attribute",
+    "rule": "py.attribute→js.member",
+    "decision": "deterministic",
+    "rationale": "member access correspondence (library method renames arrive with the registry, M5)",
+    "adaptation": null,
+    "targetSummary": "this.h",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#065",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 27,
+        "column": 15
+      },
+      "end": {
+        "line": 27,
+        "column": 15
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.BinOp(Mult)",
+    "rule": "py.mul→js.*",
+    "decision": "deterministic",
+    "rationale": "numeric multiplication correspondence",
+    "adaptation": null,
+    "targetSummary": "this.w * this.h",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#066",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 30,
+        "column": 0
+      },
+      "end": {
+        "line": 30,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.FunctionDef",
+    "rule": "py.function→js.function",
+    "decision": "deterministic",
+    "rationale": "function correspondence (closures via JS scoping; async syntax corresponds)",
+    "adaptation": null,
+    "targetSummary": "function unit_rect",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#067",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 31,
+        "column": 4
+      },
+      "end": {
+        "line": 31,
+        "column": 4
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Return",
+    "rule": "py.return→js.return",
+    "decision": "deterministic",
+    "rationale": "return correspondence",
+    "adaptation": null,
+    "targetSummary": "return value;",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#068",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 31,
+        "column": 16
+      },
+      "end": {
+        "line": 31,
+        "column": 16
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "0",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#069",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 31,
+        "column": 19
+      },
+      "end": {
+        "line": 31,
+        "column": 19
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "0",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#070",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 31,
+        "column": 22
+      },
+      "end": {
+        "line": 31,
+        "column": 22
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "1",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#071",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 31,
+        "column": 25
+      },
+      "end": {
+        "line": 31,
+        "column": 25
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "1",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "geometry.py#072",
+    "unit": "geometry.py",
+    "span": {
+      "start": {
+        "line": 31,
+        "column": 11
+      },
+      "end": {
+        "line": 31,
+        "column": 11
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call-ctor→js.new",
+    "decision": "deterministic",
+    "rationale": "class construction correspondence (unit-local class)",
+    "adaptation": null,
+    "targetSummary": "new Rect(0, 0, 1, 1)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#001",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 7,
+        "column": 4
+      },
+      "end": {
+        "line": 7,
+        "column": 4
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Return",
+    "rule": "py.return→js.return",
+    "decision": "deterministic",
+    "rationale": "return correspondence",
+    "adaptation": null,
+    "targetSummary": "return value;",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#002",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 7,
+        "column": 17
+      },
+      "end": {
+        "line": 7,
+        "column": 17
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "0",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#003",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 7,
+        "column": 20
+      },
+      "end": {
+        "line": 7,
+        "column": 20
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "0",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#004",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 7,
+        "column": 11
+      },
+      "end": {
+        "line": 7,
+        "column": 11
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call-ctor→js.new",
+    "decision": "deterministic",
+    "rationale": "class construction correspondence (unit-local class)",
+    "adaptation": null,
+    "targetSummary": "new Point(0, 0)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#005",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 12,
+        "column": 4
+      },
+      "end": {
+        "line": 12,
+        "column": 4
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Return",
+    "rule": "py.return→js.return",
+    "decision": "deterministic",
+    "rationale": "return correspondence",
+    "adaptation": null,
+    "targetSummary": "return value;",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#006",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 12,
+        "column": 16
+      },
+      "end": {
+        "line": 12,
+        "column": 16
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "0",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#007",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 12,
+        "column": 19
+      },
+      "end": {
+        "line": 12,
+        "column": 19
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "0",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#008",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 12,
+        "column": 22
+      },
+      "end": {
+        "line": 12,
+        "column": 22
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "10",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#009",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 12,
+        "column": 26
+      },
+      "end": {
+        "line": 12,
+        "column": 26
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "5",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#010",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 12,
+        "column": 11
+      },
+      "end": {
+        "line": 12,
+        "column": 11
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call-ctor→js.new",
+    "decision": "deterministic",
+    "rationale": "class construction correspondence (unit-local class)",
+    "adaptation": null,
+    "targetSummary": "new Rect(0, 0, 10, 5)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#011",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 16,
+        "column": 30
+      },
+      "end": {
+        "line": 16,
+        "column": 30
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "3",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#012",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 16,
+        "column": 34
+      },
+      "end": {
+        "line": 16,
+        "column": 34
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "2",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#013",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 16,
+        "column": 33
+      },
+      "end": {
+        "line": 16,
+        "column": 33
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.UnaryOp(USub)",
+    "rule": "py.unary→js.unary",
+    "decision": "deterministic",
+    "rationale": "unary operator correspondence (number-typed operand)",
+    "adaptation": null,
+    "targetSummary": "-2",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#014",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 16,
+        "column": 12
+      },
+      "end": {
+        "line": 16,
+        "column": 12
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call→__ctrans.callMethod",
+    "decision": "semantic",
+    "rationale": "receiver type is statically unknown; TS cannot infer the member and Python's AttributeError/TypeError behavior is preserved via __ctrans_callMethod",
+    "adaptation": "__ctrans_callMethod",
+    "targetSummary": "callMethod(origin, \"translated\", ...)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#015",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 16,
+        "column": 4
+      },
+      "end": {
+        "line": 16,
+        "column": 4
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Assign",
+    "rule": "py.assign→js.let/assign",
+    "decision": "deterministic",
+    "rationale": "binding declared with let (Python bindings are rebindable)",
+    "adaptation": null,
+    "targetSummary": "moved = ...",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#016",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 17,
+        "column": 11
+      },
+      "end": {
+        "line": 17,
+        "column": 11
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call→__ctrans.callMethod",
+    "decision": "semantic",
+    "rationale": "receiver type is statically unknown; TS cannot infer the member and Python's AttributeError/TypeError behavior is preserved via __ctrans_callMethod",
+    "adaptation": "__ctrans_callMethod",
+    "targetSummary": "callMethod(moved, \"key\", ...)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#017",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 17,
+        "column": 26
+      },
+      "end": {
+        "line": 17,
+        "column": 26
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Tuple",
+    "rule": "py.tuple→js.array",
+    "decision": "semantic",
+    "rationale": "JS has no tuple type; immutability is not preserved (documented tradeoff)",
+    "adaptation": "tuple emitted as array",
+    "targetSummary": "array literal",
+    "warnings": [
+      "CTW-TUPLE-ARRAY"
+    ],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#018",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 17,
+        "column": 27
+      },
+      "end": {
+        "line": 17,
+        "column": 27
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "3",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#019",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 17,
+        "column": 31
+      },
+      "end": {
+        "line": 17,
+        "column": 31
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "2",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#020",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 17,
+        "column": 30
+      },
+      "end": {
+        "line": 17,
+        "column": 30
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.UnaryOp(USub)",
+    "rule": "py.unary→js.unary",
+    "decision": "deterministic",
+    "rationale": "unary operator correspondence (number-typed operand)",
+    "adaptation": null,
+    "targetSummary": "-2",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#021",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 17,
+        "column": 0
+      },
+      "end": {
+        "line": 17,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.assert",
+    "rule": "pytest.assert→vitest.expect.toEqual",
+    "decision": "deterministic",
+    "rationale": "== maps to deep equality (Python == semantics for sequences and primitives)",
+    "adaptation": null,
+    "targetSummary": "__ctrans_callMethod(moved, \"key\")).toEqual([3, (-2)]",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#022",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 15,
+        "column": 0
+      },
+      "end": {
+        "line": 15,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.test",
+    "rule": "pytest.test→vitest.it",
+    "decision": "deterministic",
+    "rationale": "test function correspondence (name preserved for differential matching)",
+    "adaptation": null,
+    "targetSummary": "it(\"test_translated\")",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#023",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 21,
+        "column": 31
+      },
+      "end": {
+        "line": 21,
+        "column": 31
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "9",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#024",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 21,
+        "column": 34
+      },
+      "end": {
+        "line": 21,
+        "column": 34
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "4",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#025",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 21,
+        "column": 25
+      },
+      "end": {
+        "line": 21,
+        "column": 25
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call-ctor→js.new",
+    "decision": "deterministic",
+    "rationale": "class construction correspondence (unit-local class)",
+    "adaptation": null,
+    "targetSummary": "new Point(9, 4)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#026",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 21,
+        "column": 11
+      },
+      "end": {
+        "line": 21,
+        "column": 11
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call→__ctrans.callMethod",
+    "decision": "semantic",
+    "rationale": "receiver type is statically unknown; TS cannot infer the member and Python's AttributeError/TypeError behavior is preserved via __ctrans_callMethod",
+    "adaptation": "__ctrans_callMethod",
+    "targetSummary": "callMethod(rect, \"contains\", ...)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#027",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 21,
+        "column": 41
+      },
+      "end": {
+        "line": 21,
+        "column": 41
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(bool)",
+    "rule": "py.bool→js.boolean",
+    "decision": "deterministic",
+    "rationale": "boolean literal correspondence",
+    "adaptation": null,
+    "targetSummary": "true",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#028",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 21,
+        "column": 0
+      },
+      "end": {
+        "line": 21,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.assert",
+    "rule": "pytest.assert→vitest.expect.toBe",
+    "decision": "deterministic",
+    "rationale": "is maps to identity (toBe)",
+    "adaptation": null,
+    "targetSummary": "__ctrans_callMethod(rect, \"contains\", new Point(9, 4))).toBe(true",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#029",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 20,
+        "column": 0
+      },
+      "end": {
+        "line": 20,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.test",
+    "rule": "pytest.test→vitest.it",
+    "decision": "deterministic",
+    "rationale": "test function correspondence (name preserved for differential matching)",
+    "adaptation": null,
+    "targetSummary": "it(\"test_contains_true\")",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#030",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 25,
+        "column": 31
+      },
+      "end": {
+        "line": 25,
+        "column": 31
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "10",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#031",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 25,
+        "column": 35
+      },
+      "end": {
+        "line": 25,
+        "column": 35
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "4",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#032",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 25,
+        "column": 25
+      },
+      "end": {
+        "line": 25,
+        "column": 25
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call-ctor→js.new",
+    "decision": "deterministic",
+    "rationale": "class construction correspondence (unit-local class)",
+    "adaptation": null,
+    "targetSummary": "new Point(10, 4)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#033",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 25,
+        "column": 11
+      },
+      "end": {
+        "line": 25,
+        "column": 11
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call→__ctrans.callMethod",
+    "decision": "semantic",
+    "rationale": "receiver type is statically unknown; TS cannot infer the member and Python's AttributeError/TypeError behavior is preserved via __ctrans_callMethod",
+    "adaptation": "__ctrans_callMethod",
+    "targetSummary": "callMethod(rect, \"contains\", ...)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#034",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 25,
+        "column": 42
+      },
+      "end": {
+        "line": 25,
+        "column": 42
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(bool)",
+    "rule": "py.bool→js.boolean",
+    "decision": "deterministic",
+    "rationale": "boolean literal correspondence",
+    "adaptation": null,
+    "targetSummary": "false",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#035",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 25,
+        "column": 0
+      },
+      "end": {
+        "line": 25,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.assert",
+    "rule": "pytest.assert→vitest.expect.toBe",
+    "decision": "deterministic",
+    "rationale": "is maps to identity (toBe)",
+    "adaptation": null,
+    "targetSummary": "__ctrans_callMethod(rect, \"contains\", new Point(10, 4))).toBe(false",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#036",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 24,
+        "column": 0
+      },
+      "end": {
+        "line": 24,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.test",
+    "rule": "pytest.test→vitest.it",
+    "decision": "deterministic",
+    "rationale": "test function correspondence (name preserved for differential matching)",
+    "adaptation": null,
+    "targetSummary": "it(\"test_contains_false\")",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#037",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 29,
+        "column": 11
+      },
+      "end": {
+        "line": 29,
+        "column": 11
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call→js.call",
+    "decision": "deterministic",
+    "rationale": "call correspondence (function declarations hoist like Python's late resolution)",
+    "adaptation": null,
+    "targetSummary": "unit_rect()",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#038",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 29,
+        "column": 11
+      },
+      "end": {
+        "line": 29,
+        "column": 11
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call→__ctrans.callMethod",
+    "decision": "semantic",
+    "rationale": "receiver type is statically unknown; TS cannot infer the member and Python's AttributeError/TypeError behavior is preserved via __ctrans_callMethod",
+    "adaptation": "__ctrans_callMethod",
+    "targetSummary": "callMethod(unit_rect(), \"area\", ...)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#039",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 29,
+        "column": 33
+      },
+      "end": {
+        "line": 29,
+        "column": 33
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "1",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#040",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 29,
+        "column": 0
+      },
+      "end": {
+        "line": 29,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.assert",
+    "rule": "pytest.assert→vitest.expect.toEqual",
+    "decision": "deterministic",
+    "rationale": "== maps to deep equality (Python == semantics for sequences and primitives)",
+    "adaptation": null,
+    "targetSummary": "__ctrans_callMethod(unit_rect(), \"area\")).toEqual(1",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#041",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 28,
+        "column": 0
+      },
+      "end": {
+        "line": 28,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.test",
+    "rule": "pytest.test→vitest.it",
+    "decision": "deterministic",
+    "rationale": "test function correspondence (name preserved for differential matching)",
+    "adaptation": null,
+    "targetSummary": "it(\"test_unit_rect_area\")",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#042",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 34,
+        "column": 20
+      },
+      "end": {
+        "line": 34,
+        "column": 20
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "2",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#043",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 34,
+        "column": 23
+      },
+      "end": {
+        "line": 34,
+        "column": 23
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "3",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#044",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 34,
+        "column": 26
+      },
+      "end": {
+        "line": 34,
+        "column": 26
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "4",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#045",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 34,
+        "column": 29
+      },
+      "end": {
+        "line": 34,
+        "column": 29
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "5",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#046",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 34,
+        "column": 15
+      },
+      "end": {
+        "line": 34,
+        "column": 15
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call-ctor→js.new",
+    "decision": "deterministic",
+    "rationale": "class construction correspondence (unit-local class)",
+    "adaptation": null,
+    "targetSummary": "new Rect(2, 3, 4, 5)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#047",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 34,
+        "column": 15
+      },
+      "end": {
+        "line": 34,
+        "column": 15
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call→__ctrans.callMethod",
+    "decision": "semantic",
+    "rationale": "receiver type is statically unknown; TS cannot infer the member and Python's AttributeError/TypeError behavior is preserved via __ctrans_callMethod",
+    "adaptation": "__ctrans_callMethod",
+    "targetSummary": "callMethod(new Rect(2, 3, 4, 5), \"area\", ...)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#048",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 34,
+        "column": 42
+      },
+      "end": {
+        "line": 34,
+        "column": 42
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "20",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#049",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 34,
+        "column": 0
+      },
+      "end": {
+        "line": 34,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.assert",
+    "rule": "pytest.assert→vitest.expect.toEqual",
+    "decision": "deterministic",
+    "rationale": "== maps to deep equality (Python == semantics for sequences and primitives)",
+    "adaptation": null,
+    "targetSummary": "__ctrans_callMethod(new Rect(2, 3, 4, 5), \"area\")).toEqual(20",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#050",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 33,
+        "column": 0
+      },
+      "end": {
+        "line": 33,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.test-method",
+    "rule": "pytest.test-method→vitest.it",
+    "decision": "deterministic",
+    "rationale": "Test-class method correspondence (self dropped; plain methods only)",
+    "adaptation": null,
+    "targetSummary": "it(\"TestRect.test_area\")",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#051",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 37,
+        "column": 20
+      },
+      "end": {
+        "line": 37,
+        "column": 20
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "0",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#052",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 37,
+        "column": 23
+      },
+      "end": {
+        "line": 37,
+        "column": 23
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "0",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#053",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 37,
+        "column": 26
+      },
+      "end": {
+        "line": 37,
+        "column": 26
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "2",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#054",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 37,
+        "column": 29
+      },
+      "end": {
+        "line": 37,
+        "column": 29
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "2",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#055",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 37,
+        "column": 15
+      },
+      "end": {
+        "line": 37,
+        "column": 15
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call-ctor→js.new",
+    "decision": "deterministic",
+    "rationale": "class construction correspondence (unit-local class)",
+    "adaptation": null,
+    "targetSummary": "new Rect(0, 0, 2, 2)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#056",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 37,
+        "column": 8
+      },
+      "end": {
+        "line": 37,
+        "column": 8
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Assign",
+    "rule": "py.assign→js.let/assign",
+    "decision": "deterministic",
+    "rationale": "binding declared with let (Python bindings are rebindable)",
+    "adaptation": null,
+    "targetSummary": "rect = ...",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#057",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 38,
+        "column": 35
+      },
+      "end": {
+        "line": 38,
+        "column": 35
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "0",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#058",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 38,
+        "column": 38
+      },
+      "end": {
+        "line": 38,
+        "column": 38
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "0",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#059",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 38,
+        "column": 29
+      },
+      "end": {
+        "line": 38,
+        "column": 29
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call-ctor→js.new",
+    "decision": "deterministic",
+    "rationale": "class construction correspondence (unit-local class)",
+    "adaptation": null,
+    "targetSummary": "new Point(0, 0)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#060",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 38,
+        "column": 15
+      },
+      "end": {
+        "line": 38,
+        "column": 15
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call→js.call",
+    "decision": "deterministic",
+    "rationale": "method call correspondence on a statically typed receiver",
+    "adaptation": null,
+    "targetSummary": "rect.contains(new Point(0, 0))",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#061",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 38,
+        "column": 45
+      },
+      "end": {
+        "line": 38,
+        "column": 45
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(bool)",
+    "rule": "py.bool→js.boolean",
+    "decision": "deterministic",
+    "rationale": "boolean literal correspondence",
+    "adaptation": null,
+    "targetSummary": "true",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#062",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 38,
+        "column": 0
+      },
+      "end": {
+        "line": 38,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.assert",
+    "rule": "pytest.assert→vitest.expect.toBe",
+    "decision": "deterministic",
+    "rationale": "is maps to identity (toBe)",
+    "adaptation": null,
+    "targetSummary": "rect.contains(new Point(0, 0))).toBe(true",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#063",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 39,
+        "column": 35
+      },
+      "end": {
+        "line": 39,
+        "column": 35
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "2",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#064",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 39,
+        "column": 38
+      },
+      "end": {
+        "line": 39,
+        "column": 38
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "2",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#065",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 39,
+        "column": 29
+      },
+      "end": {
+        "line": 39,
+        "column": 29
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call-ctor→js.new",
+    "decision": "deterministic",
+    "rationale": "class construction correspondence (unit-local class)",
+    "adaptation": null,
+    "targetSummary": "new Point(2, 2)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#066",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 39,
+        "column": 15
+      },
+      "end": {
+        "line": 39,
+        "column": 15
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call→js.call",
+    "decision": "deterministic",
+    "rationale": "method call correspondence on a statically typed receiver",
+    "adaptation": null,
+    "targetSummary": "rect.contains(new Point(2, 2))",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#067",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 39,
+        "column": 45
+      },
+      "end": {
+        "line": 39,
+        "column": 45
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(bool)",
+    "rule": "py.bool→js.boolean",
+    "decision": "deterministic",
+    "rationale": "boolean literal correspondence",
+    "adaptation": null,
+    "targetSummary": "false",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#068",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 39,
+        "column": 0
+      },
+      "end": {
+        "line": 39,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.assert",
+    "rule": "pytest.assert→vitest.expect.toBe",
+    "decision": "deterministic",
+    "rationale": "is maps to identity (toBe)",
+    "adaptation": null,
+    "targetSummary": "rect.contains(new Point(2, 2))).toBe(false",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_geometry.py#069",
+    "unit": "tests/test_geometry.py",
+    "span": {
+      "start": {
+        "line": 36,
+        "column": 0
+      },
+      "end": {
+        "line": 36,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.test-method",
+    "rule": "pytest.test-method→vitest.it",
+    "decision": "deterministic",
+    "rationale": "Test-class method correspondence (self dropped; plain methods only)",
+    "adaptation": null,
+    "targetSummary": "it(\"TestRect.test_contains_corner_only\")",
+    "warnings": [],
+    "escalation": null
+  }
+]

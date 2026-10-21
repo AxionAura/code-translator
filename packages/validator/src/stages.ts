@@ -13,9 +13,34 @@
 import { join } from "node:path";
 
 import type { StageResult } from "@ctrans/core";
-import { SandboxRunner, type SandboxCapabilities, type SandboxRunSpec } from "@ctrans/sandbox";
+import {
+  SandboxRunner,
+  type SandboxCapabilities,
+  type SandboxRunResult,
+  type SandboxRunSpec,
+} from "@ctrans/sandbox";
+
+export type SandboxRun = (spec: SandboxRunSpec) => Promise<SandboxRunResult>;
+
+export interface TestAttempt {
+  readonly outcome: "passed" | "failed";
+  readonly message: string | null;
+}
 
 export interface TestOutcome {
+  readonly name: string;
+  // Target-relative test module path (evidence attribution for repair).
+  readonly file: string;
+  // Final outcome: a fail-then-pass is "passed" with `flaky: true`.
+  readonly outcome: "passed" | "failed";
+  // Failed on the first attempt, passed on the single rerun (excluded from claims).
+  readonly flaky: boolean;
+  // Both attempts are preserved; `[first]` when no rerun was needed.
+  readonly attempts: readonly TestAttempt[];
+}
+
+// The source-side runner emits only names/outcomes/messages.
+interface SourceOutcome {
   readonly name: string;
   readonly outcome: "passed" | "failed";
   readonly message: string | null;
@@ -31,6 +56,14 @@ export interface S5Options {
   // Absolute path to the node binary running the vitest CLI.
   readonly nodePath: string;
   readonly timeoutMs?: number;
+  // Flaky policy (docs/validation.md §5): at most ONE rerun of the suite when the
+  // first attempt completed with per-test failures. Default true.
+  readonly rerunFlaky?: boolean;
+  // Strict container execution (M10); requires `container`.
+  readonly strict?: boolean;
+  readonly container?: import("@ctrans/sandbox").ContainerRunOptions;
+  // Test seam: scripted sandbox executions (no process spawn).
+  readonly run?: SandboxRun;
 }
 
 export interface S5Input {
@@ -43,10 +76,19 @@ export interface S5Input {
 // assertionResults. The runner caps output; the cap must hold the full report.
 export interface S5Result extends StageResult {
   readonly outcomes: readonly TestOutcome[];
+  // Names that failed once and passed on the single rerun (excluded from claims).
+  readonly flaky: readonly string[];
+  readonly rerunPerformed: boolean;
+}
+
+interface VitestOutcomeDraft {
+  readonly name: string;
+  readonly file: string;
+  readonly outcome: "passed" | "failed";
+  readonly message: string | null;
 }
 
 export async function runS5(input: S5Input, options: S5Options): Promise<S5Result> {
-  const runner = new SandboxRunner({ capabilities: options.capabilities });
   const files = new Map(input.files);
   // The json reporter must print to STDOUT (the only stream the sandbox returns):
   // vitest's default json reporter writes a file when `stdout` is not set.
@@ -54,9 +96,143 @@ export async function runS5(input: S5Input, options: S5Options): Promise<S5Resul
     "vitest.config.mjs",
     `export default { test: { include: ['tests/**/*.test.ts', 'test/**/*.test.ts', '**/*.test.ts'], environment: 'node', reporters: [['json', { stdout: true }]] } };\n`,
   );
-  // The workspace needs a WRITABLE node_modules directory (vite's config loader
-  // writes node_modules/.vite-temp at startup), so the toolchain runner enters as
-  // a per-package symlink inside it — nothing in the toolchain store is written.
+  const run = options.run ?? defaultSandboxRun(options);
+  const first = await executeVitest(input, files, options, run);
+  if (first.kind === "infra") return first.result;
+
+  const outcomes: TestOutcome[] = first.outcomes.map((draft) => ({
+    ...draft,
+    flaky: false,
+    attempts: [{ outcome: draft.outcome, message: draft.message }],
+  }));
+  let rerunPerformed = false;
+  let rerunNote: string | null = null;
+  const unstableOnRerun: string[] = [];
+  const firstFailed = outcomes.filter((outcome) => outcome.outcome === "failed");
+  if (options.rerunFlaky !== false && firstFailed.length > 0) {
+    // Exactly ONE rerun; only the tests that failed are re-evaluated. Tests that
+    // passed the first attempt keep their first-attempt evidence.
+    rerunPerformed = true;
+    const second = await executeVitest(input, files, options, run);
+    if (second.kind === "infra") {
+      rerunNote = `rerun unavailable: ${second.result.reason ?? "infrastructure failure"}`;
+    } else {
+      const secondByName = new Map(second.outcomes.map((draft) => [draft.name, draft]));
+      for (let index = 0; index < outcomes.length; index += 1) {
+        const outcome = outcomes[index]!;
+        if (outcome.outcome !== "failed") {
+          // A first-attempt pass is not overturned by the rerun, but instability
+          // is reported rather than hidden.
+          const again = secondByName.get(outcome.name);
+          if (again === undefined || again.outcome === "failed") {
+            unstableOnRerun.push(
+              `${outcome.file}: ${outcome.name}: passed first attempt but ${
+                again === undefined ? "did not run" : "failed"
+              } on rerun (first-attempt evidence retained)`,
+            );
+          }
+          continue;
+        }
+        const again = secondByName.get(outcome.name);
+        if (again?.outcome === "passed") {
+          outcomes[index] = {
+            ...outcome,
+            outcome: "passed",
+            flaky: true,
+            attempts: [...outcome.attempts, { outcome: "passed", message: again.message }],
+          };
+        } else {
+          outcomes[index] = {
+            ...outcome,
+            attempts: [
+              ...outcome.attempts,
+              again === undefined
+                ? { outcome: "failed", message: "test did not run on the rerun" }
+                : { outcome: "failed", message: again.message },
+            ],
+          };
+        }
+      }
+    }
+  }
+
+  const flaky = outcomes.filter((outcome) => outcome.flaky).map((outcome) => outcome.name);
+  const failed = outcomes.filter((outcome) => outcome.outcome === "failed");
+  const cleanPassed = outcomes.filter((outcome) => outcome.outcome === "passed" && !outcome.flaky);
+  const flakyDetails = outcomes
+    .filter((outcome) => outcome.flaky)
+    .slice(0, 10)
+    .map((outcome) => `${outcome.file}: ${outcome.name}: flaky (failed once, passed on rerun)`);
+  const failureDetails = failed.slice(0, 10).map((outcome) => {
+    const last = outcome.attempts[outcome.attempts.length - 1];
+    return `${outcome.file}: ${outcome.name}: ${last?.message ?? "failed"}`;
+  });
+  if (rerunNote !== null) failureDetails.push(rerunNote);
+  failureDetails.push(...unstableOnRerun.slice(0, 10));
+
+  if (outcomes.length === 0) {
+    return {
+      stage: "S5-tests",
+      status: "fail",
+      reason: "no tests collected (runner reported an empty suite)",
+      details: [],
+      outcomes,
+      flaky,
+      rerunPerformed,
+    };
+  }
+  if (failed.length > 0) {
+    return {
+      stage: "S5-tests",
+      status: "fail",
+      reason: `${String(failed.length)} of ${String(outcomes.length)} translated tests failed${flaky.length > 0 ? ` (${String(flaky.length)} flaky)` : ""}`,
+      details: [...failureDetails, ...flakyDetails],
+      outcomes,
+      flaky,
+      rerunPerformed,
+    };
+  }
+  if (cleanPassed.length === 0) {
+    return {
+      stage: "S5-tests",
+      status: "warn",
+      reason: `all ${String(flaky.length)} executed test(s) were flaky; no stable first-attempt pass`,
+      details: flakyDetails,
+      outcomes,
+      flaky,
+      rerunPerformed,
+    };
+  }
+  return {
+    stage: "S5-tests",
+    status: "pass",
+    reason: null,
+    details: [...flakyDetails, ...unstableOnRerun.slice(0, 10)],
+    outcomes,
+    flaky,
+    rerunPerformed,
+  };
+}
+
+function defaultSandboxRun(options: S5Options): SandboxRun {
+  const runner = new SandboxRunner({
+    capabilities: options.capabilities,
+    ...(options.container === undefined ? {} : { container: options.container }),
+  });
+  return (spec) => runner.run(spec);
+}
+
+type VitestExecution =
+  | { readonly kind: "ok"; readonly outcomes: readonly VitestOutcomeDraft[] }
+  | { readonly kind: "infra"; readonly result: S5Result };
+
+async function executeVitest(
+  input: S5Input,
+  files: ReadonlyMap<string, string>,
+  options: S5Options,
+  run: SandboxRun,
+): Promise<VitestExecution> {
+  const strict = options.strict === true;
   const spec: SandboxRunSpec = {
     argv: [options.nodePath, options.vitestEntryPath, "run", "--no-color"],
     files: [...files.entries()].map(([path, content]) => ({ path, content })),
@@ -64,81 +240,83 @@ export async function runS5(input: S5Input, options: S5Options): Promise<S5Resul
     timeoutMs: options.timeoutMs ?? 120000,
     stdoutCapBytes: 4 * 1024 * 1024,
     stderrCapBytes: 1024 * 1024,
-    // Untrusted translated code executes ONLY under enforced network isolation;
-    // without bwrap this throws (no silent downgrade — the caller reports the skip).
+    // Untrusted translated code executes ONLY under enforced isolation; without
+    // bwrap (or a strict container) this throws — the caller reports the skip.
     requireNetworkIsolation: true,
+    ...(strict
+      ? {
+          strict: true,
+          containerArgv: ["node", options.vitestEntryPath, "run", "--no-color"],
+          containerMounts: [{ path: options.nodeModulesPath, readOnly: true }],
+        }
+      : {}),
   };
-  const result = await runner.run(spec);
-  if (result.outcome === "timeout") {
-    return {
-      stage: "S5-tests",
-      status: "fail",
-      reason: `vitest run exceeded ${String(options.timeoutMs ?? 120000)}ms (sandbox timeout)`,
-      details: [result.stderr.slice(-2000)],
-      outcomes: [],
-    };
-  }
-  if (result.outcome === "output-limit") {
-    return {
-      stage: "S5-tests",
-      status: "fail",
-      reason: "vitest output exceeded the sandbox cap (report unparseable)",
-      details: [],
-      outcomes: [],
-    };
-  }
-  if (result.outcome === "spawn-failed") {
-    return {
+  const result = await run(spec);
+  const infra = (reason: string, details: readonly string[] = []): VitestExecution => ({
+    kind: "infra",
+    result: {
       stage: "S5-tests",
       status: "skipped",
-      reason: `test runner failed to spawn: ${result.stderr.slice(0, 500)}`,
-      details: [],
+      reason,
+      details,
       outcomes: [],
-    };
+      flaky: [],
+      rerunPerformed: false,
+    },
+  });
+  if (result.outcome === "timeout") {
+    return infra(
+      `vitest run exceeded ${String(options.timeoutMs ?? 120000)}ms (infrastructure timeout)`,
+      [result.stderr.slice(-1000)],
+    );
   }
-  // completed: parse the JSON report from the workspace file (also present on stdout).
+  if (result.outcome === "output-limit") {
+    return infra("vitest output exceeded the sandbox cap (report unparseable)");
+  }
+  if (result.outcome === "spawn-failed") {
+    return infra(`test runner failed to spawn: ${result.stderr.slice(0, 300)}`);
+  }
+  if (result.outcome === "container-error") {
+    return infra(`container runtime failed before tests ran: ${result.stderr.slice(0, 300)}`);
+  }
   let report: VitestJsonReport | null = null;
   try {
-    const jsonText = extractVitestJson(result.stdout);
-    report = JSON.parse(jsonText) as VitestJsonReport;
+    report = JSON.parse(extractVitestJson(result.stdout)) as VitestJsonReport;
   } catch {
-    return {
-      stage: "S5-tests",
-      status: "fail",
-      reason: "vitest produced no parseable JSON report (runner crashed?)",
-      details: [result.stdout.slice(0, 1000), result.stderr.slice(0, 1000)],
-      outcomes: [],
-    };
+    return infra("vitest produced no parseable JSON report (runner crashed?)", [
+      result.stdout.slice(0, 500),
+      result.stderr.slice(0, 500),
+    ]);
   }
-  const outcomes: TestOutcome[] = [];
+  const outcomes: VitestOutcomeDraft[] = [];
   for (const testModule of report.testResults ?? []) {
-    const moduleName = (testModule.name ?? "").replace(/^.*\/(tests\/|test\/)?/, "tests/");
+    const file = targetTestPath(testModule.name ?? "", result.workspacePath, input.testFiles);
     for (const assertion of testModule.assertionResults ?? []) {
       const rawName = assertion.fullName ?? assertion.title ?? "";
-      // Normalize to the pytest-convention name the mapper preserved.
-      const name = normalizeTestName(rawName, moduleName);
       outcomes.push({
-        name,
+        name: normalizeTestName(rawName),
+        file,
         outcome: assertion.status === "passed" ? "passed" : "failed",
         message: (assertion.failureMessages ?? [])[0]?.slice(0, 500) ?? null,
       });
     }
   }
-  const failed = outcomes.filter((outcome) => outcome.outcome === "failed");
-  return {
-    stage: "S5-tests",
-    status: failed.length === 0 && outcomes.length > 0 ? "pass" : "fail",
-    reason:
-      failed.length === 0
-        ? outcomes.length === 0
-          ? "no tests collected (runner reported an empty suite)"
-          : null
-        : `${String(failed.length)} of ${String(outcomes.length)} translated tests failed`,
-    details: failed
-      .slice(0, 10)
-      .map((outcome) => `${outcome.name}: ${outcome.message ?? "failed"}`),
-    outcomes,
-  };
+  return { kind: "ok", outcomes };
+}
+
+// The reporter prints absolute workspace paths; evidence must name the emitted
+// target file so failures can be attributed to a unit.
+function targetTestPath(
+  reported: string,
+  workspacePath: string,
+  testFiles: readonly string[],
+): string {
+  const normalized = reported.replaceAll("\\", "/");
+  const prefix = `${workspacePath.replaceAll("\\", "/")}/`;
+  const relative = normalized.startsWith(prefix) ? normalized.slice(prefix.length) : normalized;
+  if (testFiles.includes(relative)) return relative;
+  const suffixMatch = testFiles.find((file) => relative.endsWith(`/${file}`));
+  return suffixMatch ?? relative;
 }
 
 interface VitestJsonReport {
@@ -168,8 +346,7 @@ function extractVitestJson(stdout: string): string {
 // fullName is "file > describe it" (the describe/it boundary is a SPACE in this
 // vitest version). Recover the pytest-convention name: the file prefix is split
 // off, and a Test-class describe segment becomes `Class.method`.
-function normalizeTestName(fullName: string, moduleName: string): string {
-  void moduleName;
+function normalizeTestName(fullName: string): string {
   const parts = fullName.split(" > ").filter((part) => part !== "");
   if (parts.length === 0) return fullName;
   const last = parts[parts.length - 1]!;
@@ -185,6 +362,9 @@ export interface S6Options {
   readonly nodePath: string;
   readonly pythonPath: string;
   readonly timeoutMs?: number;
+  readonly strict?: boolean;
+  readonly container?: import("@ctrans/sandbox").ContainerRunOptions;
+  readonly run?: SandboxRun;
 }
 
 export interface S6Input {
@@ -209,6 +389,9 @@ export interface S6Result extends StageResult {
   }[];
   readonly sourceOnly: readonly string[];
   readonly targetOnly: readonly string[];
+  // Target tests excluded from the comparison because their first attempt was
+  // unstable (passed only on the rerun).
+  readonly flaky: readonly string[];
 }
 
 // The tool-provided source-side runner: executes the supported pytest subset
@@ -350,7 +533,6 @@ def fail(message=""):
 `;
 
 export async function runS6(options: S6Options, input: S6Input): Promise<S6Result> {
-  const runner = new SandboxRunner({ capabilities: options.capabilities });
   const files = new Map(input.sourceFiles);
   files.set("ctrans_source_runner.py", input.sourceRunnerScript || SOURCE_RUNNER_SCRIPT);
   files.set("pytest.py", PYTEST_STUB);
@@ -361,6 +543,7 @@ export async function runS6(options: S6Options, input: S6Input): Promise<S6Resul
     dir: module.path.includes("/") ? module.path.slice(0, module.path.lastIndexOf("/")) : ".",
   }));
   files.set("manifest.json", JSON.stringify(manifest));
+  const strict = options.strict === true;
   // PYTHONPATH=. so importlib resolves root-relative modules inside the sandbox.
   const spec: SandboxRunSpec = {
     argv: [options.pythonPath, "ctrans_source_runner.py"],
@@ -369,43 +552,61 @@ export async function runS6(options: S6Options, input: S6Input): Promise<S6Resul
     timeoutMs: options.timeoutMs ?? 120000,
     stdoutCapBytes: 4 * 1024 * 1024,
     stderrCapBytes: 1024 * 1024,
-    // Untrusted source code executes ONLY under enforced network isolation; without
-    // bwrap this throws (no silent downgrade — the caller reports the skip).
+    // Untrusted source code executes ONLY under enforced isolation; without bwrap
+    // (or a strict container) this throws — the caller reports the skip.
     requireNetworkIsolation: true,
+    ...(strict
+      ? {
+          strict: true,
+          containerArgv: ["python3", "ctrans_source_runner.py"],
+        }
+      : {}),
   };
-  const result = await runner.run(spec);
+  const run =
+    options.run ??
+    ((runSpec: SandboxRunSpec) =>
+      new SandboxRunner({
+        capabilities: options.capabilities,
+        ...(options.container === undefined ? {} : { container: options.container }),
+      }).run(runSpec));
+  const result = await run(spec);
+  const skipped = (reason: string, details: readonly string[] = []): S6Result => ({
+    stage: "S6-differential",
+    status: "skipped",
+    reason,
+    details,
+    matched: [],
+    mismatched: [],
+    sourceOnly: [],
+    targetOnly: [],
+    flaky: [],
+  });
   if (result.outcome !== "completed" || result.exitCode !== 0) {
-    return {
-      stage: "S6-differential",
-      status: "skipped",
-      reason:
-        result.outcome === "timeout"
-          ? "source runner exceeded the sandbox timeout"
-          : `source runner failed (${result.outcome}, exit ${String(result.exitCode)}): ${result.stderr.slice(0, 300)}`,
-      details: [],
-      matched: [],
-      mismatched: [],
-      sourceOnly: [],
-      targetOnly: [],
-    };
+    return skipped(
+      result.outcome === "timeout"
+        ? "source runner exceeded the sandbox timeout (infrastructure)"
+        : `source runner failed (${result.outcome}, exit ${String(result.exitCode)}): ${result.stderr.slice(0, 300)}`,
+    );
   }
-  let sourceOutcomes: TestOutcome[] = [];
+  let sourceOutcomes: SourceOutcome[] = [];
   try {
-    sourceOutcomes = JSON.parse(result.stdout.trim().split("\n").pop() ?? "[]") as TestOutcome[];
+    sourceOutcomes = JSON.parse(result.stdout.trim().split("\n").pop() ?? "[]") as SourceOutcome[];
   } catch {
-    return {
-      stage: "S6-differential",
-      status: "skipped",
-      reason: "source runner produced no parseable outcome JSON",
-      details: [result.stdout.slice(0, 500)],
-      matched: [],
-      mismatched: [],
-      sourceOnly: [],
-      targetOnly: [],
-    };
+    return skipped("source runner produced no parseable outcome JSON", [
+      result.stdout.slice(0, 500),
+    ]);
   }
-  // Compare by name.
-  const targetByName = new Map(input.targetOutcomes.map((outcome) => [outcome.name, outcome]));
+  // Compare stable outcomes only: a target test that passed only on its rerun is
+  // reported as flaky and excluded (docs/validation.md §5).
+  const flakyNames = new Set(
+    input.targetOutcomes.filter((outcome) => outcome.flaky).map((outcome) => outcome.name),
+  );
+  const flaky = [...flakyNames];
+  const targetByName = new Map(
+    input.targetOutcomes
+      .filter((outcome) => !outcome.flaky)
+      .map((outcome) => [outcome.name, outcome]),
+  );
   const sourceByName = new Map(sourceOutcomes.map((outcome) => [outcome.name, outcome]));
   const matched: { name: string; outcome: "passed" | "failed" }[] = [];
   const mismatched: {
@@ -415,6 +616,7 @@ export async function runS6(options: S6Options, input: S6Input): Promise<S6Resul
   }[] = [];
   const sourceOnly: string[] = [];
   for (const source of sourceOutcomes) {
+    if (flakyNames.has(source.name)) continue;
     const target = targetByName.get(source.name);
     if (target === undefined) {
       sourceOnly.push(source.name);
@@ -426,25 +628,45 @@ export async function runS6(options: S6Options, input: S6Input): Promise<S6Resul
       mismatched.push({ name: source.name, source: source.outcome, target: target.outcome });
     }
   }
-  const targetOnly = [...targetByName.keys()].filter((name) => !sourceByName.has(name));
-  const pass =
-    mismatched.length === 0 &&
-    sourceOnly.length === 0 &&
-    targetOnly.length === 0 &&
-    matched.length > 0;
+  const targetOnly = [...targetByName.keys()].filter(
+    (name) => !sourceByName.has(name) && !flakyNames.has(name),
+  );
+  const clean = mismatched.length === 0 && sourceOnly.length === 0 && targetOnly.length === 0;
+  const status = clean
+    ? matched.length > 0
+      ? "pass"
+      : flaky.length > 0
+        ? "warn"
+        : "fail"
+    : "fail";
+  const details = mismatched.slice(0, 10).map((entry) => {
+    const target = targetByName.get(entry.name);
+    const file = target === undefined ? "target" : target.file;
+    return `${file}: ${entry.name}: source=${entry.source} target=${entry.target}`;
+  });
+  for (const name of flaky.slice(0, 10)) {
+    const target = input.targetOutcomes.find((outcome) => outcome.name === name);
+    details.push(
+      `${target?.file ?? "target"}: ${name}: excluded (flaky: failed once, passed on rerun)`,
+    );
+  }
   return {
     stage: "S6-differential",
-    status: pass ? "pass" : "fail",
-    reason: pass
-      ? null
-      : `${String(mismatched.length)} outcome mismatch(es), ${String(sourceOnly.length)} source-only, ${String(targetOnly.length)} target-only`,
-    details: mismatched
-      .slice(0, 10)
-      .map((entry) => `${entry.name}: source=${entry.source} target=${entry.target}`),
+    status,
+    reason:
+      status === "pass"
+        ? null
+        : status === "warn"
+          ? `no stable differential outcomes (${String(flaky.length)} flaky)`
+          : clean
+            ? "no comparable tests"
+            : `${String(mismatched.length)} outcome mismatch(es), ${String(sourceOnly.length)} source-only, ${String(targetOnly.length)} target-only`,
+    details,
     matched,
     mismatched,
     sourceOnly,
     targetOnly,
+    flaky,
   };
 }
 
@@ -452,5 +674,3 @@ export async function runS6(options: S6Options, input: S6Input): Promise<S6Resul
 export function sourceRunnerScript(): string {
   return SOURCE_RUNNER_SCRIPT;
 }
-
-void join;

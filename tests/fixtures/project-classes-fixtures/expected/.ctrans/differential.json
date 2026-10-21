@@ -1,0 +1,34 @@
+{
+  "stage": "S6-differential",
+  "status": "pass",
+  "matched": [
+    {
+      "name": "TestRect.test_area",
+      "outcome": "passed"
+    },
+    {
+      "name": "TestRect.test_contains_corner_only",
+      "outcome": "passed"
+    },
+    {
+      "name": "test_contains_false",
+      "outcome": "passed"
+    },
+    {
+      "name": "test_contains_true",
+      "outcome": "passed"
+    },
+    {
+      "name": "test_translated",
+      "outcome": "passed"
+    },
+    {
+      "name": "test_unit_rect_area",
+      "outcome": "passed"
+    }
+  ],
+  "mismatched": [],
+  "sourceOnly": [],
+  "targetOnly": [],
+  "flaky": []
+}

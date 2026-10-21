@@ -1,0 +1,70 @@
+{
+  "stage": "S6-differential",
+  "status": "pass",
+  "matched": [
+    {
+      "name": "test_initials",
+      "outcome": "passed"
+    },
+    {
+      "name": "test_not_palindromes hello",
+      "outcome": "passed"
+    },
+    {
+      "name": "test_not_palindromes world",
+      "outcome": "passed"
+    },
+    {
+      "name": "test_palindromes racecar",
+      "outcome": "passed"
+    },
+    {
+      "name": "test_palindromes never odd or even",
+      "outcome": "passed"
+    },
+    {
+      "name": "test_palindromes step on no pets",
+      "outcome": "passed"
+    },
+    {
+      "name": "test_parse_int_digits_membership",
+      "outcome": "passed"
+    },
+    {
+      "name": "test_parse_int_empty_raises",
+      "outcome": "passed"
+    },
+    {
+      "name": "test_parse_int_invalid 12a",
+      "outcome": "passed"
+    },
+    {
+      "name": "test_parse_int_invalid x",
+      "outcome": "passed"
+    },
+    {
+      "name": "test_parse_int_invalid -",
+      "outcome": "passed"
+    },
+    {
+      "name": "test_parse_int_valid 7 7",
+      "outcome": "passed"
+    },
+    {
+      "name": "test_parse_int_valid -42 -42",
+      "outcome": "passed"
+    },
+    {
+      "name": "test_parse_int_valid 0 0",
+      "outcome": "passed"
+    },
+    {
+      "name": "test_word_count",
+      "outcome": "passed"
+    }
+  ],
+  "mismatched": [],
+  "sourceOnly": [],
+  "targetOnly": [],
+  "flaky": []
+}

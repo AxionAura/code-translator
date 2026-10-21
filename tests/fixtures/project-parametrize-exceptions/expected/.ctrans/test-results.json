@@ -1,0 +1,203 @@
+{
+  "stage": "S5-tests",
+  "status": "pass",
+  "outcomes": [
+    {
+      "name": "test_parse_int_valid 7 7",
+      "file": "tests/test_textutil.test.ts",
+      "outcome": "passed",
+      "message": null,
+      "flaky": false,
+      "attempts": [
+        {
+          "outcome": "passed",
+          "message": null
+        }
+      ]
+    },
+    {
+      "name": "test_parse_int_valid -42 -42",
+      "file": "tests/test_textutil.test.ts",
+      "outcome": "passed",
+      "message": null,
+      "flaky": false,
+      "attempts": [
+        {
+          "outcome": "passed",
+          "message": null
+        }
+      ]
+    },
+    {
+      "name": "test_parse_int_valid 0 0",
+      "file": "tests/test_textutil.test.ts",
+      "outcome": "passed",
+      "message": null,
+      "flaky": false,
+      "attempts": [
+        {
+          "outcome": "passed",
+          "message": null
+        }
+      ]
+    },
+    {
+      "name": "test_parse_int_invalid 12a",
+      "file": "tests/test_textutil.test.ts",
+      "outcome": "passed",
+      "message": null,
+      "flaky": false,
+      "attempts": [
+        {
+          "outcome": "passed",
+          "message": null
+        }
+      ]
+    },
+    {
+      "name": "test_parse_int_invalid x",
+      "file": "tests/test_textutil.test.ts",
+      "outcome": "passed",
+      "message": null,
+      "flaky": false,
+      "attempts": [
+        {
+          "outcome": "passed",
+          "message": null
+        }
+      ]
+    },
+    {
+      "name": "test_parse_int_invalid -",
+      "file": "tests/test_textutil.test.ts",
+      "outcome": "passed",
+      "message": null,
+      "flaky": false,
+      "attempts": [
+        {
+          "outcome": "passed",
+          "message": null
+        }
+      ]
+    },
+    {
+      "name": "test_parse_int_empty_raises",
+      "file": "tests/test_textutil.test.ts",
+      "outcome": "passed",
+      "message": null,
+      "flaky": false,
+      "attempts": [
+        {
+          "outcome": "passed",
+          "message": null
+        }
+      ]
+    },
+    {
+      "name": "test_word_count",
+      "file": "tests/test_textutil.test.ts",
+      "outcome": "passed",
+      "message": null,
+      "flaky": false,
+      "attempts": [
+        {
+          "outcome": "passed",
+          "message": null
+        }
+      ]
+    },
+    {
+      "name": "test_palindromes racecar",
+      "file": "tests/test_textutil.test.ts",
+      "outcome": "passed",
+      "message": null,
+      "flaky": false,
+      "attempts": [
+        {
+          "outcome": "passed",
+          "message": null
+        }
+      ]
+    },
+    {
+      "name": "test_palindromes never odd or even",
+      "file": "tests/test_textutil.test.ts",
+      "outcome": "passed",
+      "message": null,
+      "flaky": false,
+      "attempts": [
+        {
+          "outcome": "passed",
+          "message": null
+        }
+      ]
+    },
+    {
+      "name": "test_palindromes step on no pets",
+      "file": "tests/test_textutil.test.ts",
+      "outcome": "passed",
+      "message": null,
+      "flaky": false,
+      "attempts": [
+        {
+          "outcome": "passed",
+          "message": null
+        }
+      ]
+    },
+    {
+      "name": "test_not_palindromes hello",
+      "file": "tests/test_textutil.test.ts",
+      "outcome": "passed",
+      "message": null,
+      "flaky": false,
+      "attempts": [
+        {
+          "outcome": "passed",
+          "message": null
+        }
+      ]
+    },
+    {
+      "name": "test_not_palindromes world",
+      "file": "tests/test_textutil.test.ts",
+      "outcome": "passed",
+      "message": null,
+      "flaky": false,
+      "attempts": [
+        {
+          "outcome": "passed",
+          "message": null
+        }
+      ]
+    },
+    {
+      "name": "test_initials",
+      "file": "tests/test_textutil.test.ts",
+      "outcome": "passed",
+      "message": null,
+      "flaky": false,
+      "attempts": [
+        {
+          "outcome": "passed",
+          "message": null
+        }
+      ]
+    },
+    {
+      "name": "test_parse_int_digits_membership",
+      "file": "tests/test_textutil.test.ts",
+      "outcome": "passed",
+      "message": null,
+      "flaky": false,
+      "attempts": [
+        {
+          "outcome": "passed",
+          "message": null
+        }
+      ]
+    }
+  ],
+  "flaky": [],
+  "rerunPerformed": false
+}

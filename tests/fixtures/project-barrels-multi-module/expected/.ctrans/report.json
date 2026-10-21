@@ -1,0 +1,105 @@
+{
+  "generator": {
+    "name": "code-translator",
+    "version": "0.0.0"
+  },
+  "sourceLanguage": "python",
+  "targetLanguage": "typescript",
+  "files": [
+    {
+      "source": "inventory/__init__.py",
+      "target": "inventory/index.ts",
+      "status": "translated",
+      "decisionCounts": {
+        "deterministic": 7,
+        "semantic": 0,
+        "ambiguous": 0,
+        "unsupported": 0
+      }
+    },
+    {
+      "source": "inventory/book.py",
+      "target": "inventory/book.ts",
+      "status": "translated",
+      "decisionCounts": {
+        "deterministic": 18,
+        "semantic": 4,
+        "ambiguous": 0,
+        "unsupported": 0
+      }
+    },
+    {
+      "source": "inventory/shelf.py",
+      "target": "inventory/shelf.ts",
+      "status": "translated",
+      "decisionCounts": {
+        "deterministic": 24,
+        "semantic": 11,
+        "ambiguous": 0,
+        "unsupported": 0
+      }
+    },
+    {
+      "source": "tests/test_inventory.py",
+      "target": "tests/test_inventory.test.ts",
+      "status": "translated",
+      "decisionCounts": {
+        "deterministic": 42,
+        "semantic": 13,
+        "ambiguous": 0,
+        "unsupported": 0
+      }
+    }
+  ],
+  "decisionTotals": {
+    "deterministic": 91,
+    "semantic": 28,
+    "ambiguous": 0,
+    "unsupported": 0
+  },
+  "warnings": [
+    "CTW-NUM-INT-ARBITRARY-PRECISION",
+    "CTW-GENERATOR-EAGER"
+  ],
+  "unsupported": [],
+  "ambiguous": [],
+  "validationStages": [
+    {
+      "stage": "S1-syntax",
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "stage": "S2-types",
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "stage": "S3-dependencies",
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "stage": "S4-build",
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "stage": "S5-tests",
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "stage": "S6-differential",
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "stage": "S7-smoke",
+      "status": "skipped",
+      "reason": "no smoke harness provided (opt-in)"
+    }
+  ],
+  "claimLevel": 5,
+  "repairJournal": null
+}

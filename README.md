@@ -2,7 +2,7 @@
 
 A behavior-preserving source-code translator for **Python ↔ JavaScript ↔ TypeScript**, designed to translate whole projects — not just snippets — with explicit, honest reporting of what was translated deterministically, what was adapted semantically, what was ambiguous, and what was not supported.
 
-**Status: M9 complete — bounded repair loop live.** Six translation directions (M7), whole-project Python → TypeScript with sandboxed validation to claim level 5 (M6), the provider-agnostic AI layer (M8), and now a bounded, observable repair loop over the SAME model/secret-gate/caps/cache stack (M9): failures are classified, one unit gets a strict unified-diff proposal, the engine re-runs the real validators, and only a monotone claim improvement is accepted (otherwise the baseline is restored exactly). History is hash-only under `.ctrans/repairs/`. AI stays off by default. See [docs/roadmap.md](docs/roadmap.md) and [PROJECT_STATE.md](PROJECT_STATE.md).
+**Status: M10 complete — full S1–S7 validation engine.** Six translation directions (M7), whole-project Python → TypeScript with sandboxed validation (M6), the provider-agnostic AI layer (M8), the bounded repair loop (M9), and now the completed validation engine: S4 build, flaky rerun-once, S7 opt-in smoke, evidence-checked claim ladder, Docker/Podman strict mode with optional gVisor, `ctrans doctor`, and project-mode repair re-validated through the real S5/S6 path. See [docs/roadmap.md](docs/roadmap.md) and [PROJECT_STATE.md](PROJECT_STATE.md).
 
 ## Quickstart
 
@@ -17,9 +17,22 @@ node apps/cli/bin/ctrans.mjs translate sample.py --to ts -o out/
 node apps/cli/bin/ctrans.mjs translate my-project/ --to js -o out-js/
 
 # Translate a whole project INCLUDING its pytest test modules (→ vitest) and validate
-# it in the sandbox: translated tests run (S5), source tests run sandboxed and are
-# compared per-test against the target outcomes (S6 → claim level 5)
+# S1-S7 in the sandbox: build, translated tests (S5), source-vs-target differential
+# (S6), optional smoke harness (S7), claim ladder + .ctrans/ evidence
 node apps/cli/bin/ctrans.mjs project my-project/ --to ts -o out/
+
+# Report observed environment capabilities (runtimes, validators, bwrap,
+# docker/podman, gVisor). Exit 1 only when a REQUIRED capability is missing.
+node apps/cli/bin/ctrans.mjs doctor
+
+# Strict execution: every executed stage runs in a Docker/Podman container with no
+# network, read-only rootfs, dropped capabilities, and no host fallback. Requires a
+# usable runtime and an image that provides the validation toolchain; pulls disabled.
+CTRANS_SANDBOX_IMAGE=my-ctrans-toolchain:1 \
+  node apps/cli/bin/ctrans.mjs project my-project/ --to ts -o out/ --strict
+
+# Opt-in S7 smoke: run a harness against the translated project in the sandbox
+node apps/cli/bin/ctrans.mjs project my-project/ --to ts -o out/ --smoke smoke.json
 
 # Reverse directions: JS/TS → Python, TS → JS, JS → TS (direction from the source)
 node apps/cli/bin/ctrans.mjs translate web-src/ --to py -o out-py/   # S1 bridge + S2 pyright + S3
@@ -33,13 +46,13 @@ node apps/cli/bin/ctrans.mjs translate app.js --to ts -o out-ts/     # honest un
 CTRANS_AI_KEY=... node apps/cli/bin/ctrans.mjs check mod.py --to ts \
   --ai-provider openai --ai-model gpt-4o-mini   # or --ai-provider anthropic
 
-# M9: bounded repair after translation (translate only). The model may propose ONE
-# unit-scoped unified diff per attempt (3/unit, 8/run); the engine re-runs the same
-# S1–S3 validators and accepts only a strictly higher claim level with no passing
-# stage regressed. Rejected patches are discarded exactly; the journal records hashes
-# only. Without --ai-provider the run reports `repair-unavailable` and writes the
-# deterministic output unchanged.
+# M9/M10: bounded repair after translation. translate re-validates S1-S3; project
+# re-validates the REAL S1-S6 path and refuses when behavioral validation cannot run.
+# The model may propose ONE unit-scoped unified diff per attempt (3/unit, 8/run); the
+# engine accepts only a strictly higher claim with no passing stage regressed.
 CTRANS_AI_KEY=... node apps/cli/bin/ctrans.mjs translate mod.py --to ts -o out/ \
+  --ai-provider openai --repair
+CTRANS_AI_KEY=... node apps/cli/bin/ctrans.mjs project my-project/ --to ts -o out/ \
   --ai-provider openai --repair
 ```
 

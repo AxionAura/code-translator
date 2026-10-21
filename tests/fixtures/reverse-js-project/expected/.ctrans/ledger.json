@@ -1,0 +1,1062 @@
+[
+  {
+    "id": "src/math.js#001",
+    "unit": "src/math.js",
+    "span": {
+      "start": {
+        "line": 1,
+        "column": 9
+      },
+      "end": {
+        "line": 1,
+        "column": 14
+      },
+      "startByteOffset": 37,
+      "endByteOffset": 42
+    },
+    "sourceKind": "js.BinaryExpression(+)",
+    "rule": "js.+→py.js_add",
+    "decision": "semantic",
+    "rationale": "operands are statically unknown — JS + may add or concatenate; the helper decides at runtime exactly like JS",
+    "adaptation": "js_add",
+    "targetSummary": "…",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/math.js#002",
+    "unit": "src/math.js",
+    "span": {
+      "start": {
+        "line": 0,
+        "column": 7
+      },
+      "end": {
+        "line": 2,
+        "column": 1
+      },
+      "startByteOffset": 7,
+      "endByteOffset": 45
+    },
+    "sourceKind": "js.FunctionDeclaration",
+    "rule": "js.function→py.def",
+    "decision": "deterministic",
+    "rationale": "function correspondence (async preserved; generators are yield-bearing defs)",
+    "adaptation": null,
+    "targetSummary": "def add",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/math.js#003",
+    "unit": "src/math.js",
+    "span": {
+      "start": {
+        "line": 0,
+        "column": 0
+      },
+      "end": {
+        "line": 2,
+        "column": 1
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 45
+    },
+    "sourceKind": "js.ExportNamedDeclaration",
+    "rule": "js.export→py.public-name",
+    "decision": "deterministic",
+    "rationale": "export keyword becomes a public module name (surfaced via __all__)",
+    "adaptation": null,
+    "targetSummary": "public binding",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/math.js#004",
+    "unit": "src/math.js",
+    "span": {
+      "start": {
+        "line": 5,
+        "column": 6
+      },
+      "end": {
+        "line": 5,
+        "column": 17
+      },
+      "startByteOffset": 95,
+      "endByteOffset": 106
+    },
+    "sourceKind": "js.BinaryExpression",
+    "rule": "js.<→py.<",
+    "decision": "deterministic",
+    "rationale": "operator correspondence (numeric semantics match for the mapped operand types)",
+    "adaptation": null,
+    "targetSummary": "value < low",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/math.js#005",
+    "unit": "src/math.js",
+    "span": {
+      "start": {
+        "line": 5,
+        "column": 2
+      },
+      "end": {
+        "line": 7,
+        "column": 3
+      },
+      "startByteOffset": 91,
+      "endByteOffset": 129
+    },
+    "sourceKind": "js.IfStatement",
+    "rule": "js.if→py.if",
+    "decision": "deterministic",
+    "rationale": "if/elif/else correspondence (tests through the JS-truthiness helper where types diverge)",
+    "adaptation": null,
+    "targetSummary": "if",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/math.js#006",
+    "unit": "src/math.js",
+    "span": {
+      "start": {
+        "line": 8,
+        "column": 6
+      },
+      "end": {
+        "line": 8,
+        "column": 18
+      },
+      "startByteOffset": 136,
+      "endByteOffset": 148
+    },
+    "sourceKind": "js.BinaryExpression",
+    "rule": "js.>→py.>",
+    "decision": "deterministic",
+    "rationale": "operator correspondence (numeric semantics match for the mapped operand types)",
+    "adaptation": null,
+    "targetSummary": "value > high",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/math.js#007",
+    "unit": "src/math.js",
+    "span": {
+      "start": {
+        "line": 8,
+        "column": 2
+      },
+      "end": {
+        "line": 10,
+        "column": 3
+      },
+      "startByteOffset": 132,
+      "endByteOffset": 172
+    },
+    "sourceKind": "js.IfStatement",
+    "rule": "js.if→py.if",
+    "decision": "deterministic",
+    "rationale": "if/elif/else correspondence (tests through the JS-truthiness helper where types diverge)",
+    "adaptation": null,
+    "targetSummary": "if",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/math.js#008",
+    "unit": "src/math.js",
+    "span": {
+      "start": {
+        "line": 4,
+        "column": 7
+      },
+      "end": {
+        "line": 12,
+        "column": 1
+      },
+      "startByteOffset": 54,
+      "endByteOffset": 190
+    },
+    "sourceKind": "js.FunctionDeclaration",
+    "rule": "js.function→py.def",
+    "decision": "deterministic",
+    "rationale": "function correspondence (async preserved; generators are yield-bearing defs)",
+    "adaptation": null,
+    "targetSummary": "def clamp",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/math.js#009",
+    "unit": "src/math.js",
+    "span": {
+      "start": {
+        "line": 4,
+        "column": 0
+      },
+      "end": {
+        "line": 12,
+        "column": 1
+      },
+      "startByteOffset": 47,
+      "endByteOffset": 190
+    },
+    "sourceKind": "js.ExportNamedDeclaration",
+    "rule": "js.export→py.public-name",
+    "decision": "deterministic",
+    "rationale": "export keyword becomes a public module name (surfaced via __all__)",
+    "adaptation": null,
+    "targetSummary": "public binding",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/math.js#010",
+    "unit": "src/math.js",
+    "span": null,
+    "sourceKind": "js.exports",
+    "rule": "js.exports→py.__all__",
+    "decision": "semantic",
+    "rationale": "Python has no export keywords; the export surface becomes __all__",
+    "adaptation": "__all__ list",
+    "targetSummary": "__all__ (2 names)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/util/stats.js#001",
+    "unit": "src/util/stats.js",
+    "span": {
+      "start": {
+        "line": 0,
+        "column": 0
+      },
+      "end": {
+        "line": 0,
+        "column": 33
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 33
+    },
+    "sourceKind": "js.ImportDeclaration",
+    "rule": "js.import→py.from-import",
+    "decision": "deterministic",
+    "rationale": "local import rewritten to a Python relative import of the translated module",
+    "adaptation": null,
+    "targetSummary": "from ..math import …",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/util/stats.js#002",
+    "unit": "src/util/stats.js",
+    "span": {
+      "start": {
+        "line": 3,
+        "column": 6
+      },
+      "end": {
+        "line": 3,
+        "column": 25
+      },
+      "startByteOffset": 72,
+      "endByteOffset": 91
+    },
+    "sourceKind": "js.BinaryExpression(===)",
+    "rule": "js.===→py.==",
+    "decision": "semantic",
+    "rationale": "JS strict equality maps to Python == (identical for primitives; object identity vs __eq__ documented)",
+    "adaptation": "==",
+    "targetSummary": "==",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/util/stats.js#003",
+    "unit": "src/util/stats.js",
+    "span": {
+      "start": {
+        "line": 3,
+        "column": 6
+      },
+      "end": {
+        "line": 3,
+        "column": 19
+      },
+      "startByteOffset": 72,
+      "endByteOffset": 85
+    },
+    "sourceKind": "js.MemberExpression(.length)",
+    "rule": "js.length→py.len",
+    "decision": "deterministic",
+    "rationale": "JS .length on arrays/strings maps to len() (functions carry a different .length semantics — documented)",
+    "adaptation": "len()",
+    "targetSummary": "len(values)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/util/stats.js#004",
+    "unit": "src/util/stats.js",
+    "span": {
+      "start": {
+        "line": 3,
+        "column": 2
+      },
+      "end": {
+        "line": 5,
+        "column": 3
+      },
+      "startByteOffset": 68,
+      "endByteOffset": 112
+    },
+    "sourceKind": "js.IfStatement",
+    "rule": "js.if→py.if",
+    "decision": "deterministic",
+    "rationale": "if/elif/else correspondence (tests through the JS-truthiness helper where types diverge)",
+    "adaptation": null,
+    "targetSummary": "if",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/util/stats.js#005",
+    "unit": "src/util/stats.js",
+    "span": {
+      "start": {
+        "line": 6,
+        "column": 2
+      },
+      "end": {
+        "line": 6,
+        "column": 16
+      },
+      "startByteOffset": 115,
+      "endByteOffset": 129
+    },
+    "sourceKind": "js.VariableDeclaration",
+    "rule": "js.let→py.assignment",
+    "decision": "semantic",
+    "rationale": "JS let/const/var collapse to Python assignment semantics (rebinding; Python has no block scoping — module/function scope binding is the documented mapping)",
+    "adaptation": "assignment",
+    "targetSummary": "assignment",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/util/stats.js#006",
+    "unit": "src/util/stats.js",
+    "span": {
+      "start": {
+        "line": 7,
+        "column": 2
+      },
+      "end": {
+        "line": 9,
+        "column": 3
+      },
+      "startByteOffset": 132,
+      "endByteOffset": 185
+    },
+    "sourceKind": "js.ForOfStatement",
+    "rule": "js.for-of→py.for-in",
+    "decision": "deterministic",
+    "rationale": "for-of iteration correspondence",
+    "adaptation": null,
+    "targetSummary": "for value in …",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/util/stats.js#007",
+    "unit": "src/util/stats.js",
+    "span": {
+      "start": {
+        "line": 10,
+        "column": 17
+      },
+      "end": {
+        "line": 10,
+        "column": 30
+      },
+      "startByteOffset": 203,
+      "endByteOffset": 216
+    },
+    "sourceKind": "js.MemberExpression(.length)",
+    "rule": "js.length→py.len",
+    "decision": "deterministic",
+    "rationale": "JS .length on arrays/strings maps to len() (functions carry a different .length semantics — documented)",
+    "adaptation": "len()",
+    "targetSummary": "len(values)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/util/stats.js#008",
+    "unit": "src/util/stats.js",
+    "span": {
+      "start": {
+        "line": 10,
+        "column": 9
+      },
+      "end": {
+        "line": 10,
+        "column": 30
+      },
+      "startByteOffset": 195,
+      "endByteOffset": 216
+    },
+    "sourceKind": "js.BinaryExpression",
+    "rule": "js./→py./",
+    "decision": "deterministic",
+    "rationale": "operator correspondence (numeric semantics match for the mapped operand types)",
+    "adaptation": null,
+    "targetSummary": "total / len(values)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/util/stats.js#009",
+    "unit": "src/util/stats.js",
+    "span": {
+      "start": {
+        "line": 2,
+        "column": 7
+      },
+      "end": {
+        "line": 11,
+        "column": 1
+      },
+      "startByteOffset": 42,
+      "endByteOffset": 219
+    },
+    "sourceKind": "js.FunctionDeclaration",
+    "rule": "js.function→py.def",
+    "decision": "deterministic",
+    "rationale": "function correspondence (async preserved; generators are yield-bearing defs)",
+    "adaptation": null,
+    "targetSummary": "def mean",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/util/stats.js#010",
+    "unit": "src/util/stats.js",
+    "span": {
+      "start": {
+        "line": 2,
+        "column": 0
+      },
+      "end": {
+        "line": 11,
+        "column": 1
+      },
+      "startByteOffset": 35,
+      "endByteOffset": 219
+    },
+    "sourceKind": "js.ExportNamedDeclaration",
+    "rule": "js.export→py.public-name",
+    "decision": "deterministic",
+    "rationale": "export keyword becomes a public module name (surfaced via __all__)",
+    "adaptation": null,
+    "targetSummary": "public binding",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/util/stats.js#011",
+    "unit": "src/util/stats.js",
+    "span": {
+      "start": {
+        "line": 13,
+        "column": 7
+      },
+      "end": {
+        "line": 15,
+        "column": 1
+      },
+      "startByteOffset": 228,
+      "endByteOffset": 314
+    },
+    "sourceKind": "js.FunctionDeclaration",
+    "rule": "js.function→py.def",
+    "decision": "deterministic",
+    "rationale": "function correspondence (async preserved; generators are yield-bearing defs)",
+    "adaptation": null,
+    "targetSummary": "def scale",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/util/stats.js#012",
+    "unit": "src/util/stats.js",
+    "span": {
+      "start": {
+        "line": 13,
+        "column": 0
+      },
+      "end": {
+        "line": 15,
+        "column": 1
+      },
+      "startByteOffset": 221,
+      "endByteOffset": 314
+    },
+    "sourceKind": "js.ExportNamedDeclaration",
+    "rule": "js.export→py.public-name",
+    "decision": "deterministic",
+    "rationale": "export keyword becomes a public module name (surfaced via __all__)",
+    "adaptation": null,
+    "targetSummary": "public binding",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/util/stats.js#013",
+    "unit": "src/util/stats.js",
+    "span": null,
+    "sourceKind": "js.exports",
+    "rule": "js.exports→py.__all__",
+    "decision": "semantic",
+    "rationale": "Python has no export keywords; the export surface becomes __all__",
+    "adaptation": "__all__ list",
+    "targetSummary": "__all__ (2 names)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/math.js#001",
+    "unit": "src/math.js",
+    "span": {
+      "start": {
+        "line": 1,
+        "column": 9
+      },
+      "end": {
+        "line": 1,
+        "column": 14
+      },
+      "startByteOffset": 37,
+      "endByteOffset": 42
+    },
+    "sourceKind": "js.BinaryExpression(+)",
+    "rule": "js.+→py.js_add",
+    "decision": "semantic",
+    "rationale": "operands are statically unknown — JS + may add or concatenate; the helper decides at runtime exactly like JS",
+    "adaptation": "js_add",
+    "targetSummary": "…",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/math.js#002",
+    "unit": "src/math.js",
+    "span": {
+      "start": {
+        "line": 0,
+        "column": 7
+      },
+      "end": {
+        "line": 2,
+        "column": 1
+      },
+      "startByteOffset": 7,
+      "endByteOffset": 45
+    },
+    "sourceKind": "js.FunctionDeclaration",
+    "rule": "js.function→py.def",
+    "decision": "deterministic",
+    "rationale": "function correspondence (async preserved; generators are yield-bearing defs)",
+    "adaptation": null,
+    "targetSummary": "def add",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/math.js#003",
+    "unit": "src/math.js",
+    "span": {
+      "start": {
+        "line": 0,
+        "column": 0
+      },
+      "end": {
+        "line": 2,
+        "column": 1
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 45
+    },
+    "sourceKind": "js.ExportNamedDeclaration",
+    "rule": "js.export→py.public-name",
+    "decision": "deterministic",
+    "rationale": "export keyword becomes a public module name (surfaced via __all__)",
+    "adaptation": null,
+    "targetSummary": "public binding",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/math.js#004",
+    "unit": "src/math.js",
+    "span": {
+      "start": {
+        "line": 5,
+        "column": 6
+      },
+      "end": {
+        "line": 5,
+        "column": 17
+      },
+      "startByteOffset": 95,
+      "endByteOffset": 106
+    },
+    "sourceKind": "js.BinaryExpression",
+    "rule": "js.<→py.<",
+    "decision": "deterministic",
+    "rationale": "operator correspondence (numeric semantics match for the mapped operand types)",
+    "adaptation": null,
+    "targetSummary": "value < low",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/math.js#005",
+    "unit": "src/math.js",
+    "span": {
+      "start": {
+        "line": 5,
+        "column": 2
+      },
+      "end": {
+        "line": 7,
+        "column": 3
+      },
+      "startByteOffset": 91,
+      "endByteOffset": 129
+    },
+    "sourceKind": "js.IfStatement",
+    "rule": "js.if→py.if",
+    "decision": "deterministic",
+    "rationale": "if/elif/else correspondence (tests through the JS-truthiness helper where types diverge)",
+    "adaptation": null,
+    "targetSummary": "if",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/math.js#006",
+    "unit": "src/math.js",
+    "span": {
+      "start": {
+        "line": 8,
+        "column": 6
+      },
+      "end": {
+        "line": 8,
+        "column": 18
+      },
+      "startByteOffset": 136,
+      "endByteOffset": 148
+    },
+    "sourceKind": "js.BinaryExpression",
+    "rule": "js.>→py.>",
+    "decision": "deterministic",
+    "rationale": "operator correspondence (numeric semantics match for the mapped operand types)",
+    "adaptation": null,
+    "targetSummary": "value > high",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/math.js#007",
+    "unit": "src/math.js",
+    "span": {
+      "start": {
+        "line": 8,
+        "column": 2
+      },
+      "end": {
+        "line": 10,
+        "column": 3
+      },
+      "startByteOffset": 132,
+      "endByteOffset": 172
+    },
+    "sourceKind": "js.IfStatement",
+    "rule": "js.if→py.if",
+    "decision": "deterministic",
+    "rationale": "if/elif/else correspondence (tests through the JS-truthiness helper where types diverge)",
+    "adaptation": null,
+    "targetSummary": "if",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/math.js#008",
+    "unit": "src/math.js",
+    "span": {
+      "start": {
+        "line": 4,
+        "column": 7
+      },
+      "end": {
+        "line": 12,
+        "column": 1
+      },
+      "startByteOffset": 54,
+      "endByteOffset": 190
+    },
+    "sourceKind": "js.FunctionDeclaration",
+    "rule": "js.function→py.def",
+    "decision": "deterministic",
+    "rationale": "function correspondence (async preserved; generators are yield-bearing defs)",
+    "adaptation": null,
+    "targetSummary": "def clamp",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/math.js#009",
+    "unit": "src/math.js",
+    "span": {
+      "start": {
+        "line": 4,
+        "column": 0
+      },
+      "end": {
+        "line": 12,
+        "column": 1
+      },
+      "startByteOffset": 47,
+      "endByteOffset": 190
+    },
+    "sourceKind": "js.ExportNamedDeclaration",
+    "rule": "js.export→py.public-name",
+    "decision": "deterministic",
+    "rationale": "export keyword becomes a public module name (surfaced via __all__)",
+    "adaptation": null,
+    "targetSummary": "public binding",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/math.js#010",
+    "unit": "src/math.js",
+    "span": null,
+    "sourceKind": "js.exports",
+    "rule": "js.exports→py.__all__",
+    "decision": "semantic",
+    "rationale": "Python has no export keywords; the export surface becomes __all__",
+    "adaptation": "__all__ list",
+    "targetSummary": "__all__ (2 names)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/util/stats.js#001",
+    "unit": "src/util/stats.js",
+    "span": {
+      "start": {
+        "line": 0,
+        "column": 0
+      },
+      "end": {
+        "line": 0,
+        "column": 33
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 33
+    },
+    "sourceKind": "js.ImportDeclaration",
+    "rule": "js.import→py.from-import",
+    "decision": "deterministic",
+    "rationale": "local import rewritten to a Python relative import of the translated module",
+    "adaptation": null,
+    "targetSummary": "from ..math import …",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/util/stats.js#002",
+    "unit": "src/util/stats.js",
+    "span": {
+      "start": {
+        "line": 3,
+        "column": 6
+      },
+      "end": {
+        "line": 3,
+        "column": 25
+      },
+      "startByteOffset": 72,
+      "endByteOffset": 91
+    },
+    "sourceKind": "js.BinaryExpression(===)",
+    "rule": "js.===→py.==",
+    "decision": "semantic",
+    "rationale": "JS strict equality maps to Python == (identical for primitives; object identity vs __eq__ documented)",
+    "adaptation": "==",
+    "targetSummary": "==",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/util/stats.js#003",
+    "unit": "src/util/stats.js",
+    "span": {
+      "start": {
+        "line": 3,
+        "column": 6
+      },
+      "end": {
+        "line": 3,
+        "column": 19
+      },
+      "startByteOffset": 72,
+      "endByteOffset": 85
+    },
+    "sourceKind": "js.MemberExpression(.length)",
+    "rule": "js.length→py.len",
+    "decision": "deterministic",
+    "rationale": "JS .length on arrays/strings maps to len() (functions carry a different .length semantics — documented)",
+    "adaptation": "len()",
+    "targetSummary": "len(values)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/util/stats.js#004",
+    "unit": "src/util/stats.js",
+    "span": {
+      "start": {
+        "line": 3,
+        "column": 2
+      },
+      "end": {
+        "line": 5,
+        "column": 3
+      },
+      "startByteOffset": 68,
+      "endByteOffset": 112
+    },
+    "sourceKind": "js.IfStatement",
+    "rule": "js.if→py.if",
+    "decision": "deterministic",
+    "rationale": "if/elif/else correspondence (tests through the JS-truthiness helper where types diverge)",
+    "adaptation": null,
+    "targetSummary": "if",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/util/stats.js#005",
+    "unit": "src/util/stats.js",
+    "span": {
+      "start": {
+        "line": 6,
+        "column": 2
+      },
+      "end": {
+        "line": 6,
+        "column": 16
+      },
+      "startByteOffset": 115,
+      "endByteOffset": 129
+    },
+    "sourceKind": "js.VariableDeclaration",
+    "rule": "js.let→py.assignment",
+    "decision": "semantic",
+    "rationale": "JS let/const/var collapse to Python assignment semantics (rebinding; Python has no block scoping — module/function scope binding is the documented mapping)",
+    "adaptation": "assignment",
+    "targetSummary": "assignment",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/util/stats.js#006",
+    "unit": "src/util/stats.js",
+    "span": {
+      "start": {
+        "line": 7,
+        "column": 2
+      },
+      "end": {
+        "line": 9,
+        "column": 3
+      },
+      "startByteOffset": 132,
+      "endByteOffset": 185
+    },
+    "sourceKind": "js.ForOfStatement",
+    "rule": "js.for-of→py.for-in",
+    "decision": "deterministic",
+    "rationale": "for-of iteration correspondence",
+    "adaptation": null,
+    "targetSummary": "for value in …",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/util/stats.js#007",
+    "unit": "src/util/stats.js",
+    "span": {
+      "start": {
+        "line": 10,
+        "column": 17
+      },
+      "end": {
+        "line": 10,
+        "column": 30
+      },
+      "startByteOffset": 203,
+      "endByteOffset": 216
+    },
+    "sourceKind": "js.MemberExpression(.length)",
+    "rule": "js.length→py.len",
+    "decision": "deterministic",
+    "rationale": "JS .length on arrays/strings maps to len() (functions carry a different .length semantics — documented)",
+    "adaptation": "len()",
+    "targetSummary": "len(values)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/util/stats.js#008",
+    "unit": "src/util/stats.js",
+    "span": {
+      "start": {
+        "line": 10,
+        "column": 9
+      },
+      "end": {
+        "line": 10,
+        "column": 30
+      },
+      "startByteOffset": 195,
+      "endByteOffset": 216
+    },
+    "sourceKind": "js.BinaryExpression",
+    "rule": "js./→py./",
+    "decision": "deterministic",
+    "rationale": "operator correspondence (numeric semantics match for the mapped operand types)",
+    "adaptation": null,
+    "targetSummary": "total / len(values)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/util/stats.js#009",
+    "unit": "src/util/stats.js",
+    "span": {
+      "start": {
+        "line": 2,
+        "column": 7
+      },
+      "end": {
+        "line": 11,
+        "column": 1
+      },
+      "startByteOffset": 42,
+      "endByteOffset": 219
+    },
+    "sourceKind": "js.FunctionDeclaration",
+    "rule": "js.function→py.def",
+    "decision": "deterministic",
+    "rationale": "function correspondence (async preserved; generators are yield-bearing defs)",
+    "adaptation": null,
+    "targetSummary": "def mean",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/util/stats.js#010",
+    "unit": "src/util/stats.js",
+    "span": {
+      "start": {
+        "line": 2,
+        "column": 0
+      },
+      "end": {
+        "line": 11,
+        "column": 1
+      },
+      "startByteOffset": 35,
+      "endByteOffset": 219
+    },
+    "sourceKind": "js.ExportNamedDeclaration",
+    "rule": "js.export→py.public-name",
+    "decision": "deterministic",
+    "rationale": "export keyword becomes a public module name (surfaced via __all__)",
+    "adaptation": null,
+    "targetSummary": "public binding",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/util/stats.js#011",
+    "unit": "src/util/stats.js",
+    "span": {
+      "start": {
+        "line": 13,
+        "column": 7
+      },
+      "end": {
+        "line": 15,
+        "column": 1
+      },
+      "startByteOffset": 228,
+      "endByteOffset": 314
+    },
+    "sourceKind": "js.FunctionDeclaration",
+    "rule": "js.function→py.def",
+    "decision": "deterministic",
+    "rationale": "function correspondence (async preserved; generators are yield-bearing defs)",
+    "adaptation": null,
+    "targetSummary": "def scale",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/util/stats.js#012",
+    "unit": "src/util/stats.js",
+    "span": {
+      "start": {
+        "line": 13,
+        "column": 0
+      },
+      "end": {
+        "line": 15,
+        "column": 1
+      },
+      "startByteOffset": 221,
+      "endByteOffset": 314
+    },
+    "sourceKind": "js.ExportNamedDeclaration",
+    "rule": "js.export→py.public-name",
+    "decision": "deterministic",
+    "rationale": "export keyword becomes a public module name (surfaced via __all__)",
+    "adaptation": null,
+    "targetSummary": "public binding",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/util/stats.js#013",
+    "unit": "src/util/stats.js",
+    "span": null,
+    "sourceKind": "js.exports",
+    "rule": "js.exports→py.__all__",
+    "decision": "semantic",
+    "rationale": "Python has no export keywords; the export surface becomes __all__",
+    "adaptation": "__all__ list",
+    "targetSummary": "__all__ (2 names)",
+    "warnings": [],
+    "escalation": null
+  }
+]

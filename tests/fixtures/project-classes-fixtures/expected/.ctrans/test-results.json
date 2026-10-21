@@ -1,0 +1,86 @@
+{
+  "stage": "S5-tests",
+  "status": "pass",
+  "outcomes": [
+    {
+      "name": "test_translated",
+      "file": "tests/test_geometry.test.ts",
+      "outcome": "passed",
+      "message": null,
+      "flaky": false,
+      "attempts": [
+        {
+          "outcome": "passed",
+          "message": null
+        }
+      ]
+    },
+    {
+      "name": "test_contains_true",
+      "file": "tests/test_geometry.test.ts",
+      "outcome": "passed",
+      "message": null,
+      "flaky": false,
+      "attempts": [
+        {
+          "outcome": "passed",
+          "message": null
+        }
+      ]
+    },
+    {
+      "name": "test_contains_false",
+      "file": "tests/test_geometry.test.ts",
+      "outcome": "passed",
+      "message": null,
+      "flaky": false,
+      "attempts": [
+        {
+          "outcome": "passed",
+          "message": null
+        }
+      ]
+    },
+    {
+      "name": "test_unit_rect_area",
+      "file": "tests/test_geometry.test.ts",
+      "outcome": "passed",
+      "message": null,
+      "flaky": false,
+      "attempts": [
+        {
+          "outcome": "passed",
+          "message": null
+        }
+      ]
+    },
+    {
+      "name": "TestRect.test_area",
+      "file": "tests/test_geometry.test.ts",
+      "outcome": "passed",
+      "message": null,
+      "flaky": false,
+      "attempts": [
+        {
+          "outcome": "passed",
+          "message": null
+        }
+      ]
+    },
+    {
+      "name": "TestRect.test_contains_corner_only",
+      "file": "tests/test_geometry.test.ts",
+      "outcome": "passed",
+      "message": null,
+      "flaky": false,
+      "attempts": [
+        {
+          "outcome": "passed",
+          "message": null
+        }
+      ]
+    }
+  ],
+  "flaky": [],
+  "rerunPerformed": false
+}

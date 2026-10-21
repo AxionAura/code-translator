@@ -90,6 +90,7 @@ export type RepairStopReason =
   | "success"
   | "no-eligible-failures"
   | "repair-unavailable"
+  | "validation-unavailable"
   | "declined"
   | "attempts-exhausted"
   | "run-cap"

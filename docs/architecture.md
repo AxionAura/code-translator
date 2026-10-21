@@ -115,12 +115,12 @@ Both emitters share the same contract: lowering pass (source AST → target AST,
 
 ## 9. Validation engine boundaries (summary)
 
-Stages S1 syntax → S2 types → S3 dependencies → S4 build → S5 unit tests (translated, in sandbox) → S6 differential (source-vs-target behavior on tests) — each reports `pass/fail/skipped(reason)/warn`. The engine may claim equivalence only over executed stages. Details: [validation.md](validation.md).
+Stages S1 syntax → S2 types → S3 dependencies → S4 build → S5 unit tests (translated, in sandbox) → S6 differential (source-vs-target behavior on tests) → S7 opt-in smoke (entry harness in the sandbox) — each reports `pass/fail/skipped(reason)/warn`. S1–S6 feed the claim ladder (an executed S4 failure caps it at 3); S7 is reported outside the ladder. The engine may claim equivalence only over executed stages. Capability detection, strict container execution, and doctor share one model. Details: [validation.md](validation.md).
 
 ## 10. Configuration & UX
 
 - `ctrans.config.json` (schema-validated): `from`, `to`, `intMode: number|bigint`, `datetime: temporal|date-helpers`, `ai: {enabled, provider, caps}`, `sandbox: auto|strict|off(strict refused on request)`, `format: true`, include/exclude globs.
-- CLI: `ctrans translate <path> [-o out] [--project]`, `ctrans check <path>` (parse+analyze+report only, no output), `ctrans validate <dir>`, `ctrans doctor` (capability report: runtimes, bwrap, docker, providers), `ctrans benchmark run`.
+- CLI: `ctrans translate <path> [-o out] [--project]`, `ctrans check <path>` (parse+analyze+report only, no output), `ctrans project <dir>`, `ctrans doctor` (observed capability report: runtimes, validators, bwrap, docker/podman, gVisor), `ctrans validate <dir>`/`benchmark` in M11.
 - All reports written under `<out>/.ctrans/` as JSON; CLI prints the human summary.
 - Distribution: npm package, `ctrans` bin. No UI in V1 (D-013).
 

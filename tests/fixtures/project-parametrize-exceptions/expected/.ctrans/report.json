@@ -1,0 +1,82 @@
+{
+  "generator": {
+    "name": "code-translator",
+    "version": "0.0.0"
+  },
+  "sourceLanguage": "python",
+  "targetLanguage": "typescript",
+  "files": [
+    {
+      "source": "textutil.py",
+      "target": "textutil.ts",
+      "status": "translated",
+      "decisionCounts": {
+        "deterministic": 59,
+        "semantic": 19,
+        "ambiguous": 0,
+        "unsupported": 0
+      }
+    },
+    {
+      "source": "tests/test_textutil.py",
+      "target": "tests/test_textutil.test.ts",
+      "status": "translated",
+      "decisionCounts": {
+        "deterministic": 50,
+        "semantic": 6,
+        "ambiguous": 0,
+        "unsupported": 0
+      }
+    }
+  ],
+  "decisionTotals": {
+    "deterministic": 109,
+    "semantic": 25,
+    "ambiguous": 0,
+    "unsupported": 0
+  },
+  "warnings": [
+    "CTW-METHOD-ADAPTED"
+  ],
+  "unsupported": [],
+  "ambiguous": [],
+  "validationStages": [
+    {
+      "stage": "S1-syntax",
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "stage": "S2-types",
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "stage": "S3-dependencies",
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "stage": "S4-build",
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "stage": "S5-tests",
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "stage": "S6-differential",
+      "status": "pass",
+      "reason": null
+    },
+    {
+      "stage": "S7-smoke",
+      "status": "skipped",
+      "reason": "no smoke harness provided (opt-in)"
+    }
+  ],
+  "claimLevel": 5,
+  "repairJournal": null
+}

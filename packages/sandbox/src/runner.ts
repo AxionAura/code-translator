@@ -5,11 +5,18 @@
 // resource limits when available, and bwrap unshare-net isolation when usable.
 // The capability report travels with every result — no silent downgrades.
 import { spawn, type ChildProcess } from "node:child_process";
-import { mkdtempSync, mkdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
 import type { SandboxCapabilities } from "./capability.js";
+import {
+  buildContainerArgv,
+  cleanupContainer,
+  containerNameFor,
+  validateContainerOptions,
+  type ContainerRunOptions,
+} from "./container.js";
 import {
   SandboxIsolationError,
   SandboxOutputLimitError,
@@ -50,12 +57,31 @@ export interface SandboxRunSpec {
   // When true, a run without enforced network isolation fails instead of
   // degrading (strict mode — the caller opts in for isolation-requiring runs).
   readonly requireNetworkIsolation?: boolean;
+  // Strict container execution (M10): requires `container` on the runner and
+  // refuses to fall back to host execution when it is unavailable.
+  readonly strict?: boolean;
+  // argv to use inside the container (container-native paths/PATH). Defaults to
+  // the host argv (appropriate only when paths are mounted at the same location).
+  readonly containerArgv?: readonly string[];
+  // Tool-controlled absolute host paths mounted read-only at the same path in the
+  // container (e.g. the translator's node_modules for vitest/tsc).
+  readonly containerMounts?: readonly { readonly path: string; readonly readOnly?: boolean }[];
+  // Optional stdin payload (sample input for S7). Written before the child's
+  // stdin closes; the sandbox never inherits the caller's stdin.
+  readonly stdin?: string;
 }
 
 export interface SandboxRunResult {
   // "completed" covers nonzero exits (exitCode carries the verdict); the error
   // classifications are the other outcomes. No outcome is invented.
-  readonly outcome: "completed" | "timeout" | "output-limit" | "spawn-failed";
+  readonly outcome:
+    | "completed"
+    | "timeout"
+    | "output-limit"
+    | "spawn-failed"
+    // The container CLI reported a startup/runtime failure (docker exit 125):
+    // infrastructure, never a source/target verdict.
+    | "container-error";
   readonly exitCode: number | null;
   readonly signal: string | null;
   readonly stdout: string;
@@ -79,6 +105,9 @@ export interface SandboxRunOptions {
   readonly addressSpaceBytes?: number;
   readonly bwrapPath?: string;
   readonly prlimitPath?: string;
+  // Container configuration for spec.strict runs (M10). When absent, strict runs
+  // are refused with SandboxIsolationError.
+  readonly container?: ContainerRunOptions;
 }
 
 const BASE_ENV_ALLOWLIST: Readonly<Record<string, string>> = {
@@ -92,6 +121,7 @@ export class SandboxRunner {
   private readonly addressSpaceBytes: number | undefined;
   private readonly bwrapPath: string;
   private readonly prlimitPath: string;
+  private readonly container: ContainerRunOptions | undefined;
 
   constructor(options: SandboxRunOptions) {
     this.capabilities = options.capabilities;
@@ -100,6 +130,7 @@ export class SandboxRunner {
     this.addressSpaceBytes = options.addressSpaceBytes;
     this.bwrapPath = options.bwrapPath ?? "bwrap";
     this.prlimitPath = options.prlimitPath ?? "prlimit";
+    this.container = options.container;
   }
 
   capabilityReport(): SandboxCapabilities {
@@ -111,13 +142,28 @@ export class SandboxRunner {
   // SandboxIsolationError when strict isolation is demanded but unavailable.
   async run(spec: SandboxRunSpec): Promise<SandboxRunResult> {
     this.validateSpec(spec);
-    if (spec.requireNetworkIsolation === true && !this.capabilities.bwrap.available) {
+    const strict = spec.strict === true;
+    if (strict) {
+      if (this.container === undefined) {
+        throw new SandboxIsolationError(
+          "strict container execution was requested but no container runtime is configured — execution refused",
+        );
+      }
+      try {
+        validateContainerOptions(this.container);
+      } catch (error) {
+        throw new SandboxIsolationError(
+          `strict container execution refused: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+    } else if (spec.requireNetworkIsolation === true && !this.capabilities.bwrap.available) {
       // Strict mode: error, never silently downgrade (docs/security.md §3).
       throw new SandboxIsolationError(
         "network isolation required but unavailable (bwrap) — sandboxed execution refused",
       );
     }
     const workspace = mkdtempSync(join(this.workspaceRoot ?? tmpdir(), "ctrans-run-"));
+    let containerId = strict ? containerNameFor(workspace) : null;
     try {
       this.materialize(workspace, spec.files);
       for (const link of spec.symlinks ?? []) {
@@ -125,13 +171,42 @@ export class SandboxRunner {
         mkdirSync(join(destination, ".."), { recursive: true });
         symlinkSync(link.target, destination, "dir");
       }
-      const argv = this.wrapCommand(spec.argv, workspace);
-      const env = this.buildEnv(spec.env ?? {});
+      const argv =
+        strict && this.container !== undefined
+          ? buildContainerArgv(this.container, workspace, spec)
+          : this.wrapCommand(spec.argv, workspace);
+      // In strict mode the container gets the allowlisted additions via --env;
+      // the host process running the container CLI gets only PATH/HOME/LANG.
+      const env = strict ? this.buildContainerCliEnv() : this.buildEnv(spec.env ?? {});
       const started = Date.now();
-      return await this.runChild(argv, workspace, env, spec, started);
+      const result = await this.runChild(argv, workspace, env, spec, started, strict);
+      if (strict) {
+        containerId = this.readContainerId(workspace) ?? containerId;
+      }
+      return result;
     } finally {
+      if (strict && this.container !== undefined && containerId !== null) {
+        await cleanupContainer(this.container.runtimePath, containerId);
+      }
       rmSync(workspace, { recursive: true, force: true });
     }
+  }
+
+  private readContainerId(workspace: string): string | null {
+    try {
+      const id = readFileSync(join(workspace, ".ctrans-container-id"), "utf8").trim();
+      return id === "" ? null : id;
+    } catch {
+      return null;
+    }
+  }
+
+  private buildContainerCliEnv(): Record<string, string> {
+    return {
+      PATH: process.env["PATH"] ?? "/usr/bin:/bin",
+      HOME: "/nonexistent-home",
+      LANG: "C.UTF-8",
+    };
   }
 
   private validateSpec(spec: SandboxRunSpec): void {
@@ -169,6 +244,36 @@ export class SandboxRunner {
       }
       if (!resolve(link.target).startsWith("/") || link.target.includes("..")) {
         throw new SandboxSpecError(`symlink target must be absolute: ${link.target}`);
+      }
+      if (spec.strict === true) {
+        const mounted = (spec.containerMounts ?? []).some(
+          (mount) => link.target === mount.path || link.target.startsWith(`${mount.path}/`),
+        );
+        if (!mounted) {
+          throw new SandboxSpecError(
+            `strict run symlink target must be inside a container mount: ${link.target}`,
+          );
+        }
+      }
+    }
+    if (spec.stdin !== undefined && typeof spec.stdin !== "string") {
+      throw new SandboxSpecError("stdin must be a string when provided");
+    }
+    for (const mount of spec.containerMounts ?? []) {
+      if (mount.path === "" || !mount.path.startsWith("/") || mount.path.includes("..")) {
+        throw new SandboxSpecError(
+          `container mount must be an absolute path without '..': ${mount.path}`,
+        );
+      }
+    }
+    if (spec.containerArgv !== undefined) {
+      if (spec.containerArgv.length === 0) {
+        throw new SandboxSpecError("containerArgv must not be empty");
+      }
+      for (const element of spec.containerArgv) {
+        if (typeof element !== "string") {
+          throw new SandboxSpecError("containerArgv elements must be strings");
+        }
       }
     }
   }
@@ -243,6 +348,7 @@ export class SandboxRunner {
     env: Record<string, string>,
     spec: SandboxRunSpec,
     startedAt: number,
+    strict: boolean,
   ): Promise<SandboxRunResult> {
     return new Promise((resolveRun) => {
       let child: ChildProcess;
@@ -250,8 +356,10 @@ export class SandboxRunner {
         child = spawn(argv[0]!, argv.slice(1), {
           cwd: workspace,
           env,
-          stdio: ["ignore", "pipe", "pipe"],
-          // Own process group: the timeout kill takes down bwrap + the child.
+          // stdin is a pipe only when a payload was supplied (S7); it is never
+          // inherited from the caller.
+          stdio: ["pipe", "pipe", "pipe"],
+          // Own process group: the timeout kill takes down bwrap/container CLI + child.
           detached: true,
         });
       } catch (error) {
@@ -268,6 +376,10 @@ export class SandboxRunner {
         });
         return;
       }
+      child.stdin?.on("error", () => {
+        // EPIPE when the child exits before consuming stdin is not a harness error.
+      });
+      child.stdin?.end(spec.stdin ?? "");
       // spawn errors (ENOENT etc.) arrive on 'error', not as throw.
       child.on("error", (error) => {
         settled = true;
@@ -330,6 +442,22 @@ export class SandboxRunner {
             outcome: "output-limit",
             exitCode: null,
             signal: "SIGKILL",
+            stdout,
+            stderr,
+            stdoutTruncated,
+            stderrTruncated,
+            durationMs,
+            workspacePath: workspace,
+          });
+          return;
+        }
+        if (strict && child.exitCode === 125) {
+          // The container CLI itself failed (missing image, daemon lost, invalid
+          // runtime). This is infrastructure, never a source/target verdict.
+          resolveRun({
+            outcome: "container-error",
+            exitCode: child.exitCode,
+            signal: child.signalCode,
             stdout,
             stderr,
             stdoutTruncated,

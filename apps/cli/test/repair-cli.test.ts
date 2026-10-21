@@ -69,22 +69,11 @@ describe("translate --repair", () => {
     expect(loaded.runs[0]!.stopReason).toBe("no-failures");
   }, 60000);
 
-  it("rejects --repair on check and project (no silent ignoring of the flag)", async () => {
+  it("rejects --repair on check (translate/project own the repair flow)", async () => {
     const source = writeSource("usage/app.py", CLEAN_SOURCE);
     const check = await runCliCommand(["check", source, "--to", "ts", "--repair"]);
     expect(check.code).toBe(2);
     expect(check.stderr).toContain("--repair is only available for `translate`");
-    const project = await runCliCommand([
-      "project",
-      source,
-      "--to",
-      "ts",
-      "-o",
-      join(tempRoot, "usage-out"),
-      "--repair",
-    ]);
-    expect(project.code).toBe(2);
-    expect(project.stderr).toContain("--repair is not available for `project`");
   });
 
   it("reports a rejected out-of-scope patch and leaves the baseline output in place", async () => {

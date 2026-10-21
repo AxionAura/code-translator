@@ -12,6 +12,7 @@ export type FailureCategory =
   | "build"
   | "tests"
   | "differential"
+  | "smoke"
   | "unsupported"
   | "infrastructure"
   | "unknown";
@@ -38,6 +39,7 @@ const STAGE_CLASSIFICATION: Readonly<
   "S4-build": { code: "V-S4-BUILD", category: "build" },
   "S5-tests": { code: "V-S5-TEST", category: "tests" },
   "S6-differential": { code: "V-S6-DIVERGE", category: "differential" },
+  "S7-smoke": { code: "V-S7-SMOKE", category: "smoke" },
 };
 
 // Evidence patterns that mark an infrastructure problem rather than a source

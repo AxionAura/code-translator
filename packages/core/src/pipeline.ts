@@ -128,7 +128,13 @@ export interface UnitEmission {
 }
 
 export type ValidationStageName =
-  "S1-syntax" | "S2-types" | "S3-dependencies" | "S4-build" | "S5-tests" | "S6-differential";
+  | "S1-syntax"
+  | "S2-types"
+  | "S3-dependencies"
+  | "S4-build"
+  | "S5-tests"
+  | "S6-differential"
+  | "S7-smoke";
 
 export interface StageResult {
   readonly stage: ValidationStageName;
@@ -176,8 +182,11 @@ export function computeClaimLevel(stages: readonly StageResult[]): ClaimLevel {
   if (s2?.status !== "pass") return 1;
   const s3 = stage("S3-dependencies");
   if (s3?.status !== "pass") return 2;
-  // S4 (build) is not wired in M6 (no bundler target yet) — its absence does not
-  // block the ladder; S5/S6 carry levels 4/5.
+  // S4 (build) was skipped/non-blocking before it was wired (M6); when it actually
+  // EXECUTES and fails, the project does not build — behavioral claims above level
+  // 3 are not supported. Skipped S4 (no toolchain/no build step) stays non-blocking.
+  const s4 = stage("S4-build");
+  if (s4?.status === "fail") return 3;
   const s5 = stage("S5-tests");
   if (s5?.status !== "pass") return 3;
   const s6 = stage("S6-differential");

@@ -1,0 +1,2796 @@
+[
+  {
+    "id": "inventory/book.py#001",
+    "unit": "inventory/book.py",
+    "span": null,
+    "sourceKind": "py.Expr(docstring)",
+    "rule": "py.docstring→comment",
+    "decision": "deterministic",
+    "rationale": "docstrings are documentation, not behavior",
+    "adaptation": null,
+    "targetSummary": "block comment",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/book.py#002",
+    "unit": "inventory/book.py",
+    "span": {
+      "start": {
+        "line": 3,
+        "column": 0
+      },
+      "end": {
+        "line": 3,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.ClassDef",
+    "rule": "py.class→js.class",
+    "decision": "semantic",
+    "rationale": "single-inheritance class correspondence; class attributes become static fields (instance access diverges - documented)",
+    "adaptation": "plain class",
+    "targetSummary": "class Book",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/book.py#003",
+    "unit": "inventory/book.py",
+    "span": null,
+    "sourceKind": "py.ClassDef(self-attr)",
+    "rule": "py.self-attr→js.field",
+    "decision": "semantic",
+    "rationale": "Python instance attributes are assigned dynamically; TS fields must be declared. Types come from the first assignment's annotation or conservative inference (else unknown). Fields assigned outside the constructor carry a definite-assignment assertion.",
+    "adaptation": "declared field (typed from first assignment, else unknown)",
+    "targetSummary": "field pages",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/book.py#004",
+    "unit": "inventory/book.py",
+    "span": null,
+    "sourceKind": "py.ClassDef(self-attr)",
+    "rule": "py.self-attr→js.field",
+    "decision": "semantic",
+    "rationale": "Python instance attributes are assigned dynamically; TS fields must be declared. Types come from the first assignment's annotation or conservative inference (else unknown). Fields assigned outside the constructor carry a definite-assignment assertion.",
+    "adaptation": "declared field (typed from first assignment, else unknown)",
+    "targetSummary": "field title",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/book.py#005",
+    "unit": "inventory/book.py",
+    "span": {
+      "start": {
+        "line": 4,
+        "column": 42
+      },
+      "end": {
+        "line": 4,
+        "column": 42
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.arg(annotation)",
+    "rule": "py.int-annotation→js.number",
+    "decision": "semantic",
+    "rationale": "Python int is arbitrary precision; JS number is float64 (D-006: intMode=bigint is the exact mode)",
+    "adaptation": "number with precision warning",
+    "targetSummary": "pages: number",
+    "warnings": [
+      "CTW-NUM-INT-ARBITRARY-PRECISION"
+    ],
+    "escalation": null
+  },
+  {
+    "id": "inventory/book.py#006",
+    "unit": "inventory/book.py",
+    "span": {
+      "start": {
+        "line": 4,
+        "column": 4
+      },
+      "end": {
+        "line": 4,
+        "column": 4
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.FunctionDef(method)",
+    "rule": "py.__init__→js.constructor",
+    "decision": "deterministic",
+    "rationale": "constructor correspondence (self dropped)",
+    "adaptation": null,
+    "targetSummary": "constructor(...)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/book.py#007",
+    "unit": "inventory/book.py",
+    "span": {
+      "start": {
+        "line": 5,
+        "column": 8
+      },
+      "end": {
+        "line": 5,
+        "column": 8
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Assign(member)",
+    "rule": "py.member-assign→js.member-assign",
+    "decision": "deterministic",
+    "rationale": "member assignment correspondence (statically typed receiver)",
+    "adaptation": null,
+    "targetSummary": "this.title = ...",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/book.py#008",
+    "unit": "inventory/book.py",
+    "span": {
+      "start": {
+        "line": 6,
+        "column": 8
+      },
+      "end": {
+        "line": 6,
+        "column": 8
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Assign(member)",
+    "rule": "py.member-assign→js.member-assign",
+    "decision": "deterministic",
+    "rationale": "member assignment correspondence (statically typed receiver)",
+    "adaptation": null,
+    "targetSummary": "this.pages = ...",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/book.py#009",
+    "unit": "inventory/book.py",
+    "span": {
+      "start": {
+        "line": 8,
+        "column": 4
+      },
+      "end": {
+        "line": 8,
+        "column": 4
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.FunctionDef(method)",
+    "rule": "py.method→js.method",
+    "decision": "deterministic",
+    "rationale": "method correspondence (self dropped; self references become this)",
+    "adaptation": null,
+    "targetSummary": "blurb(...)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/book.py#010",
+    "unit": "inventory/book.py",
+    "span": {
+      "start": {
+        "line": 9,
+        "column": 8
+      },
+      "end": {
+        "line": 9,
+        "column": 8
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Return",
+    "rule": "py.return→js.return",
+    "decision": "deterministic",
+    "rationale": "return correspondence",
+    "adaptation": null,
+    "targetSummary": "return value;",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/book.py#011",
+    "unit": "inventory/book.py",
+    "span": {
+      "start": {
+        "line": 9,
+        "column": 18
+      },
+      "end": {
+        "line": 9,
+        "column": 18
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Attribute",
+    "rule": "py.attribute→js.member",
+    "decision": "deterministic",
+    "rationale": "member access correspondence (library method renames arrive with the registry, M5)",
+    "adaptation": null,
+    "targetSummary": "this.title",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/book.py#012",
+    "unit": "inventory/book.py",
+    "span": {
+      "start": {
+        "line": 9,
+        "column": 32
+      },
+      "end": {
+        "line": 9,
+        "column": 32
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Attribute",
+    "rule": "py.attribute→js.member",
+    "decision": "deterministic",
+    "rationale": "member access correspondence (library method renames arrive with the registry, M5)",
+    "adaptation": null,
+    "targetSummary": "this.pages",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/book.py#013",
+    "unit": "inventory/book.py",
+    "span": {
+      "start": {
+        "line": 9,
+        "column": 15
+      },
+      "end": {
+        "line": 9,
+        "column": 15
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.JoinedStr",
+    "rule": "py.fstring→js.template",
+    "decision": "deterministic",
+    "rationale": "interpolation and literal text correspond; interpolations apply str() like Python (float-typed sites use the Python float layout)",
+    "adaptation": null,
+    "targetSummary": "template literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/book.py#014",
+    "unit": "inventory/book.py",
+    "span": {
+      "start": {
+        "line": 11,
+        "column": 0
+      },
+      "end": {
+        "line": 11,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.FunctionDef",
+    "rule": "py.function→js.function",
+    "decision": "deterministic",
+    "rationale": "function correspondence (closures via JS scoping; async syntax corresponds)",
+    "adaptation": null,
+    "targetSummary": "function book_pair",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/book.py#015",
+    "unit": "inventory/book.py",
+    "span": {
+      "start": {
+        "line": 12,
+        "column": 4
+      },
+      "end": {
+        "line": 12,
+        "column": 4
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Return",
+    "rule": "py.return→js.return",
+    "decision": "deterministic",
+    "rationale": "return correspondence",
+    "adaptation": null,
+    "targetSummary": "return value;",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/book.py#016",
+    "unit": "inventory/book.py",
+    "span": {
+      "start": {
+        "line": 12,
+        "column": 11
+      },
+      "end": {
+        "line": 12,
+        "column": 11
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.List",
+    "rule": "py.list→js.array",
+    "decision": "deterministic",
+    "rationale": "array literal preserves order, indexing and mutation",
+    "adaptation": null,
+    "targetSummary": "array literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/book.py#017",
+    "unit": "inventory/book.py",
+    "span": {
+      "start": {
+        "line": 12,
+        "column": 17
+      },
+      "end": {
+        "line": 12,
+        "column": 17
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/book.py#018",
+    "unit": "inventory/book.py",
+    "span": {
+      "start": {
+        "line": 12,
+        "column": 25
+      },
+      "end": {
+        "line": 12,
+        "column": 25
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "412",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/book.py#019",
+    "unit": "inventory/book.py",
+    "span": {
+      "start": {
+        "line": 12,
+        "column": 12
+      },
+      "end": {
+        "line": 12,
+        "column": 12
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call-ctor→js.new",
+    "decision": "deterministic",
+    "rationale": "class construction correspondence (unit-local class)",
+    "adaptation": null,
+    "targetSummary": "new Book(\"Dune\", 412)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/book.py#020",
+    "unit": "inventory/book.py",
+    "span": {
+      "start": {
+        "line": 12,
+        "column": 36
+      },
+      "end": {
+        "line": 12,
+        "column": 36
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/book.py#021",
+    "unit": "inventory/book.py",
+    "span": {
+      "start": {
+        "line": 12,
+        "column": 45
+      },
+      "end": {
+        "line": 12,
+        "column": 45
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "393",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/book.py#022",
+    "unit": "inventory/book.py",
+    "span": {
+      "start": {
+        "line": 12,
+        "column": 31
+      },
+      "end": {
+        "line": 12,
+        "column": 31
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call-ctor→js.new",
+    "decision": "deterministic",
+    "rationale": "class construction correspondence (unit-local class)",
+    "adaptation": null,
+    "targetSummary": "new Book(\"Circe\", 393)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/shelf.py#001",
+    "unit": "inventory/shelf.py",
+    "span": null,
+    "sourceKind": "py.Expr(docstring)",
+    "rule": "py.docstring→comment",
+    "decision": "deterministic",
+    "rationale": "docstrings are documentation, not behavior",
+    "adaptation": null,
+    "targetSummary": "block comment",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/shelf.py#002",
+    "unit": "inventory/shelf.py",
+    "span": {
+      "start": {
+        "line": 2,
+        "column": 0
+      },
+      "end": {
+        "line": 2,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.ImportFrom",
+    "rule": "py.import→module-prologue",
+    "decision": "deterministic",
+    "rationale": "imports are collected into the emitted module prologue",
+    "adaptation": null,
+    "targetSummary": "moved to prologue",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/shelf.py#003",
+    "unit": "inventory/shelf.py",
+    "span": {
+      "start": {
+        "line": 5,
+        "column": 0
+      },
+      "end": {
+        "line": 5,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.ClassDef",
+    "rule": "py.class→js.class",
+    "decision": "semantic",
+    "rationale": "single-inheritance class correspondence; class attributes become static fields (instance access diverges - documented)",
+    "adaptation": "plain class",
+    "targetSummary": "class Shelf",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/shelf.py#004",
+    "unit": "inventory/shelf.py",
+    "span": null,
+    "sourceKind": "py.ClassDef(self-attr)",
+    "rule": "py.self-attr→js.field",
+    "decision": "semantic",
+    "rationale": "Python instance attributes are assigned dynamically; TS fields must be declared. Types come from the first assignment's annotation or conservative inference (else unknown). Fields assigned outside the constructor carry a definite-assignment assertion.",
+    "adaptation": "declared field (typed from first assignment, else unknown)",
+    "targetSummary": "field books",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/shelf.py#005",
+    "unit": "inventory/shelf.py",
+    "span": {
+      "start": {
+        "line": 6,
+        "column": 4
+      },
+      "end": {
+        "line": 6,
+        "column": 4
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.FunctionDef(method)",
+    "rule": "py.__init__→js.constructor",
+    "decision": "deterministic",
+    "rationale": "constructor correspondence (self dropped)",
+    "adaptation": null,
+    "targetSummary": "constructor(...)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/shelf.py#006",
+    "unit": "inventory/shelf.py",
+    "span": {
+      "start": {
+        "line": 7,
+        "column": 21
+      },
+      "end": {
+        "line": 7,
+        "column": 21
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.List",
+    "rule": "py.list→js.array",
+    "decision": "deterministic",
+    "rationale": "array literal preserves order, indexing and mutation",
+    "adaptation": null,
+    "targetSummary": "array literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/shelf.py#007",
+    "unit": "inventory/shelf.py",
+    "span": {
+      "start": {
+        "line": 7,
+        "column": 8
+      },
+      "end": {
+        "line": 7,
+        "column": 8
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Assign(member)",
+    "rule": "py.member-assign→js.member-assign",
+    "decision": "deterministic",
+    "rationale": "member assignment correspondence (statically typed receiver)",
+    "adaptation": null,
+    "targetSummary": "this.books = ...",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/shelf.py#008",
+    "unit": "inventory/shelf.py",
+    "span": {
+      "start": {
+        "line": 9,
+        "column": 4
+      },
+      "end": {
+        "line": 9,
+        "column": 4
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.FunctionDef(method)",
+    "rule": "py.method→js.method",
+    "decision": "deterministic",
+    "rationale": "method correspondence (self dropped; self references become this)",
+    "adaptation": null,
+    "targetSummary": "add(...)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/shelf.py#009",
+    "unit": "inventory/shelf.py",
+    "span": {
+      "start": {
+        "line": 10,
+        "column": 8
+      },
+      "end": {
+        "line": 10,
+        "column": 8
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Expr",
+    "rule": "py.expr-stmt→js.expr-stmt",
+    "decision": "deterministic",
+    "rationale": "expression statement correspondence",
+    "adaptation": null,
+    "targetSummary": "expression statement",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/shelf.py#010",
+    "unit": "inventory/shelf.py",
+    "span": {
+      "start": {
+        "line": 10,
+        "column": 8
+      },
+      "end": {
+        "line": 10,
+        "column": 8
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Attribute",
+    "rule": "py.attribute→js.member",
+    "decision": "deterministic",
+    "rationale": "member access correspondence (library method renames arrive with the registry, M5)",
+    "adaptation": null,
+    "targetSummary": "this.books",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/shelf.py#011",
+    "unit": "inventory/shelf.py",
+    "span": {
+      "start": {
+        "line": 10,
+        "column": 8
+      },
+      "end": {
+        "line": 10,
+        "column": 8
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.array-method→js.list.append",
+    "decision": "deterministic",
+    "rationale": "registry v1 mapping (list.append): Python append returns None; JS push returns the new length (diverges only when the result is used)",
+    "adaptation": "push",
+    "targetSummary": "this.books.push(book)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/shelf.py#012",
+    "unit": "inventory/shelf.py",
+    "span": {
+      "start": {
+        "line": 11,
+        "column": 8
+      },
+      "end": {
+        "line": 11,
+        "column": 8
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Return",
+    "rule": "py.return→js.return",
+    "decision": "deterministic",
+    "rationale": "return correspondence",
+    "adaptation": null,
+    "targetSummary": "return value;",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/shelf.py#013",
+    "unit": "inventory/shelf.py",
+    "span": {
+      "start": {
+        "line": 11,
+        "column": 15
+      },
+      "end": {
+        "line": 11,
+        "column": 15
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call(len)",
+    "rule": "py.len→__ctrans.len",
+    "decision": "semantic",
+    "rationale": "length/size surface differs across JS types",
+    "adaptation": "__ctrans_len",
+    "targetSummary": "len(x)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/shelf.py#014",
+    "unit": "inventory/shelf.py",
+    "span": {
+      "start": {
+        "line": 11,
+        "column": 19
+      },
+      "end": {
+        "line": 11,
+        "column": 19
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Attribute",
+    "rule": "py.attribute→js.member",
+    "decision": "deterministic",
+    "rationale": "member access correspondence (library method renames arrive with the registry, M5)",
+    "adaptation": null,
+    "targetSummary": "this.books",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/shelf.py#015",
+    "unit": "inventory/shelf.py",
+    "span": {
+      "start": {
+        "line": 13,
+        "column": 4
+      },
+      "end": {
+        "line": 13,
+        "column": 4
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.FunctionDef(method)",
+    "rule": "py.method→js.method",
+    "decision": "deterministic",
+    "rationale": "method correspondence (self dropped; self references become this)",
+    "adaptation": null,
+    "targetSummary": "total_pages(...)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/shelf.py#016",
+    "unit": "inventory/shelf.py",
+    "span": {
+      "start": {
+        "line": 14,
+        "column": 8
+      },
+      "end": {
+        "line": 14,
+        "column": 8
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Return",
+    "rule": "py.return→js.return",
+    "decision": "deterministic",
+    "rationale": "return correspondence",
+    "adaptation": null,
+    "targetSummary": "return value;",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/shelf.py#017",
+    "unit": "inventory/shelf.py",
+    "span": {
+      "start": {
+        "line": 14,
+        "column": 15
+      },
+      "end": {
+        "line": 14,
+        "column": 15
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call(sum)",
+    "rule": "py.sum→__ctrans.sum",
+    "decision": "semantic",
+    "rationale": "Python sum() over iterables; JS reduce is the equivalent",
+    "adaptation": "__ctrans_sum",
+    "targetSummary": "sum(xs)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/shelf.py#018",
+    "unit": "inventory/shelf.py",
+    "span": {
+      "start": {
+        "line": 14,
+        "column": 42
+      },
+      "end": {
+        "line": 14,
+        "column": 42
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Attribute",
+    "rule": "py.attribute→js.member",
+    "decision": "deterministic",
+    "rationale": "member access correspondence (library method renames arrive with the registry, M5)",
+    "adaptation": null,
+    "targetSummary": "this.books",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/shelf.py#019",
+    "unit": "inventory/shelf.py",
+    "span": {
+      "start": {
+        "line": 14,
+        "column": 19
+      },
+      "end": {
+        "line": 14,
+        "column": 19
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Attribute",
+    "rule": "py.attribute→__ctrans.getattr",
+    "decision": "semantic",
+    "rationale": "receiver type is statically unknown; property access on unknown is not expressible in TS and Python raises AttributeError for missing names",
+    "adaptation": "__ctrans_getattr",
+    "targetSummary": "getattr(book, \"pages\")",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/shelf.py#020",
+    "unit": "inventory/shelf.py",
+    "span": {
+      "start": {
+        "line": 14,
+        "column": 18
+      },
+      "end": {
+        "line": 14,
+        "column": 18
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.GeneratorExp",
+    "rule": "py.genexp→js.eager-map",
+    "decision": "semantic",
+    "rationale": "generator expressions are lazy in Python; the mapped array is eager",
+    "adaptation": "eager map",
+    "targetSummary": "eager map chain",
+    "warnings": [
+      "CTW-GENERATOR-EAGER"
+    ],
+    "escalation": null
+  },
+  {
+    "id": "inventory/shelf.py#021",
+    "unit": "inventory/shelf.py",
+    "span": {
+      "start": {
+        "line": 16,
+        "column": 4
+      },
+      "end": {
+        "line": 16,
+        "column": 4
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.FunctionDef(method)",
+    "rule": "py.method→js.method",
+    "decision": "deterministic",
+    "rationale": "method correspondence (self dropped; self references become this)",
+    "adaptation": null,
+    "targetSummary": "find(...)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/shelf.py#022",
+    "unit": "inventory/shelf.py",
+    "span": {
+      "start": {
+        "line": 17,
+        "column": 8
+      },
+      "end": {
+        "line": 17,
+        "column": 8
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.For(unknown)",
+    "rule": "py.for→__ctrans.iter",
+    "decision": "semantic",
+    "rationale": "iterable type is statically unknown; TS cannot for-of unknown and Python iteration (dict keys/code points) is applied by __ctrans_iter",
+    "adaptation": "__ctrans_iter",
+    "targetSummary": "for-of over iter(...)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/shelf.py#023",
+    "unit": "inventory/shelf.py",
+    "span": {
+      "start": {
+        "line": 17,
+        "column": 20
+      },
+      "end": {
+        "line": 17,
+        "column": 20
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Attribute",
+    "rule": "py.attribute→js.member",
+    "decision": "deterministic",
+    "rationale": "member access correspondence (library method renames arrive with the registry, M5)",
+    "adaptation": null,
+    "targetSummary": "this.books",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/shelf.py#024",
+    "unit": "inventory/shelf.py",
+    "span": {
+      "start": {
+        "line": 18,
+        "column": 15
+      },
+      "end": {
+        "line": 18,
+        "column": 15
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Attribute",
+    "rule": "py.attribute→__ctrans.getattr",
+    "decision": "semantic",
+    "rationale": "receiver type is statically unknown; property access on unknown is not expressible in TS and Python raises AttributeError for missing names",
+    "adaptation": "__ctrans_getattr",
+    "targetSummary": "getattr(book, \"title\")",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/shelf.py#025",
+    "unit": "inventory/shelf.py",
+    "span": {
+      "start": {
+        "line": 18,
+        "column": 29
+      },
+      "end": {
+        "line": 18,
+        "column": 29
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Compare(Eq)",
+    "rule": "py.eq→__ctrans.eq",
+    "decision": "semantic",
+    "rationale": "Python == compares sequences elementwise; JS === does not",
+    "adaptation": "equality via __ctrans_eq",
+    "targetSummary": "eq(left, right)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/shelf.py#026",
+    "unit": "inventory/shelf.py",
+    "span": {
+      "start": {
+        "line": 18,
+        "column": 15
+      },
+      "end": {
+        "line": 18,
+        "column": 15
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.If",
+    "rule": "py.test→js.native",
+    "decision": "deterministic",
+    "rationale": "statically provable that JS truthiness equals Python truthiness for this expression (boolean/string/null/int/bigint/comparison)",
+    "adaptation": null,
+    "targetSummary": "native test",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/shelf.py#027",
+    "unit": "inventory/shelf.py",
+    "span": {
+      "start": {
+        "line": 18,
+        "column": 12
+      },
+      "end": {
+        "line": 18,
+        "column": 12
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.If",
+    "rule": "py.if→js.if",
+    "decision": "deterministic",
+    "rationale": "branching correspondence (elif chains become nested else-blocks - semantically identical)",
+    "adaptation": null,
+    "targetSummary": "if/else",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/shelf.py#028",
+    "unit": "inventory/shelf.py",
+    "span": {
+      "start": {
+        "line": 19,
+        "column": 16
+      },
+      "end": {
+        "line": 19,
+        "column": 16
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Return",
+    "rule": "py.return→js.return",
+    "decision": "deterministic",
+    "rationale": "return correspondence",
+    "adaptation": null,
+    "targetSummary": "return value;",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/shelf.py#029",
+    "unit": "inventory/shelf.py",
+    "span": {
+      "start": {
+        "line": 20,
+        "column": 8
+      },
+      "end": {
+        "line": 20,
+        "column": 8
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Return",
+    "rule": "py.return→js.return",
+    "decision": "deterministic",
+    "rationale": "return correspondence",
+    "adaptation": null,
+    "targetSummary": "return value;",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/shelf.py#030",
+    "unit": "inventory/shelf.py",
+    "span": {
+      "start": {
+        "line": 20,
+        "column": 15
+      },
+      "end": {
+        "line": 20,
+        "column": 15
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(None)",
+    "rule": "py.None→js.undefined",
+    "decision": "semantic",
+    "rationale": "None/null/undefined tri-state collapses to undefined (nullMode=undefined)",
+    "adaptation": "None emitted as undefined",
+    "targetSummary": "undefined",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/shelf.py#031",
+    "unit": "inventory/shelf.py",
+    "span": {
+      "start": {
+        "line": 22,
+        "column": 4
+      },
+      "end": {
+        "line": 22,
+        "column": 4
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.FunctionDef(method)",
+    "rule": "py.method→js.method",
+    "decision": "deterministic",
+    "rationale": "method correspondence (self dropped; self references become this)",
+    "adaptation": null,
+    "targetSummary": "titles(...)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/shelf.py#032",
+    "unit": "inventory/shelf.py",
+    "span": {
+      "start": {
+        "line": 23,
+        "column": 8
+      },
+      "end": {
+        "line": 23,
+        "column": 8
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Return",
+    "rule": "py.return→js.return",
+    "decision": "deterministic",
+    "rationale": "return correspondence",
+    "adaptation": null,
+    "targetSummary": "return value;",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/shelf.py#033",
+    "unit": "inventory/shelf.py",
+    "span": {
+      "start": {
+        "line": 23,
+        "column": 39
+      },
+      "end": {
+        "line": 23,
+        "column": 39
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Attribute",
+    "rule": "py.attribute→js.member",
+    "decision": "deterministic",
+    "rationale": "member access correspondence (library method renames arrive with the registry, M5)",
+    "adaptation": null,
+    "targetSummary": "this.books",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/shelf.py#034",
+    "unit": "inventory/shelf.py",
+    "span": {
+      "start": {
+        "line": 23,
+        "column": 16
+      },
+      "end": {
+        "line": 23,
+        "column": 16
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Attribute",
+    "rule": "py.attribute→__ctrans.getattr",
+    "decision": "semantic",
+    "rationale": "receiver type is statically unknown; property access on unknown is not expressible in TS and Python raises AttributeError for missing names",
+    "adaptation": "__ctrans_getattr",
+    "targetSummary": "getattr(book, \"title\")",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/shelf.py#035",
+    "unit": "inventory/shelf.py",
+    "span": {
+      "start": {
+        "line": 23,
+        "column": 15
+      },
+      "end": {
+        "line": 23,
+        "column": 15
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.ListComp",
+    "rule": "py.listcomp→js.map/filter",
+    "decision": "deterministic",
+    "rationale": "single-for comprehension correspondence (order and filtering preserved)",
+    "adaptation": null,
+    "targetSummary": "map/filter chain",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/__init__.py#001",
+    "unit": "inventory/__init__.py",
+    "span": null,
+    "sourceKind": "py.Expr(docstring)",
+    "rule": "py.docstring→comment",
+    "decision": "deterministic",
+    "rationale": "docstrings are documentation, not behavior",
+    "adaptation": null,
+    "targetSummary": "block comment",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/__init__.py#002",
+    "unit": "inventory/__init__.py",
+    "span": {
+      "start": {
+        "line": 2,
+        "column": 0
+      },
+      "end": {
+        "line": 2,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.ImportFrom",
+    "rule": "py.import→module-prologue",
+    "decision": "deterministic",
+    "rationale": "imports are collected into the emitted module prologue",
+    "adaptation": null,
+    "targetSummary": "moved to prologue",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/__init__.py#003",
+    "unit": "inventory/__init__.py",
+    "span": {
+      "start": {
+        "line": 3,
+        "column": 0
+      },
+      "end": {
+        "line": 3,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.ImportFrom",
+    "rule": "py.import→module-prologue",
+    "decision": "deterministic",
+    "rationale": "imports are collected into the emitted module prologue",
+    "adaptation": null,
+    "targetSummary": "moved to prologue",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/__init__.py#004",
+    "unit": "inventory/__init__.py",
+    "span": {
+      "start": {
+        "line": 5,
+        "column": 10
+      },
+      "end": {
+        "line": 5,
+        "column": 10
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.List",
+    "rule": "py.list→js.array",
+    "decision": "deterministic",
+    "rationale": "array literal preserves order, indexing and mutation",
+    "adaptation": null,
+    "targetSummary": "array literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/__init__.py#005",
+    "unit": "inventory/__init__.py",
+    "span": {
+      "start": {
+        "line": 5,
+        "column": 11
+      },
+      "end": {
+        "line": 5,
+        "column": 11
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/__init__.py#006",
+    "unit": "inventory/__init__.py",
+    "span": {
+      "start": {
+        "line": 5,
+        "column": 19
+      },
+      "end": {
+        "line": 5,
+        "column": 19
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "inventory/__init__.py#007",
+    "unit": "inventory/__init__.py",
+    "span": {
+      "start": {
+        "line": 5,
+        "column": 0
+      },
+      "end": {
+        "line": 5,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Assign",
+    "rule": "py.assign→js.let/assign",
+    "decision": "deterministic",
+    "rationale": "binding declared with let (Python bindings are rebindable)",
+    "adaptation": null,
+    "targetSummary": "__all__ = ...",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#001",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 8,
+        "column": 4
+      },
+      "end": {
+        "line": 8,
+        "column": 4
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Return",
+    "rule": "py.return→js.return",
+    "decision": "deterministic",
+    "rationale": "return correspondence",
+    "adaptation": null,
+    "targetSummary": "return value;",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#002",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 8,
+        "column": 11
+      },
+      "end": {
+        "line": 8,
+        "column": 11
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call-ctor→js.new",
+    "decision": "deterministic",
+    "rationale": "class construction correspondence (unit-local class)",
+    "adaptation": null,
+    "targetSummary": "new Shelf()",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#003",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 12,
+        "column": 26
+      },
+      "end": {
+        "line": 12,
+        "column": 26
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#004",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 12,
+        "column": 34
+      },
+      "end": {
+        "line": 12,
+        "column": 34
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "412",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#005",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 12,
+        "column": 21
+      },
+      "end": {
+        "line": 12,
+        "column": 21
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call-ctor→js.new",
+    "decision": "deterministic",
+    "rationale": "class construction correspondence (unit-local class)",
+    "adaptation": null,
+    "targetSummary": "new Book(\"Dune\", 412)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#006",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 12,
+        "column": 11
+      },
+      "end": {
+        "line": 12,
+        "column": 11
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call→__ctrans.callMethod",
+    "decision": "semantic",
+    "rationale": "receiver type is statically unknown; TS cannot infer the member and Python's AttributeError/TypeError behavior is preserved via __ctrans_callMethod",
+    "adaptation": "__ctrans_callMethod",
+    "targetSummary": "callMethod(shelf, \"add\", ...)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#007",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 12,
+        "column": 43
+      },
+      "end": {
+        "line": 12,
+        "column": 43
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "1",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#008",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 12,
+        "column": 0
+      },
+      "end": {
+        "line": 12,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.assert",
+    "rule": "pytest.assert→vitest.expect.toEqual",
+    "decision": "deterministic",
+    "rationale": "== maps to deep equality (Python == semantics for sequences and primitives)",
+    "adaptation": null,
+    "targetSummary": "__ctrans_callMethod(shelf, \"add\", new Book(\"Dune\", 412))).toEqual(1",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#009",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 13,
+        "column": 26
+      },
+      "end": {
+        "line": 13,
+        "column": 26
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#010",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 13,
+        "column": 35
+      },
+      "end": {
+        "line": 13,
+        "column": 35
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "393",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#011",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 13,
+        "column": 21
+      },
+      "end": {
+        "line": 13,
+        "column": 21
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call-ctor→js.new",
+    "decision": "deterministic",
+    "rationale": "class construction correspondence (unit-local class)",
+    "adaptation": null,
+    "targetSummary": "new Book(\"Circe\", 393)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#012",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 13,
+        "column": 11
+      },
+      "end": {
+        "line": 13,
+        "column": 11
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call→__ctrans.callMethod",
+    "decision": "semantic",
+    "rationale": "receiver type is statically unknown; TS cannot infer the member and Python's AttributeError/TypeError behavior is preserved via __ctrans_callMethod",
+    "adaptation": "__ctrans_callMethod",
+    "targetSummary": "callMethod(shelf, \"add\", ...)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#013",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 13,
+        "column": 44
+      },
+      "end": {
+        "line": 13,
+        "column": 44
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "2",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#014",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 13,
+        "column": 0
+      },
+      "end": {
+        "line": 13,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.assert",
+    "rule": "pytest.assert→vitest.expect.toEqual",
+    "decision": "deterministic",
+    "rationale": "== maps to deep equality (Python == semantics for sequences and primitives)",
+    "adaptation": null,
+    "targetSummary": "__ctrans_callMethod(shelf, \"add\", new Book(\"Circe\", 393))).toEqual(2",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#015",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 11,
+        "column": 0
+      },
+      "end": {
+        "line": 11,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.test",
+    "rule": "pytest.test→vitest.it",
+    "decision": "deterministic",
+    "rationale": "test function correspondence (name preserved for differential matching)",
+    "adaptation": null,
+    "targetSummary": "it(\"test_add_tracks_count\")",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#016",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 17,
+        "column": 4
+      },
+      "end": {
+        "line": 17,
+        "column": 4
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.For(unknown)",
+    "rule": "py.for→__ctrans.iter",
+    "decision": "semantic",
+    "rationale": "iterable type is statically unknown; TS cannot for-of unknown and Python iteration (dict keys/code points) is applied by __ctrans_iter",
+    "adaptation": "__ctrans_iter",
+    "targetSummary": "for-of over iter(...)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#017",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 17,
+        "column": 16
+      },
+      "end": {
+        "line": 17,
+        "column": 16
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call→js.call",
+    "decision": "deterministic",
+    "rationale": "call correspondence (function declarations hoist like Python's late resolution)",
+    "adaptation": null,
+    "targetSummary": "book_pair()",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#018",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 18,
+        "column": 8
+      },
+      "end": {
+        "line": 18,
+        "column": 8
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Expr",
+    "rule": "py.expr-stmt→js.expr-stmt",
+    "decision": "deterministic",
+    "rationale": "expression statement correspondence",
+    "adaptation": null,
+    "targetSummary": "expression statement",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#019",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 18,
+        "column": 8
+      },
+      "end": {
+        "line": 18,
+        "column": 8
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call→__ctrans.callMethod",
+    "decision": "semantic",
+    "rationale": "receiver type is statically unknown; TS cannot infer the member and Python's AttributeError/TypeError behavior is preserved via __ctrans_callMethod",
+    "adaptation": "__ctrans_callMethod",
+    "targetSummary": "callMethod(shelf, \"add\", ...)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#020",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 19,
+        "column": 11
+      },
+      "end": {
+        "line": 19,
+        "column": 11
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call→__ctrans.callMethod",
+    "decision": "semantic",
+    "rationale": "receiver type is statically unknown; TS cannot infer the member and Python's AttributeError/TypeError behavior is preserved via __ctrans_callMethod",
+    "adaptation": "__ctrans_callMethod",
+    "targetSummary": "callMethod(shelf, \"total_pages\", ...)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#021",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 19,
+        "column": 34
+      },
+      "end": {
+        "line": 19,
+        "column": 34
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "805",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#022",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 19,
+        "column": 0
+      },
+      "end": {
+        "line": 19,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.assert",
+    "rule": "pytest.assert→vitest.expect.toEqual",
+    "decision": "deterministic",
+    "rationale": "== maps to deep equality (Python == semantics for sequences and primitives)",
+    "adaptation": null,
+    "targetSummary": "__ctrans_callMethod(shelf, \"total_pages\")).toEqual(805",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#023",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 16,
+        "column": 0
+      },
+      "end": {
+        "line": 16,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.test",
+    "rule": "pytest.test→vitest.it",
+    "decision": "deterministic",
+    "rationale": "test function correspondence (name preserved for differential matching)",
+    "adaptation": null,
+    "targetSummary": "it(\"test_total_pages\")",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#024",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 23,
+        "column": 4
+      },
+      "end": {
+        "line": 23,
+        "column": 4
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Expr",
+    "rule": "py.expr-stmt→js.expr-stmt",
+    "decision": "deterministic",
+    "rationale": "expression statement correspondence",
+    "adaptation": null,
+    "targetSummary": "expression statement",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#025",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 23,
+        "column": 19
+      },
+      "end": {
+        "line": 23,
+        "column": 19
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#026",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 23,
+        "column": 27
+      },
+      "end": {
+        "line": 23,
+        "column": 27
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "412",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#027",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 23,
+        "column": 14
+      },
+      "end": {
+        "line": 23,
+        "column": 14
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call-ctor→js.new",
+    "decision": "deterministic",
+    "rationale": "class construction correspondence (unit-local class)",
+    "adaptation": null,
+    "targetSummary": "new Book(\"Dune\", 412)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#028",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 23,
+        "column": 4
+      },
+      "end": {
+        "line": 23,
+        "column": 4
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call→__ctrans.callMethod",
+    "decision": "semantic",
+    "rationale": "receiver type is statically unknown; TS cannot infer the member and Python's AttributeError/TypeError behavior is preserved via __ctrans_callMethod",
+    "adaptation": "__ctrans_callMethod",
+    "targetSummary": "callMethod(shelf, \"add\", ...)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#029",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 24,
+        "column": 22
+      },
+      "end": {
+        "line": 24,
+        "column": 22
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#030",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 24,
+        "column": 11
+      },
+      "end": {
+        "line": 24,
+        "column": 11
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call→__ctrans.callMethod",
+    "decision": "semantic",
+    "rationale": "receiver type is statically unknown; TS cannot infer the member and Python's AttributeError/TypeError behavior is preserved via __ctrans_callMethod",
+    "adaptation": "__ctrans_callMethod",
+    "targetSummary": "callMethod(shelf, \"find\", ...)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#031",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 24,
+        "column": 37
+      },
+      "end": {
+        "line": 24,
+        "column": 37
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(None)",
+    "rule": "py.None→js.undefined",
+    "decision": "semantic",
+    "rationale": "None/null/undefined tri-state collapses to undefined (nullMode=undefined)",
+    "adaptation": "None emitted as undefined",
+    "targetSummary": "undefined",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#032",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 24,
+        "column": 0
+      },
+      "end": {
+        "line": 24,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.assert",
+    "rule": "pytest.assert→vitest.expect.not.toBe",
+    "decision": "deterministic",
+    "rationale": "is not maps to negated identity",
+    "adaptation": null,
+    "targetSummary": "__ctrans_callMethod(shelf, \"find\", \"Dune\")).not.toBe(undefined",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#033",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 25,
+        "column": 22
+      },
+      "end": {
+        "line": 25,
+        "column": 22
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#034",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 25,
+        "column": 11
+      },
+      "end": {
+        "line": 25,
+        "column": 11
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call→__ctrans.callMethod",
+    "decision": "semantic",
+    "rationale": "receiver type is statically unknown; TS cannot infer the member and Python's AttributeError/TypeError behavior is preserved via __ctrans_callMethod",
+    "adaptation": "__ctrans_callMethod",
+    "targetSummary": "callMethod(shelf, \"find\", ...)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#035",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 25,
+        "column": 33
+      },
+      "end": {
+        "line": 25,
+        "column": 33
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(None)",
+    "rule": "py.None→js.undefined",
+    "decision": "semantic",
+    "rationale": "None/null/undefined tri-state collapses to undefined (nullMode=undefined)",
+    "adaptation": "None emitted as undefined",
+    "targetSummary": "undefined",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#036",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 25,
+        "column": 0
+      },
+      "end": {
+        "line": 25,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.assert",
+    "rule": "pytest.assert→vitest.expect.toBe",
+    "decision": "deterministic",
+    "rationale": "is maps to identity (toBe)",
+    "adaptation": null,
+    "targetSummary": "__ctrans_callMethod(shelf, \"find\", \"Nope\")).toBe(undefined",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#037",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 22,
+        "column": 0
+      },
+      "end": {
+        "line": 22,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.test",
+    "rule": "pytest.test→vitest.it",
+    "decision": "deterministic",
+    "rationale": "test function correspondence (name preserved for differential matching)",
+    "adaptation": null,
+    "targetSummary": "it(\"test_find_present_and_missing\")",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#038",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 30,
+        "column": 20
+      },
+      "end": {
+        "line": 30,
+        "column": 20
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#039",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 30,
+        "column": 29
+      },
+      "end": {
+        "line": 30,
+        "column": 29
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(number)",
+    "rule": "py.number→js.number",
+    "decision": "deterministic",
+    "rationale": "numeric literal correspondence (D-006 number mode)",
+    "adaptation": null,
+    "targetSummary": "393",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#040",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 30,
+        "column": 15
+      },
+      "end": {
+        "line": 30,
+        "column": 15
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call-ctor→js.new",
+    "decision": "deterministic",
+    "rationale": "class construction correspondence (unit-local class)",
+    "adaptation": null,
+    "targetSummary": "new Book(\"Circe\", 393)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#041",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 30,
+        "column": 8
+      },
+      "end": {
+        "line": 30,
+        "column": 8
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Assign",
+    "rule": "py.assign→js.let/assign",
+    "decision": "deterministic",
+    "rationale": "binding declared with let (Python bindings are rebindable)",
+    "adaptation": null,
+    "targetSummary": "book = ...",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#042",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 31,
+        "column": 15
+      },
+      "end": {
+        "line": 31,
+        "column": 15
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call→js.call",
+    "decision": "deterministic",
+    "rationale": "method call correspondence on a statically typed receiver",
+    "adaptation": null,
+    "targetSummary": "book.blurb()",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#043",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 31,
+        "column": 31
+      },
+      "end": {
+        "line": 31,
+        "column": 31
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#044",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 31,
+        "column": 0
+      },
+      "end": {
+        "line": 31,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.assert",
+    "rule": "pytest.assert→vitest.expect.toEqual",
+    "decision": "deterministic",
+    "rationale": "== maps to deep equality (Python == semantics for sequences and primitives)",
+    "adaptation": null,
+    "targetSummary": "book.blurb()).toEqual(\"Circe (393 pages)\"",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#045",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 29,
+        "column": 0
+      },
+      "end": {
+        "line": 29,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.test-method",
+    "rule": "pytest.test-method→vitest.it",
+    "decision": "deterministic",
+    "rationale": "Test-class method correspondence (self dropped; plain methods only)",
+    "adaptation": null,
+    "targetSummary": "it(\"TestBook.test_blurb\")",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#046",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 34,
+        "column": 4
+      },
+      "end": {
+        "line": 34,
+        "column": 4
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.For(unknown)",
+    "rule": "py.for→__ctrans.iter",
+    "decision": "semantic",
+    "rationale": "iterable type is statically unknown; TS cannot for-of unknown and Python iteration (dict keys/code points) is applied by __ctrans_iter",
+    "adaptation": "__ctrans_iter",
+    "targetSummary": "for-of over iter(...)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#047",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 34,
+        "column": 16
+      },
+      "end": {
+        "line": 34,
+        "column": 16
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call→js.call",
+    "decision": "deterministic",
+    "rationale": "call correspondence (function declarations hoist like Python's late resolution)",
+    "adaptation": null,
+    "targetSummary": "book_pair()",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#048",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 35,
+        "column": 8
+      },
+      "end": {
+        "line": 35,
+        "column": 8
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Expr",
+    "rule": "py.expr-stmt→js.expr-stmt",
+    "decision": "deterministic",
+    "rationale": "expression statement correspondence",
+    "adaptation": null,
+    "targetSummary": "expression statement",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#049",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 35,
+        "column": 8
+      },
+      "end": {
+        "line": 35,
+        "column": 8
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call→__ctrans.callMethod",
+    "decision": "semantic",
+    "rationale": "receiver type is statically unknown; TS cannot infer the member and Python's AttributeError/TypeError behavior is preserved via __ctrans_callMethod",
+    "adaptation": "__ctrans_callMethod",
+    "targetSummary": "callMethod(shelf, \"add\", ...)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#050",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 36,
+        "column": 11
+      },
+      "end": {
+        "line": 36,
+        "column": 11
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Call",
+    "rule": "py.call→__ctrans.callMethod",
+    "decision": "semantic",
+    "rationale": "receiver type is statically unknown; TS cannot infer the member and Python's AttributeError/TypeError behavior is preserved via __ctrans_callMethod",
+    "adaptation": "__ctrans_callMethod",
+    "targetSummary": "callMethod(shelf, \"titles\", ...)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#051",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 36,
+        "column": 29
+      },
+      "end": {
+        "line": 36,
+        "column": 29
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.List",
+    "rule": "py.list→js.array",
+    "decision": "deterministic",
+    "rationale": "array literal preserves order, indexing and mutation",
+    "adaptation": null,
+    "targetSummary": "array literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#052",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 36,
+        "column": 30
+      },
+      "end": {
+        "line": 36,
+        "column": 30
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#053",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 36,
+        "column": 38
+      },
+      "end": {
+        "line": 36,
+        "column": 38
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "py.Constant(str)",
+    "rule": "py.str→js.string",
+    "decision": "deterministic",
+    "rationale": "string literal correspondence",
+    "adaptation": null,
+    "targetSummary": "string literal",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#054",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 36,
+        "column": 0
+      },
+      "end": {
+        "line": 36,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.assert",
+    "rule": "pytest.assert→vitest.expect.toEqual",
+    "decision": "deterministic",
+    "rationale": "== maps to deep equality (Python == semantics for sequences and primitives)",
+    "adaptation": null,
+    "targetSummary": "__ctrans_callMethod(shelf, \"titles\")).toEqual([\"Dune\", \"Circe\"]",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "tests/test_inventory.py#055",
+    "unit": "tests/test_inventory.py",
+    "span": {
+      "start": {
+        "line": 33,
+        "column": 0
+      },
+      "end": {
+        "line": 33,
+        "column": 0
+      },
+      "startByteOffset": 0,
+      "endByteOffset": 0
+    },
+    "sourceKind": "pytest.test",
+    "rule": "pytest.test→vitest.it",
+    "decision": "deterministic",
+    "rationale": "test function correspondence (name preserved for differential matching)",
+    "adaptation": null,
+    "targetSummary": "it(\"test_titles_order\")",
+    "warnings": [],
+    "escalation": null
+  }
+]

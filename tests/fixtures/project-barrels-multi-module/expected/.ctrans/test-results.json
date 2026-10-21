@@ -1,0 +1,73 @@
+{
+  "stage": "S5-tests",
+  "status": "pass",
+  "outcomes": [
+    {
+      "name": "test_add_tracks_count",
+      "file": "tests/test_inventory.test.ts",
+      "outcome": "passed",
+      "message": null,
+      "flaky": false,
+      "attempts": [
+        {
+          "outcome": "passed",
+          "message": null
+        }
+      ]
+    },
+    {
+      "name": "test_total_pages",
+      "file": "tests/test_inventory.test.ts",
+      "outcome": "passed",
+      "message": null,
+      "flaky": false,
+      "attempts": [
+        {
+          "outcome": "passed",
+          "message": null
+        }
+      ]
+    },
+    {
+      "name": "test_find_present_and_missing",
+      "file": "tests/test_inventory.test.ts",
+      "outcome": "passed",
+      "message": null,
+      "flaky": false,
+      "attempts": [
+        {
+          "outcome": "passed",
+          "message": null
+        }
+      ]
+    },
+    {
+      "name": "TestBook.test_blurb",
+      "file": "tests/test_inventory.test.ts",
+      "outcome": "passed",
+      "message": null,
+      "flaky": false,
+      "attempts": [
+        {
+          "outcome": "passed",
+          "message": null
+        }
+      ]
+    },
+    {
+      "name": "test_titles_order",
+      "file": "tests/test_inventory.test.ts",
+      "outcome": "passed",
+      "message": null,
+      "flaky": false,
+      "attempts": [
+        {
+          "outcome": "passed",
+          "message": null
+        }
+      ]
+    }
+  ],
+  "flaky": [],
+  "rerunPerformed": false
+}

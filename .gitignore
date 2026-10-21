@@ -5,8 +5,10 @@ coverage/
 *.log
 .eslintcache
 
-# Tool artifacts
+# Tool artifacts (generated output); fixture EXPECTATIONS are pinned, not tool output
 .ctrans/
+!tests/fixtures/**/expected/.ctrans/
+!tests/fixtures/**/expected/.ctrans/**
 *.tsbuildinfo
 
 # Environment & secrets
