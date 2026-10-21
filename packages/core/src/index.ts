@@ -42,6 +42,14 @@ export {
 export type { ValidationStageName } from "./pipeline.js";
 export { validateDependencies, type S3Finding, type S3Input } from "./s3-dependencies.js";
 export {
+  ambiguityKey,
+  validateAmbiguityDecision,
+  type AmbiguityDecision,
+  type AmbiguityOption,
+  type AmbiguityRequest,
+  type AmbiguityResolver,
+} from "./escalation.js";
+export {
   DEFAULT_INTAKE_CAPS,
   discoverProjectFiles,
   isTestModulePath,

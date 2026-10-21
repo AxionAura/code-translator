@@ -38,6 +38,10 @@ export interface LedgerEntry {
   readonly targetSummary: string | null;
   // Warning codes (CTW-*) attached to the decision.
   readonly warnings: readonly string[];
+  // For `ambiguous` decisions: the engine-offered option ids a resolver may pick
+  // among. Absent for every other decision class (keeps pre-M8 artifacts
+  // byte-identical when AI is not involved).
+  readonly candidates?: readonly string[];
   // AI escalation provenance when an ambiguous decision was resolved by a model;
   // the prompt itself is journaled by hash only (docs/ai-architecture.md §5).
   readonly escalation: LedgerEscalation | null;
@@ -98,6 +102,17 @@ export function validateLedgerEntry(value: unknown): LedgerEntry {
   if (!Array.isArray(warnings) || warnings.some((entry) => typeof entry !== "string")) {
     throw new LedgerValidationError("warnings must be an array of strings");
   }
+  let candidates: readonly string[] | undefined;
+  const candidatesValue = value["candidates"];
+  if (candidatesValue !== null && candidatesValue !== undefined) {
+    if (
+      !Array.isArray(candidatesValue) ||
+      candidatesValue.some((item) => typeof item !== "string")
+    ) {
+      throw new LedgerValidationError("candidates must be an array of strings or null");
+    }
+    candidates = candidatesValue as readonly string[];
+  }
   let escalation: LedgerEscalation | null = null;
   const escalationValue = value["escalation"];
   if (escalationValue !== null && escalationValue !== undefined) {
@@ -131,6 +146,7 @@ export function validateLedgerEntry(value: unknown): LedgerEntry {
       return target;
     }),
     warnings: warnings as readonly string[],
+    ...(candidates === undefined ? {} : { candidates }),
     escalation,
   };
 }

@@ -1,11 +1,13 @@
 // CLI (M0 foundation + M4 translation commands). Unsupported constructs and
 // validation gaps are reported honestly; exit codes follow the claim ladder:
 // 0 = translated, 3 = partially translated (unsupported constructs), 1 = failure.
-import { readFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 
 import { detectCapabilities } from "@ctrans/sandbox";
+
+import { buildAiWiring, summarizeAiJournal } from "./ai-wiring.ts";
 
 import { runProject } from "./project-run.ts";
 import { checkPath, summarize, translatePath } from "./translate.ts";
@@ -52,12 +54,18 @@ function parseOptions(argv: readonly string[]): {
   out: string | undefined;
   intMode: "number" | "bigint";
   noTests: boolean;
+  aiProvider: string | undefined;
+  aiModel: string | undefined;
+  aiBaseUrl: string | undefined;
 } {
   const positional: string[] = [];
   let to: string | undefined;
   let out: string | undefined;
   let intMode: "number" | "bigint" = "number";
   let noTests = false;
+  let aiProvider: string | undefined;
+  let aiModel: string | undefined;
+  let aiBaseUrl: string | undefined;
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i]!;
     if (arg === "--to") {
@@ -72,18 +80,27 @@ function parseOptions(argv: readonly string[]): {
       i += 1;
     } else if (arg === "--no-tests") {
       noTests = true;
+    } else if (arg === "--ai-provider") {
+      aiProvider = argv[i + 1];
+      i += 1;
+    } else if (arg === "--ai-model") {
+      aiModel = argv[i + 1];
+      i += 1;
+    } else if (arg === "--ai-base-url") {
+      aiBaseUrl = argv[i + 1];
+      i += 1;
     } else {
       positional.push(arg);
     }
   }
-  return { positional, to, out, intMode, noTests };
+  return { positional, to, out, intMode, noTests, aiProvider, aiModel, aiBaseUrl };
 }
 
 async function runTranslation(
   command: "check" | "translate",
   rest: readonly string[],
 ): Promise<CliResult> {
-  const { positional, to, out, intMode } = parseOptions(rest);
+  const { positional, to, out, intMode, aiProvider, aiModel, aiBaseUrl } = parseOptions(rest);
   const sourcePath = positional[0];
   if (sourcePath === undefined || (to !== "ts" && to !== "js" && to !== "py")) {
     return {
@@ -94,17 +111,28 @@ async function runTranslation(
   }
   const target = to === "ts" ? "typescript" : to === "py" ? "python" : "javascript";
   try {
+    const ai = buildAiWiring({
+      ...(aiProvider === undefined ? {} : { provider: aiProvider }),
+      ...(aiModel === undefined ? {} : { model: aiModel }),
+      ...(aiBaseUrl === undefined ? {} : { baseUrl: aiBaseUrl }),
+    });
     const outcome =
       command === "check"
-        ? await checkPath(sourcePath, target, intMode)
-        : await translatePath(sourcePath, target, out ?? "out", intMode);
+        ? await checkPath(sourcePath, target, intMode, ai?.resolver)
+        : await translatePath(sourcePath, target, out ?? "out", intMode, ai?.resolver);
+    if (ai !== null && command === "translate") {
+      const journalDir = join(out ?? "out", ".ctrans");
+      mkdirSync(journalDir, { recursive: true });
+      writeFileSync(join(journalDir, "ai-journal.json"), ai.journal.toJson());
+    }
     const partiallyTranslated = outcome.report.files.some(
       (file) => file.status === "partially-translated",
     );
     const failed = outcome.report.files.some((file) => file.status === "failed");
+    const aiSummary = ai !== null ? `${summarizeAiJournal(ai.journal)}\n` : "";
     return {
       code: failed ? 1 : partiallyTranslated ? 3 : 0,
-      stdout: `${summarize(outcome)}\n`,
+      stdout: `${summarize(outcome)}\n${aiSummary}`,
       stderr: "",
     };
   } catch (error) {
@@ -127,7 +155,8 @@ export function runnerToolchain(): { nodeModulesPath: string; vitestEntryPath: s
 }
 
 async function runProjectCommand(rest: readonly string[]): Promise<CliResult> {
-  const { positional, to, out, intMode, noTests } = parseOptions(rest);
+  const { positional, to, out, intMode, noTests, aiProvider, aiModel, aiBaseUrl } =
+    parseOptions(rest);
   const sourceRoot = positional[0];
   if (
     sourceRoot === undefined ||
@@ -145,6 +174,11 @@ async function runProjectCommand(rest: readonly string[]): Promise<CliResult> {
   try {
     const sandbox = await detectCapabilities();
     const toolchain = runnerToolchain();
+    const ai = buildAiWiring({
+      ...(aiProvider === undefined ? {} : { provider: aiProvider }),
+      ...(aiModel === undefined ? {} : { model: aiModel }),
+      ...(aiBaseUrl === undefined ? {} : { baseUrl: aiBaseUrl }),
+    });
     const result = await runProject({
       sourceRoot,
       outputRoot: out,
@@ -156,7 +190,13 @@ async function runProjectCommand(rest: readonly string[]): Promise<CliResult> {
       pythonPath: "python3",
       nodeModulesPath: toolchain.nodeModulesPath,
       vitestEntryPath: toolchain.vitestEntryPath,
+      ...(ai === null ? {} : { resolveAmbiguity: ai.resolver }),
     });
+    if (ai !== null) {
+      const journalDir = join(out, ".ctrans");
+      mkdirSync(journalDir, { recursive: true });
+      writeFileSync(join(journalDir, "ai-journal.json"), ai.journal.toJson());
+    }
     const lines: string[] = [summarize({ report: result.pipeline.report, files: new Map() })];
     for (const skip of result.skipped) lines.push(`skipped: ${skip.what} (${skip.reason})`);
     for (const unsupported of result.unsupportedTestConstructs) {
@@ -165,6 +205,7 @@ async function runProjectCommand(rest: readonly string[]): Promise<CliResult> {
     if (result.s6 !== null) {
       lines.push(`differential: ${result.s6.matched.length} matched (claim level 5 evidence)`);
     }
+    if (ai !== null) lines.push(summarizeAiJournal(ai.journal));
     const failed = result.pipeline.report.files.some((file) => file.status === "failed");
     return { code: failed ? 1 : 0, stdout: `${lines.join("\n")}\n`, stderr: "" };
   } catch (error) {

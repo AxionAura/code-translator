@@ -10,6 +10,7 @@ import {
   directionFor,
   runPipeline,
   sourceLanguageOf,
+  type AmbiguityResolver,
   type PipelineInput,
   type PipelineResult,
   type SourceLanguage,
@@ -36,8 +37,9 @@ export async function checkPath(
   inputPath: string,
   target: TargetLanguage,
   intMode: "number" | "bigint" = "number",
+  resolver?: AmbiguityResolver,
 ): Promise<CheckOutcome> {
-  const result = await runOnPath(inputPath, target, intMode);
+  const result = await runOnPath(inputPath, target, intMode, resolver);
   const files = new Map<string, string>();
   for (const file of result.emittedFiles) files.set(file.targetPath, file.content);
   return { report: result.report, files };
@@ -48,8 +50,9 @@ export async function translatePath(
   target: TargetLanguage,
   outputDir: string,
   intMode: "number" | "bigint" = "number",
+  resolver?: AmbiguityResolver,
 ): Promise<CheckOutcome> {
-  const result = await runOnPath(inputPath, target, intMode);
+  const result = await runOnPath(inputPath, target, intMode, resolver);
   for (const file of result.emittedFiles) {
     const destination = join(outputDir, file.targetPath);
     mkdirSync(join(destination, ".."), { recursive: true });
@@ -69,6 +72,7 @@ async function runOnPath(
   inputPath: string,
   target: TargetLanguage,
   intMode: "number" | "bigint",
+  resolver?: AmbiguityResolver,
 ): Promise<PipelineResult> {
   const files = collectSourceFiles(inputPath);
   if (files.length === 0) {
@@ -110,6 +114,7 @@ async function runOnPath(
             }
           : {}),
       asyncBoundaryModules: ["requests"],
+      ...(resolver === undefined ? {} : { resolveAmbiguity: resolver }),
     },
     {
       // S3 (WS G): the graph-derived import map feeds dependency validation.

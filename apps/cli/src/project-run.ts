@@ -18,6 +18,7 @@ import {
   readProjectFile,
   runPipeline,
   validateTranslationReport,
+  type AmbiguityResolver,
   type IntMode,
   type LedgerEntry,
   type ModuleGraphModel,
@@ -56,6 +57,8 @@ export interface ProjectRunOptions {
   readonly nodeModulesPath: string;
   readonly vitestEntryPath: string;
   readonly timeoutMs?: number;
+  // M8: optional AI escalation for engine-classified ambiguous constructs.
+  readonly resolveAmbiguity?: AmbiguityResolver;
 }
 
 export interface ProjectRunReport {
@@ -200,6 +203,9 @@ export async function runProject(options: ProjectRunOptions): Promise<ProjectRun
       // honestly for JS targets, which caps the ladder at level 1 there.
       validateTypes: new OracleTypeValidator(),
       asyncBoundaryModules: ["requests"],
+      ...(options.resolveAmbiguity === undefined
+        ? {}
+        : { resolveAmbiguity: options.resolveAmbiguity }),
     },
     {
       sourceImports: new Map(

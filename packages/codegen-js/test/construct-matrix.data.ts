@@ -6,7 +6,7 @@ export interface MatrixEntry {
   readonly id: string;
   readonly source: string;
   readonly expectedContains: readonly string[];
-  readonly decision: "deterministic" | "semantic" | "unsupported";
+  readonly decision: "deterministic" | "semantic" | "ambiguous" | "unsupported";
   // TS-only entries assert target type text; the JS direction skips them.
   readonly tsOnly?: boolean;
   readonly rule?: string;
@@ -619,9 +619,20 @@ export const MATRIX: readonly MatrixEntry[] = [
     decision: "unsupported",
   },
   {
+    // M8: literal/capture match cases are AMBIGUOUS (if-chain heuristic default;
+    // switch is the alternative). Pattern kinds outside the subset stay unsupported.
     id: "match-statement",
-    source: "def f(x):\n    match x:\n        case 1:\n            pass\n",
-    expectedContains: ["ctrans: unsupported"],
+    source:
+      "def f(x):\n    match x:\n        case 1:\n            return 'one'\n        case _:\n            return 'other'\n",
+    expectedContains: ["__ctrans_eq(__ctrans_match1, 1)"],
+    decision: "ambiguous",
+    rule: "py.Match→js.if-chain",
+  },
+  {
+    id: "match-statement-patterns",
+    source:
+      "def f(x):\n    match x:\n        case [a, b]:\n            return a\n        case _:\n            return None\n",
+    expectedContains: ["ctrans: unsupported py.Match"],
     decision: "unsupported",
   },
   {
@@ -880,8 +891,7 @@ export const MATRIX: readonly MatrixEntry[] = [
   },
   {
     id: "kitchen-unsupported-sweep",
-    source:
-      "def f(v, handler):\n    assert v > 0, 'positive'\n    del v\n    match v:\n        case _:\n            pass\n    return handler\n",
+    source: "def f(v, handler):\n    assert v > 0, 'positive'\n    del v\n    return handler\n",
     expectedContains: ["ctrans: unsupported"],
     decision: "unsupported",
     rule: "py.Assert→unsupported",

@@ -9,7 +9,7 @@ import { __ctrans_call } from "./__ctrans_runtime.ts";
  * behavior (docs/language-support.md §4).
  */
 export function dispatch(value: unknown) {
-  /* ctrans: unsupported py.Match: Match is outside the M4 subset */
+  /* ctrans: unsupported py.Match: match case patterns outside the literal/capture subset (sequence/mapping/class/or/singleton) are unsupported */
 }
 export function noted(fn: unknown) {
   function wrapper() {

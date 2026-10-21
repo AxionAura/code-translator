@@ -39,8 +39,8 @@ Status: **approved blueprint**. Local-first; user code is untrusted; execution i
 
 ## 4. Secrets and keys
 
-- Embedded secret scanning (secretlint rules, MIT) before any AI request and optionally on input projects (`--scan-secrets`): findings block the request with a report.
-- Key storage: OS keychain via CLI shelling (macOS `security`, Linux `secret-tool`, Windows CredMan) → fallback `~/.config/ctrans/keys.json` at 0600 with a warning banner, mirroring the gh CLI model. Env-var reference (`CTRANS_OPENAI_KEY`) supported for CI.
+- Embedded secret scanning (secretlint rules, MIT) before any AI request and optionally on input projects (`--scan-secrets`): findings block the request with a report. **Implemented (M8):** the gate (`packages/ai/src/secret-gate.ts`) scans the exact outgoing payload with `@secretlint/core` + the recommended preset; a finding, a scanner exception, or an empty rule set BLOCKS the call (fail-closed, never bypassed), and journal entries record rule ids/locations only — never matching text.
+- Key storage: OS keychain via CLI shelling (macOS `security`, Linux `secret-tool`, Windows CredMan) → fallback `~/.config/ctrans/keys.json` at 0600 with a warning banner, mirroring the gh CLI model. Env-var reference (`CTRANS_OPENAI_KEY`) supported for CI. **M8 ships the env-var path only (`CTRANS_AI_KEY`)** — keys never enter flags, config files, logs, journals, or cache keys; keychain/file storage remains the M11 hardening scope.
 - Logs/reports/ledger never contain key material, source contents, or absolute paths outside the project root.
 
 ## 5. Generated project policy

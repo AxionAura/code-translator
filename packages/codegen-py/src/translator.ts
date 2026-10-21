@@ -25,6 +25,7 @@ import {
   type AnalyzedUnit,
   type EmittedFile,
   type LedgerEntry,
+  type LedgerEscalation,
   type ModuleGraphModel,
   type RegistryLookup,
   type UnitEmission,
@@ -349,6 +350,8 @@ class PyPrinter {
     rationale: string;
     adaptation?: string | null;
     warnings?: readonly string[];
+    candidates?: readonly string[] | null;
+    escalation?: LedgerEscalation | null;
     targetSummary?: string | null;
   }): void {
     this.ordinal += 1;
@@ -372,7 +375,8 @@ class PyPrinter {
       adaptation: entry.adaptation ?? null,
       targetSummary: entry.targetSummary ?? null,
       warnings: entry.warnings ?? [],
-      escalation: null,
+      ...(entry.candidates == null ? {} : { candidates: entry.candidates }),
+      escalation: entry.escalation ?? null,
     });
   }
 

@@ -9,11 +9,14 @@
 import {
   UNKNOWN,
   NO_REGISTRY,
+  ambiguityKey,
+  type AmbiguityDecision,
   type AnnotatedType,
   type CommonType,
   type RegistryLookup,
 } from "@ctrans/core";
 import type { AstNode } from "@ctrans/core";
+import { analyzeMatchStatement, matchAmbiguityRequest, type MatchPlan } from "./match.js";
 
 import {
   CTW_CLASS_ATTR_STATIC,
@@ -258,6 +261,7 @@ export class Emitter {
     asyncFunctions: ReadonlySet<string> = new Set(),
     importedAsyncNames: ReadonlySet<string> = new Set(),
     registry: RegistryLookup = NO_REGISTRY,
+    ambiguity: ReadonlyMap<string, AmbiguityDecision> = new Map(),
   ) {
     for (const name of importedAsyncNames) this.importedAsync.add(name);
     // Explicit field assignment (not parameter properties): the unbuilt CLI runs
@@ -268,7 +272,12 @@ export class Emitter {
     this.importedKinds = importedKinds;
     this.asyncFunctions = asyncFunctions;
     this.registry = registry;
+    this.ambiguity = ambiguity;
   }
+
+  // M8: the pipeline-resolved ambiguity choices (empty map = AI disabled; the
+  // lowering then applies its documented heuristic default).
+  private readonly ambiguity: ReadonlyMap<string, AmbiguityDecision>;
 
   lowerModuleBody(statements: readonly AstNode[]): void {
     this.collectAssignedNames(statements, this.scopeAssignedNames[0]!);
@@ -2747,8 +2756,10 @@ export class Emitter {
         return;
       case "Delete":
       case "Assert":
-      case "Match":
         this.unsupportedStmt(node, `py.${node.kind}`, `${node.kind} is outside the M4 subset`);
+        return;
+      case "Match":
+        this.lowerMatch(node);
         return;
       default:
         this.unsupportedStmt(
@@ -3614,6 +3625,126 @@ export class Emitter {
       this.indent -= 1;
     }
     this.line("}");
+  }
+
+  // `match` statement (M8): literal/capture/wildcard cases with optional guards.
+  // The strategy is an AMBIGUOUS decision — the pipeline may have resolved it via
+  // the AI escalation port (choice among engine-offered options); with AI disabled
+  // the documented heuristic default (if-chain) applies. Sequence/mapping/class/or
+  // patterns stay unsupported-loud.
+  private lowerMatch(node: AstNode): void {
+    const plan = analyzeMatchStatement(node);
+    if (plan === null) {
+      this.unsupportedStmt(
+        node,
+        "py.Match",
+        "match case patterns outside the literal/capture subset (sequence/mapping/class/or/singleton) are unsupported",
+      );
+      return;
+    }
+    const request = matchAmbiguityRequest(this.ctx.filename, node);
+    const decision =
+      request === null
+        ? undefined
+        : this.ambiguity.get(
+            ambiguityKey({ unit: request.unit, span: request.span, rule: request.rule }),
+          );
+    const offered = plan.options.map((option) => option.id);
+    const validatedChoice =
+      decision !== undefined && offered.includes(decision.optionId) ? decision.optionId : null;
+    const choice = validatedChoice ?? "if-chain";
+    const escalation = validatedChoice === null ? null : (decision?.escalation ?? null);
+    const subject = kid(node, "subject");
+    const subjectText = subject === null ? "undefined" : this.lowerExpr(subject);
+    const tempName = this.freshTempName();
+    this.line(`const ${tempName} = ${subjectText};`);
+    this.ctx.record({
+      span: pySpan(node),
+      sourceKind: "py.Match",
+      rule: `py.Match→js.${choice}`,
+      decision: "ambiguous",
+      rationale:
+        choice === "switch"
+          ? "literal-only match lowered to a JS switch over one evaluated subject (strict === is exact for string/number literals)"
+          : "match lowered to an if/else-if chain comparing one evaluated subject through the Python == helper (guards/captures supported)",
+      adaptation: choice,
+      targetSummary: choice,
+      candidates: offered,
+      escalation,
+    });
+    if (choice === "switch" && plan.switchable) {
+      this.lowerMatchAsSwitch(plan, tempName);
+    } else {
+      this.lowerMatchAsIfChain(plan, tempName);
+    }
+  }
+
+  private lowerMatchAsIfChain(plan: MatchPlan, tempName: string): void {
+    let first = true;
+    let emittedElse = false;
+    for (const entry of plan.cases) {
+      if (entry.kind === "wildcard") {
+        this.line("} else {");
+        this.indent += 1;
+        for (const statement of entry.body) this.lowerStmt(statement);
+        this.indent -= 1;
+        this.line("}");
+        emittedElse = true;
+        continue;
+      }
+      const comparison =
+        entry.kind === "literal" ? `__ctrans_eq(${tempName}, ${entry.literalText})` : "true";
+      const guardText =
+        entry.guard === null ? null : this.truthyTest(entry.guard, "py.Match(guard)");
+      const condition = guardText === null ? comparison : `${comparison} && ${guardText}`;
+      this.line(`${first ? "if" : "} else if"} (${condition}) {`);
+      first = false;
+      this.indent += 1;
+      if (entry.kind === "capture") {
+        this.line(`const ${entry.name} = ${tempName};`);
+        this.declareLocally(entry.name);
+        this.scopes.declare(entry.name, annotateUnknown());
+      }
+      for (const statement of entry.body) this.lowerStmt(statement);
+      this.indent -= 1;
+    }
+    if (!emittedElse) {
+      this.line("}");
+    }
+  }
+
+  private lowerMatchAsSwitch(plan: MatchPlan, tempName: string): void {
+    this.line(`switch (${tempName}) {`);
+    this.indent += 1;
+    let sawWildcard = false;
+    for (const entry of plan.cases) {
+      if (entry.kind === "wildcard") {
+        sawWildcard = true;
+        this.line("default: {");
+      } else if (entry.kind === "literal") {
+        this.line(`case ${entry.literalText}: {`);
+      } else {
+        // Captures are not offered in switch mode (analysis guarantees this).
+        continue;
+      }
+      this.indent += 1;
+      for (const statement of entry.body) this.lowerStmt(statement);
+      this.indent -= 1;
+      this.line("}");
+    }
+    if (!sawWildcard) {
+      this.line("default:");
+      this.indent += 1;
+      this.line("break;");
+      this.indent -= 1;
+    }
+    this.indent -= 1;
+    this.line("}");
+  }
+
+  private freshTempName(): string {
+    this.tempCounter += 1;
+    return `__ctrans_match${String(this.tempCounter)}`;
   }
 
   private lowerFor(node: AstNode): void {

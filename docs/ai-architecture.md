@@ -1,6 +1,10 @@
 # AI Architecture
 
-Status: **approved blueprint**. Governing rules: AI is an *escalation resolver*, never the translation engine (AGENTS.md §9; OWASP LLM v2 mitigations apply).
+Status: port 1 (`resolveAmbiguity`), the secret gate, caps/cache/journal, and the pipeline/CLI integration are **implemented (M8)**; port 2 (`proposeRepairPatch`) is the M9 repair loop; `polishIdioms` stays deferred. Governing rules: AI is an *escalation resolver*, never the translation engine (AGENTS.md §9; OWASP LLM v2 mitigations apply).
+
+## 0. Implementation status (M8, 2026-10-21)
+
+`@ctrans/ai` implements the `ChatModel` contract from §2 with adapters for OpenAI-compatible endpoints (OpenAI, vLLM, llama.cpp server, Ollama's OpenAI endpoint, LM Studio via `baseUrl`), Anthropic Messages, and a user-templated custom endpoint; `FakeChatModel` is the only model the deterministic suites use. `AiAmbiguityResolver` implements the core `AmbiguityResolver` port: packer (§3) → secretlint hard gate → caps → cache → model → strict JSON option validation with ONE bounded re-ask → decision (`{optionId, escalation}`) or `null` (heuristic fallback). Escalation requests reach it only for constructs the ENGINE classified `ambiguous` with more than one emitted strategy — currently Python `match` with literal/capture cases (language-support §2.4: `if-chain` heuristic vs `switch`). The pipeline resolves ambiguities BEFORE lowering (translation stays synchronous/deterministic), validates the chosen id against the offered set (`validateAmbiguityDecision`), and records `candidates` + `escalation` in the ledger. CLI: `--ai-provider openai|anthropic`, `--ai-model`, `--ai-base-url`, key from `CTRANS_AI_KEY`; journal at `.ctrans/ai-journal.json`. Caps default to 20 calls / 50k tokens / 60 s per request / 300 s run. Providers report usage; USD caps enforce only when reported. See ADR D-025.
 
 ## 1. What AI is used for — exactly three ports
 

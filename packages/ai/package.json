@@ -8,5 +8,11 @@
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@secretlint/core": "13.0.7",
+    "@secretlint/secretlint-rule-preset-recommend": "13.0.7",
+    "secretlint": "13.0.7",
+    "@ctrans/core": "workspace:*"
   }
 }

@@ -13,6 +13,7 @@ import {
   CTransError,
   NO_REGISTRY,
   type AnalyzedUnit,
+  type LedgerEscalation,
   type EmittedFile,
   type LedgerEntry,
   type ModuleGraphModel,
@@ -84,6 +85,8 @@ abstract class JsPrinterBase {
     rationale: string;
     adaptation?: string | null;
     warnings?: readonly string[];
+    candidates?: readonly string[] | null;
+    escalation?: LedgerEscalation | null;
     targetSummary?: string | null;
   }): void {
     this.ordinal += 1;
@@ -107,7 +110,8 @@ abstract class JsPrinterBase {
       adaptation: entry.adaptation ?? null,
       targetSummary: entry.targetSummary ?? null,
       warnings: entry.warnings ?? [],
-      escalation: null,
+      ...(entry.candidates == null ? {} : { candidates: entry.candidates }),
+      escalation: entry.escalation ?? null,
     });
   }
 

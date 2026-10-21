@@ -2,7 +2,13 @@
 // lowering rule — ledger recording, runtime-helper requirements, warnings, and a
 // lightweight name→type scope stack for the few type-directed decisions. No hidden
 // global state: one context per unit.
-import type { AnnotatedType, DecisionKind, LedgerEntry, TargetLanguage } from "@ctrans/core";
+import type {
+  AnnotatedType,
+  DecisionKind,
+  LedgerEntry,
+  LedgerEscalation,
+  TargetLanguage,
+} from "@ctrans/core";
 
 export const CTW_TUPLE_ARRAY = "CTW-TUPLE-ARRAY";
 export const CTW_DICT_KEY_COERCION = "CTW-DICT-KEY-COERCION";
@@ -48,6 +54,8 @@ export class LoweringContext {
     adaptation?: string | null;
     targetSummary?: string | null;
     warnings?: readonly string[];
+    candidates?: readonly string[] | null;
+    escalation?: LedgerEscalation | null;
   }): void {
     this.ordinal += 1;
     this.ledger.push({
@@ -69,7 +77,8 @@ export class LoweringContext {
       adaptation: entry.adaptation ?? null,
       targetSummary: entry.targetSummary ?? null,
       warnings: entry.warnings ?? [],
-      escalation: null,
+      ...(entry.candidates == null ? {} : { candidates: entry.candidates }),
+      escalation: entry.escalation ?? null,
     });
     for (const warning of entry.warnings ?? []) this.warnings.add(warning);
   }

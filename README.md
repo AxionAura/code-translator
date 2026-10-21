@@ -25,6 +25,13 @@ node apps/cli/bin/ctrans.mjs project my-project/ --to ts -o out/
 node apps/cli/bin/ctrans.mjs translate web-src/ --to py -o out-py/   # S1 bridge + S2 pyright + S3
 node apps/cli/bin/ctrans.mjs translate legacy.ts --to js -o out-js/  # type erasure
 node apps/cli/bin/ctrans.mjs translate app.js --to ts -o out-ts/     # honest unknown types
+
+# Optional AI escalation (OFF by default): let a model choose among the options the
+# engine already offers for AMBIGUOUS constructs (never anything else). A secretlint
+# scan gates every request; caps + cache + journal are enforced; the heuristic default
+# applies when the provider is unavailable or the answer is not an offered option.
+CTRANS_AI_KEY=... node apps/cli/bin/ctrans.mjs check mod.py --to ts \
+  --ai-provider openai --ai-model gpt-4o-mini   # or --ai-provider anthropic
 ```
 
 The CLI prints the claim-ladder level (what validation actually proved), per-file status, and decision counts. Translated output is finalized through Prettier; runtime helpers land in a generated `__ctrans_runtime.ts|js` that carries **zero** dependencies.

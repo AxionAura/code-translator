@@ -4,11 +4,13 @@ behavior (docs/language-support.md §4)."""
 
 
 def dispatch(value):
+    # M8: literal/capture match cases are supported (ambiguous strategy); the
+    # PATTERN kinds stay unsupported and must remain loud.
     match value:
-        case 1:
-            return "one"
+        case [first, second]:
+            return first
         case _:
-            return "other"
+            return None
 
 
 def noted(fn):

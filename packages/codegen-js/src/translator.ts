@@ -21,7 +21,9 @@ import {
 } from "@ctrans/core";
 import { format } from "prettier";
 
+import { type AmbiguityRequest } from "@ctrans/core";
 import { LoweringContext, ScopeStack } from "./context.js";
+import { collectMatchStatements, matchAmbiguityRequest } from "./match.js";
 import {
   INT_RESULT_TYPE,
   REGISTRY_MODULE_SOURCES,
@@ -68,6 +70,19 @@ export class PyToJsTranslator implements UnitTranslator {
     this.registry = registry;
   }
 
+  // M8: engine-classified ambiguous constructs of this unit (the pipeline resolves
+  // them through the optional AI port before translation). Only constructs with
+  // MORE THAN ONE engine-offered option are escalatable; single-strategy cases are
+  // not ambiguous requests.
+  collectAmbiguities(unit: AnalyzedUnit, _graph: ModuleGraphModel): readonly AmbiguityRequest[] {
+    const requests: AmbiguityRequest[] = [];
+    for (const matchNode of collectMatchStatements(unit.parseResult.ast)) {
+      const request = matchAmbiguityRequest(unit.filename, matchNode);
+      if (request !== null) requests.push(request);
+    }
+    return requests;
+  }
+
   async translateUnit(
     unit: AnalyzedUnit,
     graph: ModuleGraphModel,
@@ -84,6 +99,7 @@ export class PyToJsTranslator implements UnitTranslator {
       context?.asyncFunctions?.get(unit.filename) ?? new Set(),
       this.importedAsyncNames(unit, graph, context),
       this.registry,
+      context?.ambiguity ?? new Map(),
     );
 
     const moduleImports = this.importPrologue(unit, graph, extension);

@@ -17,6 +17,7 @@
     "@ctrans/registry": "workspace:*",
     "@ctrans/sandbox": "workspace:*",
     "@ctrans/validator": "workspace:*",
-    "@ctrans/codegen-py": "workspace:*"
+    "@ctrans/codegen-py": "workspace:*",
+    "@ctrans/ai": "workspace:*"
   }
 }

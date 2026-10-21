@@ -14,7 +14,15 @@ import {
   propagateAsync,
 } from "./async-propagation.js";
 import { validateDependencies } from "./s3-dependencies.js";
+import {
+  ambiguityKey,
+  validateAmbiguityDecision,
+  type AmbiguityDecision,
+  type AmbiguityRequest,
+  type AmbiguityResolver,
+} from "./escalation.js";
 import { sourceLanguageOf } from "./direction.js";
+import { extractModuleContract } from "./module-contract.js";
 
 // M7: "python" is a full target (codegen-py) — its S1 re-parses with the Python
 // parser and its S2 is the injected pyright adapter; JS targets skip S2 honestly.
@@ -50,6 +58,12 @@ export interface TranslateOptions {
   // WS F: registry modules whose target API is async-only (e.g. requests -> fetch).
   // Non-empty triggers the deterministic async-propagation fixpoint.
   readonly asyncBoundaryModules?: readonly string[];
+  // M8: optional AI escalation port for engine-classified AMBIGUOUS constructs
+  // (docs/ai-architecture.md §1). Absent = AI disabled = deterministic heuristic
+  // defaults (the default posture; the pipeline never requires a provider).
+  readonly resolveAmbiguity?: AmbiguityResolver;
+  // Bounded wall-clock waited for a single escalation before falling back.
+  readonly escalationTimeoutMs?: number;
 }
 
 // S3 stage inputs supplied by the wiring layer (the registry data lives outside
@@ -74,6 +88,10 @@ export interface UnitTranslationContext {
   // propagation). Units consult this for their own functions and for cross-module
   // callees; absent = no boundary in the project.
   readonly asyncFunctions?: ReadonlyMap<string, ReadonlySet<string>>;
+  // M8: chosen option per `ambiguityKey(request)` — either the AI-resolved choice
+  // (with escalation provenance) or the deterministic heuristic. Absent = the
+  // translator applies its own heuristic default (AI disabled).
+  readonly ambiguity?: ReadonlyMap<string, AmbiguityDecision>;
 }
 
 export interface UnitTranslator {
@@ -83,6 +101,11 @@ export interface UnitTranslator {
     graph: ModuleGraphModel,
     context?: UnitTranslationContext,
   ): Promise<UnitEmission>;
+  // M8: the engine-classified ambiguous constructs of a unit (enumerated
+  // candidate options + heuristic default). The pipeline resolves them through
+  // the optional AI port BEFORE translation and passes the chosen options down;
+  // lowering itself stays synchronous and deterministic.
+  collectAmbiguities?(unit: AnalyzedUnit, graph: ModuleGraphModel): readonly AmbiguityRequest[];
   // Optional post-pass run once after every unit has been translated: shared files
   // whose contents depend on the union of all units' requirements (e.g. the runtime
   // helper module, which must cover helpers requested by ANY unit).
@@ -159,6 +182,109 @@ export function computeClaimLevel(stages: readonly StageResult[]): ClaimLevel {
   return 5;
 }
 
+// M8 escalation orchestration: collect each unit's ambiguous constructs, ask the
+// optional resolver (bounded by a wall-clock timeout), validate the answer
+// against the offered options, and fall back to the heuristic default on any
+// failure. AI can never change WHAT is offered — only which offered option wins.
+async function resolveAmbiguities(
+  options: TranslateOptions,
+  analyzed: readonly AnalyzedUnit[],
+  graph: ModuleGraphModel,
+): Promise<Map<string, Map<string, AmbiguityDecision>>> {
+  const byUnit = new Map<string, Map<string, AmbiguityDecision>>();
+  const resolver = options.resolveAmbiguity;
+  const collect = options.translateUnit.collectAmbiguities;
+  if (resolver === undefined || collect === undefined) {
+    // AI disabled: translators apply their own heuristic defaults.
+    return byUnit;
+  }
+  const timeoutMs = options.escalationTimeoutMs ?? 30000;
+  const analyzedById = new Map(analyzed.map((unit) => [unit.filename, unit]));
+  for (const unit of analyzed) {
+    const requests = collect.call(options.translateUnit, unit, graph).map((request) => ({
+      ...request,
+      contracts: directDependencyContracts(unit, graph, analyzedById),
+      diagnostics: unit.parseResult.diagnostics
+        .filter((diagnostic) => diagnostic.severity !== "info")
+        .slice(0, 8)
+        .map((diagnostic) => `${String(diagnostic.code)}: ${diagnostic.message}`),
+    }));
+    if (requests.length === 0) continue;
+    const decisions = new Map<string, AmbiguityDecision>();
+    for (const request of requests) {
+      let decision: AmbiguityDecision | null = null;
+      try {
+        decision = await resolveWithTimeout(resolver, request, timeoutMs);
+      } catch {
+        // Any resolver failure degrades to the deterministic default.
+        decision = null;
+      }
+      const validated = validateAmbiguityDecision(request, decision);
+      decisions.set(
+        ambiguityKey(request),
+        validated ?? { optionId: request.heuristic, escalation: null },
+      );
+    }
+    byUnit.set(unit.filename, decisions);
+  }
+  return byUnit;
+}
+
+// Export-signature summaries of a unit's DIRECT dependencies (adr §3: the only
+// cross-unit context an escalation may carry — never the whole project).
+function directDependencyContracts(
+  unit: AnalyzedUnit,
+  graph: ModuleGraphModel,
+  analyzed: ReadonlyMap<string, AnalyzedUnit>,
+): readonly { readonly module: string; readonly exports: readonly string[] }[] {
+  const node = graph.modules[unit.filename];
+  if (node === undefined) return [];
+  const contracts: { module: string; exports: readonly string[] }[] = [];
+  const seen = new Set<string>();
+  for (const graphImport of node.imports) {
+    if (graphImport.importKind !== "static" || graphImport.resolvedModuleId === null) continue;
+    if (seen.has(graphImport.resolvedModuleId)) continue;
+    seen.add(graphImport.resolvedModuleId);
+    const dep = analyzed.get(graphImport.resolvedModuleId);
+    if (dep === undefined) continue;
+    const contract = extractModuleContract({
+      filename: dep.filename,
+      source: "",
+      parseResult: dep.parseResult,
+      model: dep.model,
+    });
+    contracts.push({
+      module: dep.filename,
+      exports: contract.exports.map((entry) => `${entry.name}: ${entry.kind}`).slice(0, 24),
+    });
+  }
+  return contracts;
+}
+
+async function resolveWithTimeout(
+  resolver: AmbiguityResolver,
+  request: AmbiguityRequest,
+  timeoutMs: number,
+): Promise<AmbiguityDecision | null> {
+  const controller = new AbortController();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<null>((resolve) => {
+    timer = setTimeout(() => {
+      controller.abort();
+      resolve(null);
+    }, timeoutMs);
+    // Do not keep the process alive for an escalation timer.
+    if (typeof (timer as { unref?: () => void }).unref === "function") {
+      (timer as { unref: () => void }).unref();
+    }
+  });
+  try {
+    return await Promise.race([resolver.resolve(request, controller.signal), timeout]);
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
+}
+
 // Deterministic target module path policy (roadmap M4 §8): pkg/mod.py -> pkg/mod.<ext>,
 // pkg/__init__.py -> pkg/index.<ext>. Single source of truth for emitter and importer.
 function extensionFor(target: TargetLanguage): ".js" | ".ts" | ".py" {
@@ -226,6 +352,11 @@ export async function runPipeline(
     }
   }
 
+  // M8: resolve engine-classified ambiguous constructs BEFORE lowering. Lowering
+  // stays synchronous and deterministic; the pipeline only forwards the chosen
+  // option (validated against the engine-offered set) with its provenance.
+  const ambiguityByUnit = await resolveAmbiguities(options, analyzed, graph);
+
   // Stage: translate units in dependency order (deterministic; graph.order).
   const analyzedById = new Map(analyzed.map((unit) => [unit.filename, unit]));
   const emittedFiles: EmittedFile[] = [];
@@ -233,9 +364,11 @@ export async function runPipeline(
   for (const moduleId of graph.order) {
     const unit = analyzed.find((candidate) => candidate.filename === moduleId);
     if (unit === undefined) continue;
+    const ambiguity = ambiguityByUnit.get(unit.filename);
     const emission = await options.translateUnit.translateUnit(unit, graph, {
       analyzed: analyzedById,
       ...(asyncFunctions === undefined ? {} : { asyncFunctions }),
+      ...(ambiguity === undefined ? {} : { ambiguity }),
     });
     emittedFiles.push(...emission.files);
     ledger.push(...emission.ledger);

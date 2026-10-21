@@ -86,8 +86,10 @@ describe("runCliCommand: check (in-memory pipeline)", () => {
 
   it("reports unsupported constructs honestly: partially translated, exit code 3", async () => {
     const root = writeProject("unsupported", {
+      // M8: literal match cases are supported (ambiguous); sequence patterns
+      // remain unsupported and must still drive the partial-translation verdict.
       "dispatch.py":
-        "def f(x):\n    match x:\n        case 1:\n            return 1\n        case _:\n            return 0\n",
+        "def f(x):\n    match x:\n        case [a, b]:\n            return a\n        case _:\n            return 0\n",
     });
     const result = await runCliCommand(["check", join(root, "dispatch.py"), "--to", "ts"]);
     expect(result.code).toBe(3);

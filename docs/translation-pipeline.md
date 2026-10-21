@@ -35,6 +35,7 @@ For each translation unit (file), in dependency order:
      "rule": "py.comprehension→js.map+filter",
      "adaptation": "list comprehension over str: code-point iteration via [...str]",
      "warnings": [],                  // non-empty for semantic/ambiguous/unsupported
+     "candidates": null,              // ambiguous entries: offered option ids
      "escalation": null               // {provider, model, promptHash} when AI resolved
    }
    ```
@@ -47,7 +48,7 @@ Failure posture: a unit with `unsupported` constructs is still emitted (markers 
 
 1. **Documented heuristic default** applied; ledger entry says which alternative was rejected and why.
 2. If `ai.enabled`: escalation payload = `{unit AST, dep contracts, construct span, candidate options, constraints}` → `resolveAmbiguity`. Response must select an option (it may not invent new behavior); recorded with prompt hash; still validated like any output.
-3. If AI disabled or escalation fails: emit heuristic default + `TODO(ctrans)` comment + warning. Never block the run on AI.
+3. If AI disabled or escalation fails: emit heuristic default + `TODO(ctrans)` comment + warning. Never block the run on AI. **Implemented (M8):** the pipeline resolves ambiguities before lowering (AI port injected into `runPipeline`), validates the answer against the engine-offered `candidates`, and records `escalation` provenance in the ledger; the AI journal (`.ctrans/ai-journal.json`) keeps prompt hashes only.
 
 ## 4. Project graph rules
 
