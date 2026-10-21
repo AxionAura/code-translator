@@ -8,9 +8,15 @@ importers:
 
   .:
     devDependencies:
+      '@astral-sh/ruff-wasm-nodejs':
+        specifier: 0.17.1
+        version: 0.17.1
       '@ctrans/codegen-js':
         specifier: workspace:*
         version: link:packages/codegen-js
+      '@ctrans/codegen-py':
+        specifier: workspace:*
+        version: link:packages/codegen-py
       '@ctrans/core':
         specifier: workspace:*
         version: link:packages/core
@@ -41,6 +47,9 @@ importers:
       prettier:
         specifier: ^3.9.9
         version: 3.9.9
+      pyright:
+        specifier: 1.1.406
+        version: 1.1.406
       typescript:
         specifier: ~6.0.3
         version: 6.0.3
@@ -56,6 +65,9 @@ importers:
       '@ctrans/codegen-js':
         specifier: workspace:*
         version: link:../../packages/codegen-js
+      '@ctrans/codegen-py':
+        specifier: workspace:*
+        version: link:../../packages/codegen-py
       '@ctrans/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -86,7 +98,14 @@ importers:
         specifier: ^3.9.9
         version: 3.9.9
 
-  packages/codegen-py: {}
+  packages/codegen-py:
+    dependencies:
+      '@astral-sh/ruff-wasm-nodejs':
+        specifier: 0.17.1
+        version: 0.17.1
+      '@ctrans/core':
+        specifier: workspace:*
+        version: link:../core
 
   packages/core: {}
 
@@ -141,6 +160,9 @@ importers:
         version: link:../sandbox
 
 packages:
+
+  '@astral-sh/ruff-wasm-nodejs@0.17.1':
+    resolution: {integrity: sha512-3nK6GOGz4alFF+zst9NV/cwg5aP3Mb4/IhPXHPsBb+Vz5QWpxb/wHRJbcF1i33++orQMzh08SvEYPXK5Xg+L3w==}
 
   '@babel/helper-string-parser@7.29.7':
     resolution: {integrity: sha512-Pb5ijPrZ89GDH8223L4UP8i6QApWxs04RbPQJTeWDV0/keR2E36MeKnyr6LYmUUvqRRI+Iv87SuF1W6ErINzYw==}
@@ -935,6 +957,11 @@ packages:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
     engines: {node: '>=6'}
 
+  pyright@1.1.406:
+    resolution: {integrity: sha512-1k62zN/37Buv8soOOjaOhAb0EZUZb/zW5rR2//ZUA/cU3XHZQQqMrLY+ozPccdodvH9sJRePOO30RRxQu/tqtQ==}
+    engines: {node: '>=14.0.0'}
+    hasBin: true
+
   qified@0.10.1:
     resolution: {integrity: sha512-+Owyggi9IxT1ePKGafcI87ubSmxol6smwJ+RAHDQlx9+9cPwFWDiKFFCPuWhr9ignlGpZ9vDQLw67N4dcTVFEA==}
     engines: {node: '>=20'}
@@ -1122,6 +1149,8 @@ packages:
     engines: {node: '>=10'}
 
 snapshots:
+
+  '@astral-sh/ruff-wasm-nodejs@0.17.1': {}
 
   '@babel/helper-string-parser@7.29.7': {}
 
@@ -1808,6 +1837,10 @@ snapshots:
   prettier@3.9.9: {}
 
   punycode@2.3.1: {}
+
+  pyright@1.1.406:
+    optionalDependencies:
+      fsevents: 2.3.3
 
   qified@0.10.1:
     dependencies:

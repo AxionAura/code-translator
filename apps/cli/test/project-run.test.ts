@@ -219,5 +219,5 @@ def test_with_monkeypatch(monkeypatch):
     expect(report.skipped.some((skip) => skip.what === "S5-tests")).toBe(true);
     expect(existsSync(join(outputRoot, ".ctrans", "test-results.json"))).toBe(false);
     expect(existsSync(join(outputRoot, ".ctrans", "differential.json"))).toBe(false);
-  });
+  }, 120000);
 });

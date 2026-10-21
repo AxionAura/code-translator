@@ -1,2 +1,5 @@
-// Responsibility (docs/architecture.md section 3): lowering and Python emission for JavaScript/TypeScript sources. Implementation starts in milestone M7.
+// JS/TS → Python code generation (roadmap M7 WS B): the reverse direction through
+// the established pipeline contracts (AnalyzedUnit + ModuleGraph + ledger).
+export { createJsToPyTranslator, JsToPyTranslator, relativePyImport } from "./translator.js";
+export { RUNTIME_HELPERS, helperClosure, renderPyRuntime } from "./helpers.js";
 export const packageName = "@ctrans/codegen-py";

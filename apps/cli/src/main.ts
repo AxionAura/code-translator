@@ -85,14 +85,14 @@ async function runTranslation(
 ): Promise<CliResult> {
   const { positional, to, out, intMode } = parseOptions(rest);
   const sourcePath = positional[0];
-  if (sourcePath === undefined || (to !== "ts" && to !== "js")) {
+  if (sourcePath === undefined || (to !== "ts" && to !== "js" && to !== "py")) {
     return {
       code: 2,
       stdout: "",
       stderr: `ctrans: ${command} requires a path and --to <ts|js> (run \`ctrans --help\`)\n`,
     };
   }
-  const target = to === "ts" ? "typescript" : "javascript";
+  const target = to === "ts" ? "typescript" : to === "py" ? "python" : "javascript";
   try {
     const outcome =
       command === "check"
@@ -129,15 +129,19 @@ export function runnerToolchain(): { nodeModulesPath: string; vitestEntryPath: s
 async function runProjectCommand(rest: readonly string[]): Promise<CliResult> {
   const { positional, to, out, intMode, noTests } = parseOptions(rest);
   const sourceRoot = positional[0];
-  if (sourceRoot === undefined || (to !== "ts" && to !== "js") || out === undefined) {
+  if (
+    sourceRoot === undefined ||
+    (to !== "ts" && to !== "js" && to !== "py") ||
+    out === undefined
+  ) {
     return {
       code: 2,
       stdout: "",
       stderr:
-        "ctrans: project requires a source directory, --to <ts|js>, and -o <output-dir> (run `ctrans --help`)\n",
+        "ctrans: project requires a source directory, --to <ts|js|py>, and -o <output-dir> (run `ctrans --help`)\n",
     };
   }
-  const target = to === "ts" ? "typescript" : "javascript";
+  const target = to === "ts" ? "typescript" : to === "py" ? "python" : "javascript";
   try {
     const sandbox = await detectCapabilities();
     const toolchain = runnerToolchain();

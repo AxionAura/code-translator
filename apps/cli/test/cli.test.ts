@@ -178,7 +178,7 @@ describe("runCliCommand: translate (writes output + .ctrans artifacts)", () => {
     const root = writeProject("empty-project", { "README.txt": "not code\n" });
     const result = await runCliCommand(["check", root, "--to", "ts"]);
     expect(result.code).toBe(1);
-    expect(result.stderr).toContain("no .py files");
+    expect(result.stderr).toContain("no translatable source files");
   });
 });
 

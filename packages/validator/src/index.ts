@@ -13,4 +13,11 @@ export {
   type S6Result,
   type TestOutcome,
 } from "./stages.js";
+export {
+  PyrightTypeValidator,
+  parsePyrightJson,
+  pyrightEntryPath,
+  type PyrightDiagnostic,
+  type PyrightValidatorOptions,
+} from "./pyright.js";
 export const packageName = "@ctrans/validator";

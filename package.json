@@ -21,7 +21,9 @@
     "fixtures:accept": "FIXTURES_ACCEPT=1 vitest run tests/golden-fixtures.test.ts"
   },
   "devDependencies": {
+    "@astral-sh/ruff-wasm-nodejs": "0.17.1",
     "@ctrans/codegen-js": "workspace:*",
+    "@ctrans/codegen-py": "workspace:*",
     "@ctrans/core": "workspace:*",
     "@ctrans/parser-js": "workspace:*",
     "@ctrans/parser-py": "workspace:*",
@@ -32,6 +34,7 @@
     "@vitest/coverage-v8": "5.0.5",
     "eslint": "^10.12.0",
     "prettier": "^3.9.9",
+    "pyright": "1.1.406",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.71.1",
     "vitest": "^5.0.3"

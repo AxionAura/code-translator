@@ -1,6 +1,6 @@
 # Validation
 
-Status: S1–S3 **implemented (M4/M5)**, S5/S6 **implemented (M6)**, S4/S7 and the repair-loop integration still **blueprint**. The validation engine is the product's trust boundary: it decides what the tool is allowed to claim.
+Status: S1–S3 **implemented (M4/M5)**, S5/S6 **implemented (M6)**, S2-for-Python **implemented (M7, pyright)**, S4/S7 and the repair-loop integration still **blueprint**. The validation engine is the product's trust boundary: it decides what the tool is allowed to claim.
 
 ## 1. Stage pipeline
 
@@ -19,6 +19,8 @@ Every stage result is one of: `pass`, `fail`, `warn`, `skipped(reason)`. **A ski
 **S3 verdict classes (M5, implemented):** `emitted-local` (import resolves to an emitted project module), `mapped` (registry v1 entry), `external-verbatim` (unmapped third-party — exact warning, passes through, never guessed), `unsupported` (declared non-goal — warns), `unresolved` (relative import to no emitted module — FAILS the stage). S3 pass extends the claim ladder to level 3. A registry miss is NEVER conflated with a missing project module.
 
 **S5/S6 as implemented (M6):** S5 runs the translated vitest suite inside `@ctrans/sandbox` — the toolchain's `node_modules` enters the workspace as a per-package writable symlink (nothing is installed; security.md §5 holds) and the vitest json reporter is pinned to stdout. S6 materializes the SOURCE project plus a tool-provided stdlib runner and `pytest` stub in the same sandbox and executes it there (source code is untrusted — it never runs on the host); parametrize cases and same-module fixture factories are reproduced so the comparison is per-test AND per-case, matched by pytest-convention names. Both stages demand enforced network isolation (`requireNetworkIsolation: true`) — without bwrap they are refused (`SandboxIsolationError`) and reported `skipped(reason)`, never downgraded. S4 is recorded `skipped` (no build stage wired) and does not block the ladder.
+
+**Direction-aware stages (M7):** S1 validates the TARGET language — oxc re-parses JS/TS output, the CPython bridge re-parses Python output (reference grammar). S2 for Python output uses the pinned pyright CLI (D-005/D-024): the emitted project is materialized into an owned temp workspace (preserving relative layout so intra-project imports resolve), pyright runs with `--outputjson` under a controlled environment and timeout, findings become structured `fail` details, and unavailable/crashed/pathological runs report `skipped(reason)` — a pass verdict is never reported without executing. S3's specifier normalization understands both JS/TS (`./x.js` → emitted `.py` module, directory imports → barrel) and Python (dotted absolute imports) sources.
 
 ## 2. What may be claimed (claim ladder)
 

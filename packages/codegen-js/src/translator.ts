@@ -392,6 +392,13 @@ export class PyToJsTranslator implements UnitTranslator {
     helperNames: readonly string[],
     includeExceptions: boolean,
   ): Promise<string> {
+    // This translator only handles the JS/TS targets; Python output is codegen-py's.
+    if (this.target !== "typescript" && this.target !== "javascript") {
+      throw new CTransError(
+        "CG-DIRECTION-MISMATCH",
+        "py-to-js translator cannot render runtime helpers for a python target",
+      );
+    }
     return renderRuntime(this.target, helperNames, includeExceptions, this.intMode);
   }
 }

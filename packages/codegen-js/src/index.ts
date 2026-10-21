@@ -4,6 +4,7 @@
 export const packageName = "@ctrans/codegen-js";
 
 export { PyToJsTranslator, createPyToJsTranslator, relativeImportSpecifier } from "./translator.js";
+export { TsToJsTranslator, JsToTsTranslator } from "./js-directions.js";
 export {
   PytestToVitestMapper,
   type TestMapperContext,

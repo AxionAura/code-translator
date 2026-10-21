@@ -1,0 +1,7 @@
+{
+  "name": "reverse-js-project",
+  "from": "javascript",
+  "to": "python",
+  "expectedClaimLevel": 3,
+  "description": "Reverse-direction golden (M7): a JS project (multi-module, relative imports, loops, arrays, template-free string ops) translates to Python through the CLI pipeline and validates S1 (bridge re-parse) + S2 (pyright) + S3 (dependency resolution). The ladder caps at level 3 honestly: S5/S6 need reverse test translation (later milestone)."
+}

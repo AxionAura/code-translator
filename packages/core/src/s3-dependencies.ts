@@ -38,15 +38,32 @@ export function validateDependencies(input: S3Input): {
   const findings: S3Finding[] = [];
   for (const [unit, specifiers] of input.sourceImports) {
     for (const specifier of specifiers) {
-      const root = specifier.startsWith(".") ? specifier : (specifier.split(".")[0] ?? specifier);
-      // 1. Project-local module: resolved by the graph and emitted.
-      const localTarget = input.targetPathFor(normalizeSpecifier(specifier, unit));
-      if (input.files.has(localTarget) || input.files.has(localTarget.replace(/\.py$/, ".ts"))) {
+      // External root for registry lookup: dotted for Python sources
+      // (`os.path` → `os`), path-rooted for JS sources (`lodash/merge` → `lodash`).
+      const root = specifier.startsWith(".")
+        ? specifier
+        : specifier.includes("/")
+          ? (specifier.split("/")[0] ?? specifier)
+          : (specifier.split(".")[0] ?? specifier);
+      // 1. Project-local module: resolved by the graph and emitted. Directory
+      // imports (`./lib`) resolve to the barrel (lib/index.py).
+      const normalized = normalizeSpecifier(specifier, unit);
+      const localCandidates = [
+        input.targetPathFor(normalized),
+        input.targetPathFor(`${normalized}/index`),
+      ];
+      const localTarget = localCandidates.find(
+        (candidate) =>
+          input.files.has(candidate) ||
+          input.files.has(candidate.replace(/\.py$/, ".ts")) ||
+          input.files.has(candidate.replace(/\.py$/, ".js")),
+      );
+      if (localTarget !== undefined) {
         findings.push({
           specifier,
           unit,
           verdict: "emitted-local",
-          detail: `resolved to emitted project module ${localTarget}`,
+          detail: `resolved to emitted project module ${String(localTarget)}`,
         });
         continue;
       }
@@ -132,16 +149,30 @@ export function validateDependencies(input: S3Input): {
   };
 }
 
-// Normalize a Python import specifier to a module id relative to the importing
-// unit (relative imports resolve against the unit's directory; absolute stay as-is).
+// Normalize a source import specifier to a module id relative to the importing
+// unit (relative imports resolve against the unit's directory; absolute stay
+// as-is). JS/TS relative specifiers carry their JS extension (or none) — stripped
+// so the emitted .py candidate can be derived.
 function normalizeSpecifier(specifier: string, unit: string): string {
-  if (!specifier.startsWith(".")) return `${specifier}.py`;
+  if (!specifier.startsWith(".")) {
+    if (unit.endsWith(".py")) {
+      // Python absolute imports name project modules too (`import helper`) —
+      // the .py candidate derives from the name itself.
+      return `${specifier}.py`;
+    }
+    // JS/TS bare specifiers are externals (packages) — no local candidate.
+    return specifier;
+  }
   let rest = specifier;
   let level = 0;
   while (rest.startsWith(".")) {
     level += 1;
     rest = rest.slice(1);
   }
+  rest = rest.replace(/\.(js|ts|tsx|jsx|mjs|cjs)$/, "");
+  rest = rest.replace(/^\//, ""); // the dot-count loop leaves a leading separator
+  if (rest.endsWith("/")) rest = rest.slice(0, -1);
+  if (rest === "") rest = "index";
   const parts = unit.split("/");
   parts.pop(); // the unit's own filename
   for (let i = 1; i < level; i += 1) parts.pop();

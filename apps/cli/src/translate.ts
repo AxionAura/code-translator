@@ -1,20 +1,31 @@
-// Pipeline wiring for the CLI (docs/roadmap.md M4): owns the bridge spawn lifecycle
-// and validator construction, then delegates to the core pipeline. `check` runs the
-// full pipeline in memory; `translate` additionally writes the target files and the
-// `.ctrans/` artifacts (ledger + report).
+// Pipeline wiring for the CLI (docs/roadmap.md M4/M7): owns the parser/codegen
+// dispatch per translation direction and the bridge spawn lifecycle, then delegates
+// to the core pipeline. `check` runs the full pipeline in memory; `translate`
+// additionally writes the target files and the `.ctrans/` artifacts.
 import { mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
 
 import { MODULE_MAPPINGS, createRegistryLookup } from "@ctrans/registry";
 import {
+  directionFor,
   runPipeline,
+  sourceLanguageOf,
   type PipelineInput,
   type PipelineResult,
+  type SourceLanguage,
+  type SyntaxValidator,
   type TargetLanguage,
+  type UnitTranslator,
 } from "@ctrans/core";
-import { createPyToJsTranslator } from "@ctrans/codegen-js";
-import { createPythonBridgeParser } from "@ctrans/parser-py";
-import { createOxcSyntaxValidator, OracleTypeValidator } from "@ctrans/parser-js";
+import { createPyToJsTranslator, JsToTsTranslator, TsToJsTranslator } from "@ctrans/codegen-js";
+import { createJsToPyTranslator } from "@ctrans/codegen-py";
+import { createPythonBridgeParser, type PythonBridgeParser } from "@ctrans/parser-py";
+import {
+  createOxcJsParser,
+  createOxcSyntaxValidator,
+  OracleTypeValidator,
+} from "@ctrans/parser-js";
+import { PyrightTypeValidator, pyrightEntryPath } from "@ctrans/validator";
 
 export interface CheckOutcome {
   readonly report: PipelineResult["report"];
@@ -59,16 +70,23 @@ async function runOnPath(
   target: TargetLanguage,
   intMode: "number" | "bigint",
 ): Promise<PipelineResult> {
-  const pyFiles = collectPythonFiles(inputPath);
-  if (pyFiles.length === 0) {
-    throw new Error(`no .py files found under "${inputPath}"`);
+  const files = collectSourceFiles(inputPath);
+  if (files.length === 0) {
+    throw new Error(`no translatable source files found under "${inputPath}"`);
   }
-  const parser = await createPythonBridgeParser();
-  const inputs = [];
-  for (const file of pyFiles) {
+  const sourceLanguage = sourceLanguageOf(
+    files.map((file) => ({ language: languageForFilename(file.moduleId) })),
+  );
+  const direction = directionFor(sourceLanguage, target);
+  if (direction === null) {
+    throw new Error(`no translation direction from ${sourceLanguage} to ${target}`);
+  }
+  const inputs: PipelineInput[] = [];
+  for (const file of files) {
+    const language = languageForFilename(file.moduleId);
     inputs.push({
       filename: file.moduleId,
-      parseResult: await parser.parse(readFileSync(file.path, "utf8"), { filename: file.moduleId }),
+      parseResult: await parseSource(language, file.path, file.moduleId),
     });
   }
   return runPipeline(
@@ -76,12 +94,21 @@ async function runOnPath(
     {
       target,
       intMode,
-      translateUnit: await createPyToJsTranslator(target, {
-        intMode,
-        registry: createRegistryLookup(),
-      }),
-      validateSyntax: await createOxcSyntaxValidator(),
-      validateTypes: new OracleTypeValidator(),
+      translateUnit: await translatorFor(direction, intMode),
+      validateSyntax: await syntaxValidatorFor(target),
+      // S2: the oracle for TS output; the pinned pyright CLI for Python output
+      // (it materializes the emitted project into its own workspace, so it runs
+      // for both check and translate modes).
+      ...(target === "typescript"
+        ? { validateTypes: new OracleTypeValidator() as never }
+        : target === "python"
+          ? {
+              validateTypes: new PyrightTypeValidator({
+                pyrightPath: pyrightEntryPath(import.meta.url),
+                nodePath: process.execPath,
+              }) as never,
+            }
+          : {}),
       asyncBoundaryModules: ["requests"],
     },
     {
@@ -97,6 +124,88 @@ async function runOnPath(
   );
 }
 
+function languageForFilename(filename: string): SourceLanguage {
+  if (filename.endsWith(".py")) return "python";
+  if (/\.(ts|tsx|mts|cts)$/.test(filename)) return "typescript";
+  if (/\.(js|jsx|mjs|cjs)$/.test(filename)) return "javascript";
+  throw new Error(`unsupported source extension: ${filename}`);
+}
+
+async function parseSource(
+  language: SourceLanguage,
+  path: string,
+  moduleId: string,
+): Promise<PipelineInput["parseResult"]> {
+  const content = readFileSync(path, "utf8");
+  if (language === "python") {
+    const parser = await createPythonBridgeParser();
+    return parser.parse(content, { filename: moduleId });
+  }
+  const parser = await createOxcJsParser();
+  return parser.parse(content, { filename: moduleId, language });
+}
+
+// Direction-aware translator dispatch (docs/roadmap.md M7 WS A).
+async function translatorFor(
+  direction: NonNullable<ReturnType<typeof directionFor>>,
+  intMode: "number" | "bigint",
+): Promise<UnitTranslator> {
+  switch (direction) {
+    case "python→typescript":
+    case "python→javascript":
+      return createPyToJsTranslator(
+        direction === "python→typescript" ? "typescript" : "javascript",
+        {
+          intMode,
+          registry: createRegistryLookup(),
+        },
+      );
+    case "typescript→javascript":
+      return new TsToJsTranslator(createRegistryLookup());
+    case "javascript→typescript":
+      return new JsToTsTranslator(createRegistryLookup());
+    case "javascript→python":
+    case "typescript→python":
+      return createJsToPyTranslator();
+  }
+}
+
+// S1 wiring per TARGET language: oxc re-parses JS/TS output; Python output
+// re-parses through the bridge (the reference grammar).
+async function syntaxValidatorFor(target: TargetLanguage): Promise<SyntaxValidator> {
+  if (target === "python") {
+    return createPythonSyntaxValidator(await createPythonBridgeParser());
+  }
+  return createOxcSyntaxValidator();
+}
+
+function createPythonSyntaxValidator(parser: PythonBridgeParser): SyntaxValidator {
+  return {
+    async validate(files) {
+      const details: string[] = [];
+      let failures = 0;
+      for (const file of files) {
+        if (!file.path.endsWith(".py")) continue;
+        try {
+          await parser.parse(file.content, { filename: file.path });
+        } catch (error) {
+          failures += 1;
+          details.push(`${file.path}: ${error instanceof Error ? error.message : String(error)}`);
+        }
+      }
+      if (failures > 0) {
+        return {
+          stage: "S1-syntax",
+          status: "fail",
+          reason: `${String(failures)} file(s) failed to re-parse as Python`,
+          details,
+        };
+      }
+      return { stage: "S1-syntax", status: "pass", reason: null, details: [] };
+    },
+  };
+}
+
 // The ModuleGraph already resolved imports per unit; S3 re-derives the specifier
 // list from the same parse data (cheap, deterministic, one source of truth).
 function collectSourceImports(inputs: readonly PipelineInput[]): Map<string, string[]> {
@@ -110,7 +219,9 @@ function collectSourceImports(inputs: readonly PipelineInput[]): Map<string, str
   return map;
 }
 
-function collectPythonFiles(inputPath: string): Array<{ path: string; moduleId: string }> {
+function collectSourceFiles(inputPath: string): Array<{ path: string; moduleId: string }> {
+  const translatable = (name: string): boolean =>
+    /\.(py|ts|tsx|js|jsx|mjs|cjs)$/.test(name) && !name.endsWith(".d.ts");
   if (!statSync(inputPath).isDirectory()) {
     // Single-file mode: the module id is the file's basename.
     const base = inputPath.replaceAll("\\", "/").split("/").pop()!;
@@ -123,7 +234,7 @@ function collectPythonFiles(inputPath: string): Array<{ path: string; moduleId: 
       const childModuleId = moduleId === "" ? entry.name : `${moduleId}/${entry.name}`;
       if (entry.isDirectory()) {
         walk(childAbsolute, childModuleId);
-      } else if (entry.name.endsWith(".py")) {
+      } else if (translatable(entry.name)) {
         files.push({ path: childAbsolute, moduleId: childModuleId });
       }
     }

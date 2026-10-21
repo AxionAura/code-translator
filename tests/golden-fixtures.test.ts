@@ -39,9 +39,10 @@ function listFixtures(): string[] {
       .filter((entry) => entry.isDirectory())
       .map((entry) => entry.name)
       // project-* fixtures are whole mini-projects (M6): they run through the
+      // reverse-* fixtures are M7 reverse-direction goldens (tests/reverse-golden.test.ts).
       // project runner (translation + tests + differential) in golden-projects.test.ts,
       // not the single-unit pipeline here.
-      .filter((name) => !name.startsWith("project-"))
+      .filter((name) => !name.startsWith("project-") && !name.startsWith("reverse-"))
       .sort()
   );
 }

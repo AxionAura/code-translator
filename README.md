@@ -2,7 +2,7 @@
 
 A behavior-preserving source-code translator for **Python ↔ JavaScript ↔ TypeScript**, designed to translate whole projects — not just snippets — with explicit, honest reporting of what was translated deterministically, what was adapted semantically, what was ambiguous, and what was not supported.
 
-**Status: M6 complete — whole-project Python → TypeScript with sandboxed validation** (M5's registry/async/bigint/string semantics included). Whole projects translate end-to-end — including pytest test modules to vitest — and every run is validated in an isolated sandbox: the translated suite executes (S5) and the source suite runs in the same sandbox for a per-test differential comparison (S6), supporting claim-ladder level 5. Reverse directions are next; see [docs/roadmap.md](docs/roadmap.md) and [PROJECT_STATE.md](PROJECT_STATE.md).
+**Status: M7 complete — all four reverse directions live** (JS/TS → Python, TS → JS, JS → TS) alongside whole-project Python → TypeScript with sandboxed validation (M6) and M5's registry/async/bigint/string semantics. Whole projects translate end-to-end — including pytest test modules to vitest — and every run is validated in an isolated sandbox: the translated suite executes (S5) and the source suite runs in the same sandbox for a per-test differential comparison (S6), supporting claim-ladder level 5. Reverse directions are next; see [docs/roadmap.md](docs/roadmap.md) and [PROJECT_STATE.md](PROJECT_STATE.md).
 
 ## Quickstart
 
@@ -20,6 +20,11 @@ node apps/cli/bin/ctrans.mjs translate my-project/ --to js -o out-js/
 # it in the sandbox: translated tests run (S5), source tests run sandboxed and are
 # compared per-test against the target outcomes (S6 → claim level 5)
 node apps/cli/bin/ctrans.mjs project my-project/ --to ts -o out/
+
+# Reverse directions: JS/TS → Python, TS → JS, JS → TS (direction from the source)
+node apps/cli/bin/ctrans.mjs translate web-src/ --to py -o out-py/   # S1 bridge + S2 pyright + S3
+node apps/cli/bin/ctrans.mjs translate legacy.ts --to js -o out-js/  # type erasure
+node apps/cli/bin/ctrans.mjs translate app.js --to ts -o out-ts/     # honest unknown types
 ```
 
 The CLI prints the claim-ladder level (what validation actually proved), per-file status, and decision counts. Translated output is finalized through Prettier; runtime helpers land in a generated `__ctrans_runtime.ts|js` that carries **zero** dependencies.

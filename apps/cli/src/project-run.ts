@@ -170,6 +170,13 @@ export async function runProject(options: ProjectRunOptions): Promise<ProjectRun
 
   // 4. Translate the source modules through the pipeline. The wrapper registers the
   // test requirements right before the translator finalizes the shared runtime.
+  // Project mode covers the Python→TS direction (the pytest mapper emits .test.ts);
+  // other targets report their stage skips honestly below.
+  if (options.target !== "typescript" && options.target !== "javascript") {
+    throw new Error(
+      "project mode currently supports the python→typescript direction only (pytest→vitest mapping)",
+    );
+  }
   const translator = await createPyToJsTranslator(options.target, {
     intMode: options.intMode,
     registry,

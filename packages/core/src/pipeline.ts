@@ -14,8 +14,11 @@ import {
   propagateAsync,
 } from "./async-propagation.js";
 import { validateDependencies } from "./s3-dependencies.js";
+import { sourceLanguageOf } from "./direction.js";
 
-export type TargetLanguage = "javascript" | "typescript";
+// M7: "python" is a full target (codegen-py) — its S1 re-parses with the Python
+// parser and its S2 is the injected pyright adapter; JS targets skip S2 honestly.
+export type TargetLanguage = "javascript" | "typescript" | "python";
 
 // D-006: Python int is arbitrary precision. `number` (default) maps int to float64
 // with precision-risk diagnostics; `bigint` is the exact opt-in mode (Python ints
@@ -94,7 +97,7 @@ export interface EmittedFile {
 }
 
 export interface UnitEmission {
-  readonly targetExtension: ".js" | ".ts";
+  readonly targetExtension: ".js" | ".ts" | ".py";
   // Map of source module id -> emitted target path (for import rewriting across units).
   readonly pathFor: (sourceModuleId: string) => string;
   readonly files: readonly EmittedFile[];
@@ -158,11 +161,11 @@ export function computeClaimLevel(stages: readonly StageResult[]): ClaimLevel {
 
 // Deterministic target module path policy (roadmap M4 §8): pkg/mod.py -> pkg/mod.<ext>,
 // pkg/__init__.py -> pkg/index.<ext>. Single source of truth for emitter and importer.
-function extensionFor(target: TargetLanguage): ".js" | ".ts" {
-  return target === "typescript" ? ".ts" : ".js";
+function extensionFor(target: TargetLanguage): ".js" | ".ts" | ".py" {
+  return target === "typescript" ? ".ts" : target === "python" ? ".py" : ".js";
 }
 
-export function targetModulePath(sourceModuleId: string, extension: ".js" | ".ts"): string {
+export function targetModulePath(sourceModuleId: string, extension: ".js" | ".ts" | ".py"): string {
   const id = normalizeModuleId(sourceModuleId);
   if (id.endsWith("__init__.py")) {
     return id.slice(0, -"__init__.py".length) + `index${extension}`;
@@ -266,7 +269,7 @@ export async function runPipeline(
     });
   }
   if (
-    options.target === "typescript" &&
+    (options.target === "typescript" || options.target === "python") &&
     options.validateTypes !== undefined &&
     emittedFiles.length > 0
   ) {
@@ -320,7 +323,7 @@ export async function runPipeline(
   const warnings = [...new Set(ledger.flatMap((entry) => entry.warnings))];
   const report = validateTranslationReport({
     generator: { name: "code-translator", version: "0.0.0" },
-    sourceLanguage: "python",
+    sourceLanguage: sourceLanguageOf(inputs.map((input) => input.parseResult)),
     targetLanguage: options.target,
     files: analyzed.map((unit) => {
       const unitLedger = ledger.filter((entry) => entry.unit === unit.filename);

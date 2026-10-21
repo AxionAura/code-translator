@@ -33,6 +33,12 @@ export type {
   TranslationReport,
 } from "./report.js";
 export { computeClaimLevel, runPipeline, targetModulePath } from "./pipeline.js";
+export {
+  DIRECTIONS,
+  directionFor,
+  sourceLanguageOf,
+  type TranslationDirection,
+} from "./direction.js";
 export type { ValidationStageName } from "./pipeline.js";
 export { validateDependencies, type S3Finding, type S3Input } from "./s3-dependencies.js";
 export {
