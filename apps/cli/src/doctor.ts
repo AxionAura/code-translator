@@ -10,7 +10,8 @@ import {
   type ValidationCapabilities,
 } from "@ctrans/validator";
 
-import { runnerToolchain } from "./toolchain.ts";
+import { jsonOutput } from "./output.js";
+import { runnerToolchain } from "./toolchain.js";
 
 export interface DoctorResult {
   readonly code: 0 | 1;
@@ -20,11 +21,26 @@ export interface DoctorResult {
 
 export type CapabilityDetector = () => Promise<ValidationCapabilities>;
 
-export async function runDoctor(detect?: CapabilityDetector): Promise<DoctorResult> {
+export interface DoctorOptions {
+  readonly json?: boolean;
+}
+
+export async function runDoctor(
+  detect?: CapabilityDetector,
+  options: DoctorOptions = {},
+): Promise<DoctorResult> {
   const capabilities = detect === undefined ? await defaultDetection() : await detect();
   return {
     code: capabilityExitCode(capabilities),
-    stdout: formatCapabilityReport(capabilities),
+    stdout:
+      options.json === true
+        ? jsonOutput({
+            command: "doctor",
+            requiredAvailable: capabilities.requiredAvailable,
+            strictAvailable: capabilities.strictAvailable,
+            capabilities,
+          })
+        : formatCapabilityReport(capabilities),
     stderr: "",
   };
 }

@@ -7,11 +7,15 @@ import {
   AiAmbiguityResolver,
   AiJournal,
   AnthropicModel,
+  FileResponseCacheStore,
   OpenAiCompatibleModel,
+  ResponseCache,
   type AiCaps,
   type ChatModel,
 } from "@ctrans/ai";
 import { AiRepairProposer } from "@ctrans/repair";
+
+import { resolveAiKey, type AiKeyResolution } from "./keys.js";
 
 export interface AiFlags {
   // "openai" (OpenAI-compatible: OpenAI, vLLM, llama.cpp server, Ollama) or
@@ -19,8 +23,15 @@ export interface AiFlags {
   readonly provider?: string;
   readonly model?: string;
   readonly baseUrl?: string;
+  // M11: memory cache by default; "disk" is explicit opt-in (cached model output
+  // may contain code-derived text).
+  readonly cache?: "memory" | "disk";
+  // Test/ops seam for the opt-in disk cache root (defaults to the per-user XDG cache).
+  readonly cacheDirectory?: string;
   // Test seam: a scripted model bypasses provider construction and the key.
   readonly modelFactory?: (provider: string, model: string, baseUrl: string) => ChatModel;
+  // Test seam for key resolution (never used to pass a key through flags).
+  readonly keyResolver?: (provider: string) => AiKeyResolution;
 }
 
 export interface AiWiring {
@@ -31,6 +42,9 @@ export interface AiWiring {
   readonly journal: AiJournal;
   readonly provider: string;
   readonly model: string;
+  readonly cacheMode: "memory" | "disk";
+  // Secret-free diagnostics (e.g. the 0600 key-file fallback warning).
+  readonly warnings: readonly string[];
 }
 
 const DEFAULT_MODELS: Readonly<Record<string, string>> = {
@@ -57,6 +71,15 @@ export function buildAiWiring(flags: AiFlags, caps?: Partial<AiCaps>): AiWiring 
     );
   }
   const baseUrl = flags.baseUrl ?? DEFAULT_BASE_URLS[provider] ?? "";
+  const cacheMode = flags.cache ?? "memory";
+  const cache =
+    cacheMode === "disk"
+      ? new ResponseCache({
+          store: new FileResponseCacheStore(
+            flags.cacheDirectory ?? FileResponseCacheStore.defaultDirectory(),
+          ),
+        })
+      : new ResponseCache();
   if (flags.modelFactory !== undefined) {
     const scripted = flags.modelFactory(provider, model, baseUrl);
     const journal = new AiJournal();
@@ -64,24 +87,31 @@ export function buildAiWiring(flags: AiFlags, caps?: Partial<AiCaps>): AiWiring 
       resolver: new AiAmbiguityResolver({
         model: scripted,
         journal,
+        cache,
         ...(caps === undefined ? {} : { caps }),
       }),
       repairProposer: new AiRepairProposer({
         model: scripted,
+        cache,
         ...(caps === undefined ? {} : { caps }),
       }),
       journal,
       provider,
       model,
+      cacheMode,
+      warnings: [],
     };
   }
-  const apiKey = process.env["CTRANS_AI_KEY"];
-  if (apiKey === undefined || apiKey === "") {
+  const resolution =
+    flags.keyResolver === undefined ? resolveAiKey(provider) : flags.keyResolver(provider);
+  const apiKey = resolution.key;
+  if (apiKey === null || apiKey === "") {
     throw new CTransError(
       "AI-KEY-MISSING",
-      "AI provider selected but no key is configured — set CTRANS_AI_KEY in the environment",
+      `AI provider "${provider}" selected but no key is configured — set CTRANS_AI_KEY, store it in the OS keychain (service ctrans-ai, account ${provider}), or use ${process.env["XDG_CONFIG_HOME"] ?? "~/.config"}/ctrans/keys.json with mode 0600${resolution.warning === null ? "" : `; ${resolution.warning}`}`,
     );
   }
+  const warnings = resolution.warning === null ? [] : [resolution.warning];
   const modelAdapter =
     provider === "anthropic"
       ? new AnthropicModel({ baseUrl, model, apiKey })
@@ -98,15 +128,19 @@ export function buildAiWiring(flags: AiFlags, caps?: Partial<AiCaps>): AiWiring 
     resolver: new AiAmbiguityResolver({
       model: modelAdapter,
       journal,
+      cache,
       ...(caps === undefined ? {} : { caps }),
     }),
     repairProposer: new AiRepairProposer({
       model: modelAdapter,
+      cache,
       ...(caps === undefined ? {} : { caps }),
     }),
     journal,
     provider,
     model,
+    cacheMode,
+    warnings,
   };
 }
 

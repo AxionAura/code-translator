@@ -29,7 +29,14 @@ export {
   type BudgetDenial,
   type BudgetState,
 } from "./budget.js";
-export { ResponseCache, canonicalRequest, hashText, type CacheStats } from "./cache.js";
+export {
+  FileResponseCacheStore,
+  ResponseCache,
+  canonicalRequest,
+  hashText,
+  type CacheStats,
+  type ResponseCacheStore,
+} from "./cache.js";
 export {
   SecretlintGate,
   type GateOutcome,

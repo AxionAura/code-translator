@@ -21,7 +21,7 @@ import {
   type RepairRunResult,
 } from "@ctrans/repair";
 
-import { runTranslation, writeTranslationArtifacts } from "./translate.ts";
+import { runTranslation, writeTranslationArtifacts } from "./translate.js";
 
 export interface TranslateWithRepairOptions {
   readonly sourcePath: string;

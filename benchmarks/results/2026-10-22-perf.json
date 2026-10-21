@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "generatedAt": "2026-10-21T21:24:27.979Z",
+  "nodeVersion": "v24.15.0",
+  "deterministic": true,
+  "suites": [
+    {
+      "name": "perf",
+      "status": "ok",
+      "cases": [
+        {
+          "name": "perf/500-modules-js-to-ts",
+          "status": "ok",
+          "iterations": 1,
+          "correctness": true,
+          "wallMs": {
+            "median": 311.88368899999995,
+            "p95": 311.88368899999995,
+            "total": 311.88368899999995
+          },
+          "metrics": {
+            "inputFiles": 500,
+            "emittedFiles": 500,
+            "ledgerEntries": 2996,
+            "claim": 1
+          },
+          "details": []
+        }
+      ]
+    }
+  ]
+}

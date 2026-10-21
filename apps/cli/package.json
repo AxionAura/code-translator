@@ -1,13 +1,14 @@
 {
   "name": "@ctrans/cli",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
+  "private": false,
   "type": "module",
   "bin": {
-    "ctrans": "./bin/ctrans.mjs"
+    "ctrans": "./bin/ctrans-dist.mjs"
   },
   "scripts": {
-    "typecheck": "tsc -p tsconfig.json"
+    "typecheck": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.build.json"
   },
   "dependencies": {
     "@ctrans/codegen-js": "workspace:*",
@@ -20,5 +21,13 @@
     "@ctrans/codegen-py": "workspace:*",
     "@ctrans/ai": "workspace:*",
     "@ctrans/repair": "workspace:*"
-  }
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "files": [
+    "dist",
+    "bin"
+  ]
 }

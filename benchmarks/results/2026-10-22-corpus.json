@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "generatedAt": "2026-10-21T20:56:40.824Z",
+  "nodeVersion": "v24.15.0",
+  "deterministic": true,
+  "suites": [
+    {
+      "name": "corpus",
+      "status": "ok",
+      "cases": [
+        {
+          "name": "corpus/arithmetic.py/python-to-typescript",
+          "status": "ok",
+          "iterations": 3,
+          "correctness": true,
+          "wallMs": {
+            "median": 19.014462999999978,
+            "p95": 83.46194300000008,
+            "total": 117.32964400000009
+          },
+          "metrics": {
+            "bytes": 351,
+            "ledgerEntries": 24,
+            "claim": 1
+          },
+          "details": []
+        },
+        {
+          "name": "corpus/classes.py/python-to-typescript",
+          "status": "ok",
+          "iterations": 3,
+          "correctness": true,
+          "wallMs": {
+            "median": 19.378134000000045,
+            "p95": 22.389554999999973,
+            "total": 59.87163100000009
+          },
+          "metrics": {
+            "bytes": 393,
+            "ledgerEntries": 22,
+            "claim": 1
+          },
+          "details": []
+        },
+        {
+          "name": "corpus/collections.py/python-to-typescript",
+          "status": "ok",
+          "iterations": 3,
+          "correctness": true,
+          "wallMs": {
+            "median": 21.527231999999913,
+            "p95": 27.350977000000057,
+            "total": 67.84524399999998
+          },
+          "metrics": {
+            "bytes": 451,
+            "ledgerEntries": 23,
+            "claim": 1
+          },
+          "details": []
+        }
+      ]
+    }
+  ]
+}

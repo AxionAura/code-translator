@@ -3,6 +3,8 @@
 // env allowlist isolates, bwrap unshare-net blocks network) — not that flags
 // exist. Capability-dependent cases skip with an explicit reason when the tool
 // is genuinely absent (bwrap probe failure), never silently.
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -204,6 +206,27 @@ describe("sandbox enforcement", () => {
     );
     expect(result.outcome).toBe("completed");
     expect(result.stdout).toContain("script-ran");
+  });
+
+  it("re-binds toolchain mounts that live under the shadowed /tmp", async () => {
+    // Reproduces the clean-clone layout: both the workspace and the toolchain
+    // symlink target are under /tmp, where bwrap mounts a tmpfs.
+    const target = mkdtempSync(join(tmpdir(), "ctrans-tool-"));
+    writeFileSync(join(target, "value.txt"), "mounted-value\n");
+    try {
+      const result = await runner.run(
+        spec({
+          argv: [PYTHON, "-c", "print(open('tool/value.txt').read(), end='')"],
+          files: [{ path: "main.py", content: "" }],
+          symlinks: [{ path: "tool", target }],
+          containerMounts: [{ path: target, readOnly: true }],
+        }),
+      );
+      expect(result.outcome).toBe("completed");
+      expect(result.stdout).toBe("mounted-value\n");
+    } finally {
+      rmSync(target, { recursive: true, force: true });
+    }
   });
 });
 

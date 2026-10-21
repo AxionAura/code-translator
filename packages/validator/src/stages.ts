@@ -243,11 +243,11 @@ async function executeVitest(
     // Untrusted translated code executes ONLY under enforced isolation; without
     // bwrap (or a strict container) this throws — the caller reports the skip.
     requireNetworkIsolation: true,
+    containerMounts: [{ path: options.nodeModulesPath, readOnly: true }],
     ...(strict
       ? {
           strict: true,
           containerArgv: ["node", options.vitestEntryPath, "run", "--no-color"],
-          containerMounts: [{ path: options.nodeModulesPath, readOnly: true }],
         }
       : {}),
   };

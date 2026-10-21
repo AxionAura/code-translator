@@ -1,13 +1,18 @@
 # Benchmarks
 
-Benchmark framework per [docs/benchmarks.md](../docs/benchmarks.md). Populated from M11 (micro suite exists earlier, behind the CLI).
+Implemented harness per [docs/benchmarks.md](../docs/benchmarks.md).
 
 ```
 benchmarks/
-  projects/        # vendored license-clean mini-projects (with ATTRIBUTION.md), pinned by commit
-  results/         # committed JSON + markdown reports (never hand-edited)
+  corpus/          # small original Python inputs (MIT), see ATTRIBUTION.md
+  projects/        # three original mini-projects (MIT) with pytest suites
+  results/         # committed, schema-validated JSON results (never hand-edited)
+  ATTRIBUTION.md
 ```
 
-- `ctrans benchmark run --suite micro|mini-projects|corpus|perf`
-- Headline metric: **differential equivalence** (source-vs-target test outcome match rate, S6).
-- AI-enabled runs are tagged separately and never mixed into deterministic trends.
+- `pnpm benchmark` / `ctrans benchmark --suite micro` — parse/translate cases with correctness checks.
+- `pnpm benchmark:mini` — end-to-end project mode (S5/S6), explicit/nightly.
+- `pnpm benchmark:perf` — 500-module synthetic JS→TS chain.
+- `pnpm benchmark:nightly` — mini + perf, writes `results/<date>-<suite>.json`.
+- Timings are machine-local observations, not performance claims; AI is never
+  called by these suites.

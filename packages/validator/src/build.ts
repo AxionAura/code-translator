@@ -97,11 +97,13 @@ async function runTypeScriptBuild(input: S4Input, options: S4Options): Promise<S
     stderrCapBytes: 1024 * 1024,
     // tsc parses but never executes project code; no network isolation is needed.
     requireNetworkIsolation: false,
+    // Tool-controlled toolchain mounts (used by strict containers and by the host
+    // bwrap profile when the path lives under the shadowed /tmp).
+    containerMounts: [{ path: options.nodeModulesPath, readOnly: true }],
     ...(strict
       ? {
           strict: true,
           containerArgv: ["node", options.typescriptEntryPath, "--noEmit", "-p", "tsconfig.json"],
-          containerMounts: [{ path: options.nodeModulesPath, readOnly: true }],
         }
       : {}),
   };

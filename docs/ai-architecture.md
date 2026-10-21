@@ -60,7 +60,8 @@ Whole-project prompts are forbidden. If a fix needs more context than the budget
 
 ## 5. Caching, cost, determinism
 
-- Response cache keyed by (model id, prompt hash, params): identical escalations within/across runs are free.
+- Response cache keyed by (model id, prompt hash, params): identical escalations are free within a run (in-memory default). M11 adds an **opt-in** cross-run file cache (`--ai-cache disk` / `ai.cache: "disk"`): per-user `0700` directory, `0600` files named by sha256 key, symlink/oversize/malformed entries ignored, atomic writes, and pruning beyond 2000 entries. It is opt-in because cached model text may contain code-derived content.
+- Key resolution (M11): `CTRANS_AI_KEY` → OS keychain (`security`/`secret-tool`) → 0600 `~/.config/ctrans/keys.json` with a warning; insecure permissions and symlinks are rejected. Keychain retrieval is not exercised against a live credential in this environment; Windows CredMan is not implemented (documented).
 - All AI interactions are journaled by prompt hash, never full prompt text: `.ctrans/ai-journal.json` for ambiguity escalations and the hash-only `.ctrans/repairs/repairs.json` for repair attempts (no diffs, responses, or source content). Full-prompt journaling is not implemented.
 - Benchmarks and fixture CI never enable AI (`deterministic CI` rule) — AI-assisted runs are measured separately and reported as such.
 

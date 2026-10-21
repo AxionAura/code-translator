@@ -1,6 +1,6 @@
 {
   "name": "code-translator",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "description": "Behavior-preserving source code translator for Python, JavaScript and TypeScript. Milestone status in PROJECT_STATE.md, plan in docs/roadmap.md.",
   "license": "MIT",
@@ -10,7 +10,7 @@
     "node": ">=22.18"
   },
   "scripts": {
-    "verify": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm docs:check",
+    "verify": "pnpm build && pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm docs:check",
     "typecheck": "tsc -p tsconfig.json && pnpm -r typecheck",
     "lint": "eslint .",
     "format": "prettier --write .",
@@ -18,7 +18,13 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "docs:check": "node scripts/check-doc-links.mjs",
-    "fixtures:accept": "FIXTURES_ACCEPT=1 vitest run tests/golden-fixtures.test.ts"
+    "fixtures:accept": "FIXTURES_ACCEPT=1 vitest run tests/golden-fixtures.test.ts",
+    "build": "pnpm -r --workspace-concurrency=4 build",
+    "benchmark": "node apps/cli/bin/ctrans.mjs benchmark",
+    "benchmark:mini": "node apps/cli/bin/ctrans.mjs benchmark --suite mini-projects --iterations 1",
+    "benchmark:perf": "node apps/cli/bin/ctrans.mjs benchmark --suite perf --iterations 1",
+    "perf:smoke": "vitest run tests/perf-smoke.test.ts",
+    "benchmark:nightly": "node scripts/benchmark-nightly.mjs"
   },
   "devDependencies": {
     "@astral-sh/ruff-wasm-nodejs": "0.17.1",

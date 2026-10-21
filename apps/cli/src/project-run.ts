@@ -73,6 +73,13 @@ export interface ProjectRepairOptions {
   readonly now?: () => Date;
 }
 
+export interface ProjectProgressEvent {
+  readonly event: string;
+  readonly message: string;
+  readonly stage?: string;
+  readonly status?: string;
+}
+
 export interface ProjectRunOptions {
   readonly sourceRoot: string;
   readonly outputRoot: string;
@@ -101,6 +108,8 @@ export interface ProjectRunOptions {
   readonly repair?: ProjectRepairOptions;
   // M8: optional AI escalation for engine-classified ambiguous constructs.
   readonly resolveAmbiguity?: AmbiguityResolver;
+  // M11 progress events (stderr at the CLI; never mixed into JSON stdout).
+  readonly onProgress?: (event: ProjectProgressEvent) => void;
 }
 
 export interface ProjectRunReport {
@@ -159,7 +168,12 @@ interface ProjectValidation {
 }
 
 export async function runProject(options: ProjectRunOptions): Promise<ProjectRunReport> {
+  options.onProgress?.({ event: "project:translate", message: "translating source project" });
   const prepared = await prepareProject(options);
+  options.onProgress?.({
+    event: "project:translated",
+    message: `translated ${String(prepared.pipeline.emittedFiles.length)} file(s)`,
+  });
   const baseline = await validateProjectFiles(prepared, prepared.emitted, {
     staticStages: prepared.pipeline.validationStages,
   });
@@ -459,6 +473,12 @@ async function validateProjectFiles(
               : { container: optionsForRun.container }),
           },
         );
+  optionsForRun.onProgress?.({
+    event: "stage:done",
+    stage: "S4-build",
+    status: s4.status,
+    message: `S4-build ${s4.status}`,
+  });
 
   const testsExecutable =
     prepared.translatedTestFiles.size > 0 &&
@@ -608,6 +628,26 @@ async function validateProjectFiles(
     }
   }
 
+  optionsForRun.onProgress?.({
+    event: "stage:done",
+    stage: "S5-tests",
+    status: s5Stage.status,
+    message: `S5-tests ${s5Stage.status}`,
+  });
+  optionsForRun.onProgress?.({
+    event: "stage:done",
+    stage: "S6-differential",
+    status: s6Stage.status,
+    message: `S6-differential ${s6Stage.status}`,
+  });
+  if (s7 !== null) {
+    optionsForRun.onProgress?.({
+      event: "stage:done",
+      stage: "S7-smoke",
+      status: s7.status,
+      message: `S7-smoke ${s7.status}`,
+    });
+  }
   const executed: StageResult[] = [...staticStages, s4, s5Stage, s6Stage];
   if (s7 !== null) executed.push(s7);
   const stages = assembleStages(executed, STAGE_ORDER, (name) =>

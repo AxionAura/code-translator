@@ -119,8 +119,8 @@ Stages S1 syntax → S2 types → S3 dependencies → S4 build → S5 unit tests
 
 ## 10. Configuration & UX
 
-- `ctrans.config.json` (schema-validated): `from`, `to`, `intMode: number|bigint`, `datetime: temporal|date-helpers`, `ai: {enabled, provider, caps}`, `sandbox: auto|strict|off(strict refused on request)`, `format: true`, include/exclude globs.
-- CLI: `ctrans translate <path> [-o out] [--project]`, `ctrans check <path>` (parse+analyze+report only, no output), `ctrans project <dir>`, `ctrans doctor` (observed capability report: runtimes, validators, bwrap, docker/podman, gVisor), `ctrans validate <dir>`/`benchmark` in M11.
+- `ctrans.config.json` (M11, strict schema in [configuration.md](configuration.md)): `to`, `intMode: number|bigint`, `sandbox: auto|strict`, `sandboxImage`, `smoke`, `format: true`, `ai: {enabled, provider, model, baseUrl, cache}`. Unknown keys and secret-bearing keys are rejected; CLI flags win.
+- CLI: `ctrans translate <path> [-o out]`, `ctrans check <path>`, `ctrans project <dir> -o <out>`, `ctrans validate <target-dir>`, `ctrans benchmark [--suite …]`, `ctrans doctor`; `--json` keeps machine output on stdout and diagnostics/progress on stderr.
 - All reports written under `<out>/.ctrans/` as JSON; CLI prints the human summary.
 - Distribution: npm package, `ctrans` bin. No UI in V1 (D-013).
 

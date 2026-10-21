@@ -18,6 +18,9 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "isolatedModules": true,
-    "types": ["node"]
+    "types": ["node"],
+    "paths": {
+      "@ctrans/*": ["./packages/*/src/index.ts"]
+    }
   }
 }

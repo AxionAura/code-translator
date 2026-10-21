@@ -2,13 +2,26 @@
 
 A behavior-preserving source-code translator for **Python ↔ JavaScript ↔ TypeScript**, designed to translate whole projects — not just snippets — with explicit, honest reporting of what was translated deterministically, what was adapted semantically, what was ambiguous, and what was not supported.
 
-**Status: M10 complete — full S1–S7 validation engine.** Six translation directions (M7), whole-project Python → TypeScript with sandboxed validation (M6), the provider-agnostic AI layer (M8), the bounded repair loop (M9), and now the completed validation engine: S4 build, flaky rerun-once, S7 opt-in smoke, evidence-checked claim ladder, Docker/Podman strict mode with optional gVisor, `ctrans doctor`, and project-mode repair re-validated through the real S5/S6 path. See [docs/roadmap.md](docs/roadmap.md) and [PROJECT_STATE.md](PROJECT_STATE.md).
+**Status: M11 complete — v0.1.0 release candidate (not published).** Six translation directions (M7), whole-project validation S1–S7 (M6/M10), the provider-agnostic AI layer (M8), bounded repair (M9), and the M11 CLI: config schema, `validate`/`benchmark` commands, `--json` machine output with stderr-only progress, keychain/0600-file credentials, opt-in disk cache, a compiled `dist` entry, benchmark suites/corpus, and a security review checklist. See [docs/roadmap.md](docs/roadmap.md), [docs/release.md](docs/release.md), and [PROJECT_STATE.md](PROJECT_STATE.md).
 
 ## Quickstart
 
 ```bash
 corepack enable && pnpm install
+pnpm build                      # compiled packages + CLI (dist)
 
+# Compiled entry (release path):
+node apps/cli/bin/ctrans-dist.mjs check sample.py --to ts
+node apps/cli/bin/ctrans-dist.mjs translate sample.py --to ts -o out/
+node apps/cli/bin/ctrans-dist.mjs project my-project/ --to ts -o out/
+node apps/cli/bin/ctrans-dist.mjs doctor
+node apps/cli/bin/ctrans-dist.mjs benchmark --suite micro --iterations 3
+node apps/cli/bin/ctrans-dist.mjs validate out/          # validate an existing target project
+```
+
+Development/test commands use the source-mode launcher (Node type stripping):
+
+```bash
 # Analyze + validate a Python file without writing output (exit 0 = translated)
 node apps/cli/bin/ctrans.mjs check sample.py --to ts
 
@@ -39,10 +52,18 @@ node apps/cli/bin/ctrans.mjs translate web-src/ --to py -o out-py/   # S1 bridge
 node apps/cli/bin/ctrans.mjs translate legacy.ts --to js -o out-js/  # type erasure
 node apps/cli/bin/ctrans.mjs translate app.js --to ts -o out-ts/     # honest unknown types
 
+# Configuration is optional and strictly validated (ctrans.config.json beside the
+# input or via --config). CLI flags win; unknown/secret-bearing keys are rejected.
+node apps/cli/bin/ctrans.mjs check mod.py --config ctrans.config.json
+
+# Machine-readable output: JSON on stdout, progress/errors on stderr.
+node apps/cli/bin/ctrans.mjs check mod.py --to ts --json --progress json
+
 # Optional AI escalation (OFF by default): let a model choose among the options the
 # engine already offers for AMBIGUOUS constructs (never anything else). A secretlint
 # scan gates every request; caps + cache + journal are enforced; the heuristic default
 # applies when the provider is unavailable or the answer is not an offered option.
+# Keys: CTRANS_AI_KEY, OS keychain, or a 0600 ~/.config/ctrans/keys.json file.
 CTRANS_AI_KEY=... node apps/cli/bin/ctrans.mjs check mod.py --to ts \
   --ai-provider openai --ai-model gpt-4o-mini   # or --ai-provider anthropic
 
@@ -54,9 +75,15 @@ CTRANS_AI_KEY=... node apps/cli/bin/ctrans.mjs translate mod.py --to ts -o out/ 
   --ai-provider openai --repair
 CTRANS_AI_KEY=... node apps/cli/bin/ctrans.mjs project my-project/ --to ts -o out/ \
   --ai-provider openai --repair
+
+# Benchmarks: micro runs in verify; corpus/perf/mini are explicit, nightly script.
+pnpm benchmark
+pnpm benchmark:mini
+pnpm benchmark:perf
+pnpm benchmark:nightly
 ```
 
-The CLI prints the claim-ladder level (what validation actually proved), per-file status, and decision counts. Translated output is finalized through Prettier; runtime helpers land in a generated `__ctrans_runtime.ts|js` that carries **zero** dependencies.
+The CLI prints the claim-ladder level (what validation actually proved), per-file status, and decision counts. Translated output is finalized through Prettier; runtime helpers land in a generated `__ctrans_runtime.ts|js` that carries **zero** dependencies. No release has been published; see [docs/release.md](docs/release.md).
 
 ## Documentation index
 
@@ -71,6 +98,9 @@ The CLI prints the claim-ladder level (what validation actually proved), per-fil
 | [docs/ai-architecture.md](docs/ai-architecture.md) | Where AI is used, provider-independent model layer |
 | [docs/validation.md](docs/validation.md) | Validation pipeline, capability reporting, differential testing |
 | [docs/security.md](docs/security.md) | Threat model, sandboxing, secret handling |
+| [docs/security-review-checklist.md](docs/security-review-checklist.md) | Executed security review with per-threat evidence and residual risks |
+| [docs/configuration.md](docs/configuration.md) | `ctrans.config.json` schema, discovery, precedence |
+| [docs/release.md](docs/release.md) | v0.1.0 build/packaging/publishing instructions and limits |
 | [docs/testing.md](docs/testing.md) | Test strategy and fixture system (`input/` vs `expected/`) |
 | [docs/benchmarks.md](docs/benchmarks.md) | Benchmark framework and metrics |
 | [docs/decisions.md](docs/decisions.md) | Architecture decision records (ADR log) |
@@ -92,5 +122,10 @@ Prerequisites: Node.js ≥ 22.18 with Corepack (the pnpm version is pinned via t
 ```bash
 corepack enable        # first use of pnpm may ask to download the pinned version
 pnpm install
-pnpm verify            # typecheck → lint → format check → tests → documentation links
+pnpm build             # compiled dist/ for all packages (release path)
+pnpm verify            # build → typecheck → lint → format check → tests → documentation links
+pnpm test:coverage
 ```
+
+Release status: version `0.1.0`, MIT, compiled `dist` entries, packed contents
+verified; **nothing has been published** (see [docs/release.md](docs/release.md)).

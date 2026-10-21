@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "generatedAt": "2026-10-21T20:56:39.925Z",
+  "nodeVersion": "v24.15.0",
+  "deterministic": true,
+  "suites": [
+    {
+      "name": "micro",
+      "status": "ok",
+      "cases": [
+        {
+          "name": "parse/python-small",
+          "status": "ok",
+          "iterations": 3,
+          "correctness": true,
+          "wallMs": {
+            "median": 25.557114999999953,
+            "p95": 26.350689999999986,
+            "total": 77.08967599999988
+          },
+          "metrics": {
+            "bytes": 177
+          },
+          "details": []
+        },
+        {
+          "name": "translate/python-to-typescript",
+          "status": "ok",
+          "iterations": 3,
+          "correctness": true,
+          "wallMs": {
+            "median": 28.71863200000007,
+            "p95": 94.22571000000005,
+            "total": 143.75152500000013
+          },
+          "metrics": {
+            "files": 2,
+            "ledgerEntries": 20,
+            "claim": 1
+          },
+          "details": []
+        },
+        {
+          "name": "translate/python-to-javascript",
+          "status": "ok",
+          "iterations": 3,
+          "correctness": true,
+          "wallMs": {
+            "median": 20.17232100000001,
+            "p95": 33.87404300000003,
+            "total": 71.50306
+          },
+          "metrics": {
+            "files": 2,
+            "ledgerEntries": 20,
+            "claim": 1
+          },
+          "details": []
+        }
+      ]
+    }
+  ]
+}

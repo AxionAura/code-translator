@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "generatedAt": "2026-10-21T20:56:52.643Z",
+  "nodeVersion": "v24.15.0",
+  "deterministic": true,
+  "suites": [
+    {
+      "name": "mini-projects",
+      "status": "ok",
+      "cases": [
+        {
+          "name": "mini-projects/arithmetic",
+          "status": "ok",
+          "iterations": 3,
+          "correctness": true,
+          "wallMs": {
+            "median": 1216.204115,
+            "p95": 1468.105353,
+            "total": 3893.359713
+          },
+          "metrics": {
+            "claim": 5,
+            "files": 2,
+            "s5": "pass",
+            "s6": "pass",
+            "differentialMatched": 2
+          },
+          "details": []
+        },
+        {
+          "name": "mini-projects/classes",
+          "status": "ok",
+          "iterations": 3,
+          "correctness": true,
+          "wallMs": {
+            "median": 1253.8393240000005,
+            "p95": 1316.3430950000002,
+            "total": 3821.965736000001
+          },
+          "metrics": {
+            "claim": 5,
+            "files": 2,
+            "s5": "pass",
+            "s6": "pass",
+            "differentialMatched": 2
+          },
+          "details": []
+        },
+        {
+          "name": "mini-projects/collections",
+          "status": "ok",
+          "iterations": 3,
+          "correctness": true,
+          "wallMs": {
+            "median": 1195.546017999999,
+            "p95": 1229.6270429999995,
+            "total": 3603.413801999998
+          },
+          "metrics": {
+            "claim": 5,
+            "files": 2,
+            "s5": "pass",
+            "s6": "pass",
+            "differentialMatched": 3
+          },
+          "details": []
+        }
+      ]
+    }
+  ]
+}

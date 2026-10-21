@@ -174,7 +174,7 @@ export class SandboxRunner {
       const argv =
         strict && this.container !== undefined
           ? buildContainerArgv(this.container, workspace, spec)
-          : this.wrapCommand(spec.argv, workspace);
+          : this.wrapCommand(spec.argv, workspace, spec);
       // In strict mode the container gets the allowlisted additions via --env;
       // the host process running the container CLI gets only PATH/HOME/LANG.
       const env = strict ? this.buildContainerCliEnv() : this.buildEnv(spec.env ?? {});
@@ -289,7 +289,11 @@ export class SandboxRunner {
   // Hardened command line: bwrap (isolation) > prlimit (rlimits) > command.
   // The workspace is bound explicitly AFTER the tmpfs /tmp mount — the workspace
   // lives under the host temp dir, which the tmpfs would otherwise shadow.
-  private wrapCommand(argv: readonly string[], workspace: string): readonly string[] {
+  private wrapCommand(
+    argv: readonly string[],
+    workspace: string,
+    spec: SandboxRunSpec,
+  ): readonly string[] {
     let wrapped = argv;
     if (this.capabilities.prlimit.available) {
       const limits = ["--"];
@@ -302,7 +306,9 @@ export class SandboxRunner {
     if (this.capabilities.bwrap.available) {
       // bwrap binds the workspace read-write (the child needs its cwd), the root
       // read-only, and unshares network + PID. die-with-parent ties the bubble's
-      // lifetime to ours.
+      // lifetime to ours. A tmpfs /tmp gives the child scratch space; because that
+      // shadows host /tmp, toolchain mount paths under /tmp (clean-clone layouts)
+      // are re-bound explicitly below.
       wrapped = [
         this.bwrapPath,
         "--unshare-net",
@@ -320,6 +326,7 @@ export class SandboxRunner {
         "--bind",
         workspace,
         workspace,
+        ...(this.toolchainMounts(spec) ?? []),
         "--chdir",
         workspace,
         "--",
@@ -327,6 +334,17 @@ export class SandboxRunner {
       ];
     }
     return wrapped;
+  }
+
+  // Tool-controlled mount paths that live under the shadowed host /tmp must be
+  // re-bound inside the bubble (workspace + toolchain layouts in temp dirs).
+  private toolchainMounts(spec: SandboxRunSpec): readonly string[] {
+    const args: string[] = [];
+    for (const mount of spec.containerMounts ?? []) {
+      if (!mount.path.startsWith("/tmp/")) continue;
+      args.push(mount.readOnly === false ? "--bind" : "--ro-bind", mount.path, mount.path);
+    }
+    return args;
   }
 
   private buildEnv(additions: Readonly<Record<string, string>>): Record<string, string> {
