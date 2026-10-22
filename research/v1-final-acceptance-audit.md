@@ -261,3 +261,26 @@ Checked at `main` / `0f18e12` with a clean working tree, no tags, and no remotes
 Remaining gate: **explicit maintainer authorization** to execute the publication
 plan. No package was published, tagged, pushed, or uploaded, and no registry state
 was changed.
+
+## 13. Final pre-publish verification (2026-10-22, 2FA enabled)
+
+Checked at `main` / `f4c69ab` with a clean working tree, no tags, and no remotes.
+
+- **Authentication:** `npm whoami` → `code-translator`.
+- **Organization access:** `npm org ls axion-ct code-translator --json` → role
+  `owner`.
+- **2FA:** `npm profile get --json` → `tfa.mode: "auth-and-writes"`,
+  `pending: null` (enabled).
+- **Package names:** all eleven `npm view <pkg> version` calls returned 404; none
+  are published.
+- **Verification:** `pnpm verify` → **exit 0** (110 files, 1091/1091 tests, doc
+  links).
+- **Packing:** all eleven packages repack at `0.1.0`; packed internal dependencies
+  are `@axion-ct/*@0.1.0`; no `workspace:`, old-scope, generated-cache, test,
+  source, or credential files are present.
+- **Dependency order:** topologically valid; `@axion-ct/cli` is last.
+- **Publish commands:** the plan requires `--access public` and explicitly stops
+  on the first failure.
+
+Remaining gate: **explicit maintainer authorization**. No package was published,
+tagged, pushed, or uploaded, and no registry state was changed.

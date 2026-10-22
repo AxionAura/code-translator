@@ -2,11 +2,12 @@
 
 Status: **preflight complete, awaiting explicit publish authorization.** Nothing has
 been published, tagged, or uploaded. The authenticated npm account is
-`code-translator`, which is the **owner** of `@axion-ct`; no publish command has
-been executed.
+`code-translator`, which is the **owner** of `@axion-ct`; 2FA is enabled in
+`auth-and-writes` mode. No publish command has been executed.
 
-Prepared from `main` at `0f18e12` (clean working tree, no tags, no remotes). The
-scope migration and parser-py packaging fixes are included (`3918946`, `70d774a`).
+Prepared from `main` at `f4c69ab` (clean working tree, no tags, no remotes); the
+report update is a documentation-only follow-up. The scope migration and
+parser-py packaging fixes are included (`3918946`, `70d774a`).
 
 ## 0. Scope migration
 
@@ -50,7 +51,7 @@ without a maintainer-provided repository URL.
 
 | Check | Result |
 | --- | --- |
-| Git state | `main` at `0f18e12`; clean tree; no tags or remotes |
+| Git state | `main` at `f4c69ab`; clean tree; no tags or remotes |
 | Lockfile | `pnpm install --frozen-lockfile --offline --ignore-scripts` → **exit 0** |
 | Full verification | `pnpm verify` → **exit 0**; 110 files, 1091/1091 tests; doc links OK |
 | Package packing | All eleven `pnpm --filter <pkg> pack` commands → **exit 0** |
@@ -64,7 +65,7 @@ without a maintainer-provided repository URL.
 | Organization | `npm org ls axion-ct code-translator --json` → **role `owner`** |
 | Scope publish permission | **Appears authorized** (organization owner); exact registry enforcement is only proven by an actual publish, which was not attempted |
 | Package names | All eleven `npm view <pkg> version` calls returned **404**; they are not publicly visible at check time |
-| Publish-time 2FA/OTP | **Not enabled** (`npm profile get --json` reports `tfa: false`); no OTP is expected. Enabling 2FA is recommended before publication. |
+| Publish-time 2FA | **Enabled** (`npm profile get --json` reports `tfa.mode: "auth-and-writes"`, `pending: null`); OTPs are never requested or stored in the plan |
 
 The public registry was checked read-only. No credentials were read, printed,
 stored, or modified.
@@ -87,10 +88,9 @@ All must be true; otherwise stop.
    smoke test succeed.
 
 **Current status (2026-10-22):** items 1–4 and 6 are verified; npm authentication
-is active as `code-translator` (owner). Two-factor authentication is **not**
-enabled on the account; enabling it is recommended before the first publication.
-Item 5 — explicit maintainer approval of the version, package set, and documented
-limitations — is the remaining gate.
+is active as `code-translator` (owner), and 2FA is enabled in `auth-and-writes`
+mode. Item 5 — explicit maintainer approval of the version, package set, and
+documented limitations — is the sole remaining gate.
 
 ## 4. Publish order
 
