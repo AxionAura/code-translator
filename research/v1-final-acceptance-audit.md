@@ -153,4 +153,6 @@ remain unverified.
 
 **Gate verdict: PASS WITH DOCUMENTED LIMITATIONS.** The verified High finding is
 fixed and regression-tested; no execution, cleanup, timeout, or resource-limit
-protection was relaxed, and no test was skipped or weakened.
+protection was relaxed, and no test was skipped or weakened. Implementation commit:
+`7d56ebf`; documentation/state finalization follows in a separate commit. Nothing
+was published, tagged, or uploaded, and no registry state changed.
