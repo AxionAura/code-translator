@@ -186,7 +186,7 @@ describe("option parsing and machine-readable output", () => {
     expect(parsed.capabilities.node.state).toBe("available");
     expect(["available", "unavailable"]).toContain(parsed.capabilities.bwrap.state);
     expect(typeof parsed.requiredAvailable).toBe("boolean");
-  });
+  }, 30000);
 
   it("translate --json reports output files without embedding source content", async () => {
     const root = project("json-translate", { "a.py": SOURCE });

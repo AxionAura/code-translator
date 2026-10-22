@@ -1,6 +1,6 @@
 # Architecture
 
-Status: **approved blueprint** (M0 not started). Decisions referenced as D-xxx live in [decisions.md](decisions.md).
+Status: **implemented V1** (M0–M11). The approved blueprint is maintained as the architecture contract; implementation evidence is in [PROJECT_STATE.md](../PROJECT_STATE.md). Decisions referenced as D-xxx live in [decisions.md](decisions.md).
 
 ## 1. System overview
 

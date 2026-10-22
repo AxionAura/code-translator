@@ -1,6 +1,6 @@
 # Implementation Roadmap
 
-Status: **approved blueprint** (2026-10-06). Milestones are sequential; each has an objective, expected components, a test gate, completion criteria, and dependencies. AGENTS.md §12 (definition of done) applies to every milestone. Supporting docs: [architecture.md](architecture.md), [language-support.md](language-support.md), [validation.md](validation.md), [testing.md](testing.md).
+Status: **M0–M11 complete (2026-10-22)**; this document remains the milestone plan and post-V1 backlog. Milestones are sequential; each has an objective, expected components, a test gate, completion criteria, and dependencies. AGENTS.md §12 (definition of done) applies to every milestone. Supporting docs: [architecture.md](architecture.md), [language-support.md](language-support.md), [validation.md](validation.md), [testing.md](testing.md).
 
 Deliberate sequencing rationale: front-ends before semantics, semantics before codegen, Py→TS before reverse directions, AI last (the deterministic engine must be complete enough to make AI escalation meaningful and testable via fakes).
 

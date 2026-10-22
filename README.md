@@ -90,6 +90,7 @@ The CLI prints the claim-ladder level (what validation actually proved), per-fil
 | Document | Purpose |
 | --- | --- |
 | [PROJECT_STATE.md](PROJECT_STATE.md) | **Canonical handoff state** — current status, milestone, what works/doesn't; read this first for progress |
+| [research/v1-final-acceptance-audit.md](research/v1-final-acceptance-audit.md) | V1 acceptance audit: independent verification, evidence matrix, unverified environments |
 | [docs/research.md](docs/research.md) | Verified technology survey: parsers, prior art, semantics, security (researched 2026-10-06) |
 | [docs/architecture.md](docs/architecture.md) | System architecture, package layout, core data model |
 | [docs/translation-pipeline.md](docs/translation-pipeline.md) | Stage-by-stage pipeline, artifacts, decision ledger |

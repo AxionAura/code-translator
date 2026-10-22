@@ -1,6 +1,6 @@
 # Translation Pipeline
 
-Status: **approved blueprint**. Companion to [architecture.md](architecture.md).
+Status: **implemented V1** (M4–M11); this document remains the pipeline/artifact contract. Companion to [architecture.md](architecture.md).
 
 ## 1. Stage graph
 

@@ -19,7 +19,6 @@ falls back.
 
 ```json
 {
-  "$schema": "https://example.invalid/ctrans.config.schema.json",
   "to": "ts",
   "intMode": "number",
   "sandbox": "auto",
@@ -49,7 +48,11 @@ falls back.
 | `ai.model` | string | Defaults per provider |
 | `ai.baseUrl` | http(s) URL | Credentials in URLs are rejected |
 | `ai.cache` | `"memory"`, `"disk"` | `disk` is opt-in (cached model text may contain code) |
-| `$schema` | string | Editor hint, ignored by the engine |
+
+No JSON Schema is published for `ctrans.config.json`; this document and
+`apps/cli/src/config.ts` are the contract. A `$schema` field, if present, is
+accepted and ignored (an editor hint only) — do not publish or reference a schema
+URL until one actually exists.
 
 **Credentials are never configuration.** Any `key`, `token`, `secret`, `password`,
 or `apiKey` field is rejected with `CONFIG-UNSAFE-KEY`. Keys come from

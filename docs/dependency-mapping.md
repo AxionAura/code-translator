@@ -1,6 +1,6 @@
 # Dependency Mapping
 
-Status: **approved blueprint**. Decisions D-007 (zero runtime deps in output), D-011 (hybrid registry), D-014 (license rules).
+Status: **registry v1 implemented (M5)**; the broader mapping blueprint remains future scope. Decisions D-007 (zero runtime deps in output), D-011 (hybrid registry), D-014 (license rules).
 
 ## 1. Problem
 

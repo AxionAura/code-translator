@@ -1,6 +1,6 @@
 # Testing Strategy
 
-Status: **approved blueprint**. Governs all test code from M1 onward.
+Status: **implemented V1** (M0–M11); this document remains the maintained testing contract.
 
 ## 1. Test pyramid for a translator
 
@@ -9,9 +9,9 @@ Status: **approved blueprint**. Governs all test code from M1 onward.
 | Unit | one mapping rule, one resolver, one emitter function, one ledger behavior | `packages/*/test/` |
 | Parser tests | front-end fidelity: spans, comments, error recovery, symtable accuracy | `packages/parser-*/test/` |
 | IR/semantic tests | CommonType inference, symbol resolution, ModuleGraph construction (SCCs, ordering) | `packages/core/test/` |
-| **ConstructMatrix** | every §2 entry of language-support.md × every direction, as minimal input→expected pairs | `tests/constructs/` |
+| **ConstructMatrix** | supported constructs as minimal input→expected pairs per implemented direction | `packages/codegen-js/test/construct-matrix.data.ts` (+ `packages/codegen-py/test/reverse-matrix.data.ts`) |
 | Golden fixtures | whole-file translations (stable, reviewed) | `tests/fixtures/` |
-| Dependency tests | registry entries behave as claimed (usage tests) | `packages/registry/tests/` |
+| Dependency tests | registry entries behave as claimed (usage tests) | `packages/registry/test/` |
 | Validation tests | stage pipeline produces exactly the expected verdicts (positive + negative) | `packages/validator/test/` |
 | Repair tests | classification, caps, loop detection, revert-on-regression with FakeChatModel | `packages/repair/test/` |
 | Repair E2E | real pipeline + real S1/S2 validators, scripted model; accepted and rejected outcomes | `packages/repair/test/pipeline-repair.test.ts` |
@@ -22,7 +22,7 @@ Status: **approved blueprint**. Governs all test code from M1 onward.
 | CLI doctor / strict / smoke | observed capability report, fail-closed gates, S7 harness in the sandbox | `apps/cli/test/doctor-smoke.test.ts` |
 | CLI M11 | config schema/precedence, JSON stdout discipline, progress stderr, key storage/cache, validate/benchmark commands, dist entry | `apps/cli/test/{cli-m11,commands-m11,keys}.test.ts`, `packages/ai/test/disk-cache.test.ts`, `tests/dist-entry.test.ts` |
 | Benchmarks | deterministic micro/corpus/perf correctness, result-schema negatives, 500-file smoke, nightly mini-projects | `tests/benchmark.test.ts`, `tests/perf-smoke.test.ts`, CLI benchmark tests |
-| E2E | CLI runs against fixture projects, produces reports | `tests/e2e/` |
+| E2E | CLI/source-vs-target workflows and fixture projects | `apps/cli/test/`, `tests/*.test.ts` |
 | Benchmarks | aggregate quality/perf over time (not pass/fail per commit) | `benchmarks/` |
 
 ## 2. Fixture system (`tests/fixtures/`)
@@ -52,7 +52,7 @@ Rules:
 
 ## 3. ConstructMatrix
 
-Machine-readable index (`tests/constructs/index.json`) enumerating every construct in language-support.md §2 with: id, direction(s), input snippet, expected output, expected decision class (`deterministic|semantic|ambiguous|unsupported`), expected warning codes. A generator expands it into test cases. Adding a construct to the support matrix **without** adding a ConstructMatrix entry fails CI. `unsupported` classifications get negative tests too (asserting the warning/marker, not absence of output).
+The forward matrix lives in `packages/codegen-js/test/construct-matrix.data.ts` (Python → TS/JS, including TS-only expectations) and is executed by `construct-matrix.test.ts`; the reverse matrix is `packages/codegen-py/test/reverse-matrix.data.ts` with `reverse-matrix.test.ts`. Each entry pins input, expected emission, the ledger decision class (`deterministic|semantic|ambiguous|unsupported`), and expected warning codes. Adding a supported construct without matrix coverage is caught in review/tests; unsupported constructs have negative sweeps asserting the warning/marker rather than absence of output. There is no separate `tests/constructs/index.json` generator.
 
 ## 4. Determinism & hermeticity
 
@@ -63,7 +63,7 @@ Machine-readable index (`tests/constructs/index.json`) enumerating every constru
 
 ## 5. Corpus for stress testing
 
-A vendored corpus of small, license-clean (MIT/BSD/Apache) real-world files with attribution file (`tests/corpus/ATTRIBUTION.md`), used by benchmarks and fuzz-ish property checks: "translation always terminates, always produces a report, never crashes" for every corpus file × direction. Corpus files are never added to goldens wholesale (they're too big to review); they feed property tests and metrics.
+`benchmarks/corpus/` holds small Python inputs authored for this repository (MIT; see `benchmarks/ATTRIBUTION.md`), and `benchmarks/projects/` holds three original mini-projects with pytest suites. The M11 corpus benchmark translates each corpus file to TypeScript and checks S1/emission; the mini-project benchmark runs full project mode (S5/S6) and is explicit/nightly. Corpus files are not added to goldens wholesale. A broader real-world corpus and the blueprint's fuzz-ish property checks ("terminates, produces a report, never crashes" for every file × direction) are future work, not current claims.
 
 ## 6. Coverage & gates
 

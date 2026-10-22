@@ -1,6 +1,6 @@
 # Language Support
 
-Status: **approved blueprint**. Semantic facts are source-verified (see [research.md](research.md) §3). This document defines *what maps, how, and how honestly* for each direction. It is the contract that `codegen-js` and `codegen-py` implement and that the ConstructMatrix fixtures test.
+Status: **implemented V1** (M4–M11). Semantic facts are source-verified (see [research.md](research.md) §3). This document defines *what maps, how, and how honestly* for each direction. It is the contract that `codegen-js` and `codegen-py` implement and that the ConstructMatrix fixtures test.
 
 ## 1. Decision classes recap
 
