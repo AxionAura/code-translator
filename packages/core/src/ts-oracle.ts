@@ -2,7 +2,7 @@ import type { SourceSpan } from "./source-span.js";
 
 // TypeScript semantic-oracle contract (D-004, roadmap M2). The interface lives in core
 // so the rest of the project never depends on TypeScript compiler API objects; the
-// pinned typescript@6 implementation lives in @ctrans/parser-js and is replaceable when
+// pinned typescript@6 implementation lives in @axion-ct/parser-js and is replaceable when
 // the TypeScript 7.1+ API lands. All queries are synchronous, in-memory, and
 // deterministic: sources are provided as virtual files, nothing is read from disk.
 

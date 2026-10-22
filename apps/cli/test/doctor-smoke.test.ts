@@ -11,8 +11,8 @@ import {
   detectCapabilities,
   type ContainerCapabilities,
   type SandboxCapabilities,
-} from "@ctrans/sandbox";
-import { detectValidationCapabilities } from "@ctrans/validator";
+} from "@axion-ct/sandbox";
+import { detectValidationCapabilities } from "@axion-ct/validator";
 
 import { runCliCommand, runnerToolchain } from "../src/main.ts";
 import { runDoctor } from "../src/doctor.ts";

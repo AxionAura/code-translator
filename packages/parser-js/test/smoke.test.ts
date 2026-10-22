@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import { packageName } from "../src/index.js";
 
-describe("@ctrans/parser-js package", () => {
+describe("@axion-ct/parser-js package", () => {
   it("keeps its identity export", () => {
-    expect(packageName).toBe("@ctrans/parser-js");
+    expect(packageName).toBe("@axion-ct/parser-js");
   });
 
   it("exposes the public front-end surface", async () => {

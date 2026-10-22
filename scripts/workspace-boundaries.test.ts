@@ -1,5 +1,5 @@
 // Mechanical enforcement of the package dependency direction from docs/architecture.md §3
-// and ADR D-017: @ctrans/core is the base layer that owns all cross-package types and
+// and ADR D-017: @axion-ct/core is the base layer that owns all cross-package types and
 // interfaces; implementation packages depend on core and strictly lower layers only, which
 // makes the graph acyclic by construction. Update LAYERS when packages or edges change.
 import { readdirSync, readFileSync } from "node:fs";
@@ -10,17 +10,17 @@ const REPO_ROOT = new URL("..", import.meta.url).pathname;
 
 // Higher number = higher layer. A package may depend only on strictly lower layers.
 const LAYERS: Record<string, number> = {
-  "@ctrans/core": 0,
-  "@ctrans/parser-py": 1,
-  "@ctrans/parser-js": 1,
-  "@ctrans/codegen-js": 1,
-  "@ctrans/codegen-py": 1,
-  "@ctrans/registry": 1,
-  "@ctrans/sandbox": 1,
-  "@ctrans/validator": 2,
-  "@ctrans/ai": 2,
-  "@ctrans/repair": 3,
-  "@ctrans/cli": 4,
+  "@axion-ct/core": 0,
+  "@axion-ct/parser-py": 1,
+  "@axion-ct/parser-js": 1,
+  "@axion-ct/codegen-js": 1,
+  "@axion-ct/codegen-py": 1,
+  "@axion-ct/registry": 1,
+  "@axion-ct/sandbox": 1,
+  "@axion-ct/validator": 2,
+  "@axion-ct/ai": 2,
+  "@axion-ct/repair": 3,
+  "@axion-ct/cli": 4,
 };
 
 interface Manifest {
@@ -56,7 +56,7 @@ describe("workspace package boundaries", () => {
       if (selfLayer === undefined) continue; // misclassification is reported by the test above
       for (const section of ["dependencies", "devDependencies"] as const) {
         for (const dep of Object.keys(manifest[section] ?? {})) {
-          if (!dep.startsWith("@ctrans/")) continue;
+          if (!dep.startsWith("@axion-ct/")) continue;
           const depLayer = LAYERS[dep];
           if (depLayer === undefined || depLayer >= selfLayer) {
             violations.push(`${manifest.name} (${section}) -> ${dep}`);

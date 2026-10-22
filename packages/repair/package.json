@@ -1,5 +1,5 @@
 {
-  "name": "@ctrans/repair",
+  "name": "@axion-ct/repair",
   "version": "0.1.0",
   "private": false,
   "type": "module",
@@ -14,13 +14,13 @@
     "build": "tsc -p tsconfig.build.json"
   },
   "dependencies": {
-    "@ctrans/ai": "workspace:*",
-    "@ctrans/core": "workspace:*"
+    "@axion-ct/ai": "workspace:*",
+    "@axion-ct/core": "workspace:*"
   },
   "devDependencies": {
-    "@ctrans/codegen-js": "workspace:*",
-    "@ctrans/parser-js": "workspace:*",
-    "@ctrans/parser-py": "workspace:*"
+    "@axion-ct/codegen-js": "workspace:*",
+    "@axion-ct/parser-js": "workspace:*",
+    "@axion-ct/parser-py": "workspace:*"
   },
   "license": "MIT",
   "engines": {

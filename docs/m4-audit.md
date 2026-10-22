@@ -85,7 +85,7 @@ and new ConstructMatrix entries), then fixed, then re-run green.
 6. **Container-method calls emitted verbatim without the promised warning.**
    `list.append`/`dict.get` are documented M4-verbatim ("warnings, never silent") but produced no
    warning. *Fix:* native method calls on statically known array/map receivers carry
-   `CTW-METHOD-UNMAPPED` (new code, exported from `@ctrans/codegen-js`).
+   `CTW-METHOD-UNMAPPED` (new code, exported from `@axion-ct/codegen-js`).
 7. **Parallel-assignment bindings got literal-inferred types that broke Python rebinding.**
    `a, b = 0, 1` then `a, b = b, a + b` failed S2 (`__ctrans_add` returns a union).
    *Fix:* unpack destructures inherit the RHS element type when statically known (annotated

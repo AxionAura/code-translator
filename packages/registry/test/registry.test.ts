@@ -1,6 +1,6 @@
 // Registry v1 structural invariants (docs/dependency-mapping.md §3/§5): unique
 // ids, honest fidelity declarations, unique method (receiver, name) pairs, and
-// lookup determinism. Behavioral usage tests live in @ctrans/codegen-js
+// lookup determinism. Behavioral usage tests live in @axion-ct/codegen-js
 // (registry-methods.test.ts) — a mapping claim without a behavior test is a bug,
 // so every entry here must have a matching emission path exercised there.
 import { describe, expect, it } from "vitest";

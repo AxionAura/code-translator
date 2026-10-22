@@ -10,7 +10,7 @@ import type {
   ModuleImport,
   ModuleInfo,
   SourceSpan,
-} from "@ctrans/core";
+} from "@axion-ct/core";
 
 function childrenAt(node: AstNode, name: string): AstNode[] {
   const value = node.fields[name];

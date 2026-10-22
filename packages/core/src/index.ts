@@ -1,7 +1,7 @@
 // Responsibility (docs/architecture.md §3): semantic layer, module graph, transformation
 // ledger, and pipeline orchestration. Cross-package types and engine interfaces live here
 // (AGENTS.md §3, ADR D-017); implementation packages depend on these, never the reverse.
-export const packageName = "@ctrans/core";
+export const packageName = "@axion-ct/core";
 
 export { CTransError } from "./errors.js";
 export { analyzeModule } from "./semantic.js";

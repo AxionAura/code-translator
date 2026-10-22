@@ -9,8 +9,8 @@ import {
   type LedgerEntry,
   type StageResult,
   type ValidationStageName,
-} from "@ctrans/core";
-import { hashText } from "@ctrans/ai";
+} from "@axion-ct/core";
+import { hashText } from "@axion-ct/ai";
 
 import {
   admittedForRepair,

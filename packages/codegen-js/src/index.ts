@@ -1,7 +1,7 @@
 // Responsibility (docs/architecture.md §3): Python → JavaScript/TypeScript lowering,
 // emission and formatting (M4). Consumes core contracts; parser implementations stay
 // out of this package (layer rules, D-017).
-export const packageName = "@ctrans/codegen-js";
+export const packageName = "@axion-ct/codegen-js";
 
 export { PyToJsTranslator, createPyToJsTranslator, relativeImportSpecifier } from "./translator.js";
 export { TsToJsTranslator, JsToTsTranslator } from "./js-directions.js";

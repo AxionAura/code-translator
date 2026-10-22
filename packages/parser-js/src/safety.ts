@@ -12,7 +12,7 @@
 //    normalized AST yields the true depth, or its failure becomes a structured
 //    error. Bypassing the scan with bracket characters inside strings cannot hide
 //    depth, because the probe measures the real tree.
-import type { AstNode } from "@ctrans/core";
+import type { AstNode } from "@axion-ct/core";
 
 export const MAX_SAFE_NESTING_DEPTH = 2000;
 

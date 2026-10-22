@@ -6,9 +6,9 @@ import { join } from "node:path";
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { analyzeModule, buildModuleGraph } from "@ctrans/core";
-import { createPythonBridgeParser, type PythonBridgeParser } from "@ctrans/parser-py";
-import { createRegistryLookup } from "@ctrans/registry";
+import { analyzeModule, buildModuleGraph } from "@axion-ct/core";
+import { createPythonBridgeParser, type PythonBridgeParser } from "@axion-ct/parser-py";
+import { createRegistryLookup } from "@axion-ct/registry";
 import { createPyToJsTranslator, type PyToJsTranslator } from "../src/translator.js";
 
 let py: PythonBridgeParser;

@@ -3,8 +3,8 @@
 // stay S1-valid (babel re-parse) unless the test asserts an unsupported marker.
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { analyzeModule, buildModuleGraph } from "@ctrans/core";
-import { createOxcJsParser, type OxcJsParser } from "@ctrans/parser-js";
+import { analyzeModule, buildModuleGraph } from "@axion-ct/core";
+import { createOxcJsParser, type OxcJsParser } from "@axion-ct/parser-js";
 import { JsToTsTranslator, TsToJsTranslator } from "../src/js-directions.js";
 
 let js: OxcJsParser;

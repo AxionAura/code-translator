@@ -4,7 +4,7 @@
 // are never repairable.
 import { describe, expect, it } from "vitest";
 
-import type { LedgerEntry, StageResult } from "@ctrans/core";
+import type { LedgerEntry, StageResult } from "@axion-ct/core";
 
 import {
   admittedForRepair,

@@ -1,5 +1,5 @@
-import { CTransError } from "@ctrans/core";
-import type { SourceSpan } from "@ctrans/core";
+import { CTransError } from "@axion-ct/core";
+import type { SourceSpan } from "@axion-ct/core";
 
 export const JS_SYNTAX = "JS-SYNTAX";
 export const JS_SOURCE_LIMIT = "JS-SOURCE-LIMIT";

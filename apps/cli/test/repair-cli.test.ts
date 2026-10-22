@@ -7,7 +7,7 @@ import { join } from "node:path";
 
 import { afterAll, describe, expect, it } from "vitest";
 
-import { DisabledRepairProposer, RepairJournal } from "@ctrans/repair";
+import { DisabledRepairProposer, RepairJournal } from "@axion-ct/repair";
 
 import { summarizeRepair, translateWithRepair } from "../src/repair-run.ts";
 import { runCliCommand } from "../src/main.js";

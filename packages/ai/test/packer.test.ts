@@ -2,7 +2,7 @@
 // contracts only, delimiters around code-as-data, and honest overflow behavior.
 import { describe, expect, it } from "vitest";
 
-import type { AmbiguityRequest } from "@ctrans/core";
+import type { AmbiguityRequest } from "@axion-ct/core";
 
 import { estimateTokens, packAmbiguityPrompt } from "../src/index.js";
 

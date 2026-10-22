@@ -3,13 +3,13 @@
 // JS→TS, and boolean literal inference.
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { analyzeModule, buildModuleGraph } from "@ctrans/core";
+import { analyzeModule, buildModuleGraph } from "@axion-ct/core";
 import {
   createOxcJsParser,
   createOxcSyntaxValidator,
   OracleTypeValidator,
   type OxcJsParser,
-} from "@ctrans/parser-js";
+} from "@axion-ct/parser-js";
 import { JsToTsTranslator, TsToJsTranslator } from "../src/js-directions.js";
 
 let js: OxcJsParser;

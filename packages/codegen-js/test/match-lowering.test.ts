@@ -10,9 +10,9 @@ import {
   type AmbiguityDecision,
   type AmbiguityRequest,
   type AmbiguityResolver,
-} from "@ctrans/core";
-import { createPythonBridgeParser, type PythonBridgeParser } from "@ctrans/parser-py";
-import { createOxcSyntaxValidator } from "@ctrans/parser-js";
+} from "@axion-ct/core";
+import { createPythonBridgeParser, type PythonBridgeParser } from "@axion-ct/parser-py";
+import { createOxcSyntaxValidator } from "@axion-ct/parser-js";
 import { createPyToJsTranslator } from "../src/translator.js";
 
 let py: PythonBridgeParser;

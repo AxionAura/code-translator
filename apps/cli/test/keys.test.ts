@@ -9,7 +9,7 @@ import { afterAll, describe, expect, it } from "vitest";
 
 import { buildAiWiring } from "../src/ai-wiring.ts";
 import { keyFilePath, resolveAiKey } from "../src/keys.ts";
-import { FakeChatModel } from "@ctrans/ai";
+import { FakeChatModel } from "@axion-ct/ai";
 
 const created: string[] = [];
 function tempDir(): string {

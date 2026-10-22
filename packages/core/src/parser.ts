@@ -1,7 +1,7 @@
 import type { ParseResult } from "./parse-result.js";
 
 // Contract every Python front-end implements (D-003: CPython bridge is primary,
-// tree-sitter is the documented fallback). Implementations live in @ctrans/parser-py;
+// tree-sitter is the documented fallback). Implementations live in @axion-ct/parser-py;
 // the pipeline receives them through this interface (D-017).
 export interface PythonParser {
   parse(source: string, options?: PythonParseOptions): Promise<ParseResult>;
@@ -23,7 +23,7 @@ export interface ParserDescription {
 }
 
 // Contract every JS/TS front-end implements (D-004: oxc primary, Babel fallback).
-// Implementations live in @ctrans/parser-js. The language is explicit per parse —
+// Implementations live in @axion-ct/parser-js. The language is explicit per parse —
 // front-ends never guess grammar mode from file extensions.
 export interface JsParser {
   parse(source: string, options: JsParseOptions): Promise<ParseResult>;

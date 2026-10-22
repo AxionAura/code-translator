@@ -1,7 +1,7 @@
 // Responsibility (docs/architecture.md §3): JavaScript/TypeScript front-end — oxc
 // primary (D-004), Babel fallback behind the same JsParser interface, and the pinned
 // typescript@6 semantic oracle (the only compiler-API consumer in the repository).
-export const packageName = "@ctrans/parser-js";
+export const packageName = "@axion-ct/parser-js";
 
 export { BabelJsParser, createBabelJsParser } from "./babel-parser.js";
 export { OxcJsParser, createOxcJsParser } from "./oxc-parser.js";

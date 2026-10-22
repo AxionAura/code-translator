@@ -3,8 +3,8 @@
 // compares the exit code / stdout. It is outside the claim ladder: a skipped or
 // failed smoke stage never raises or lowers the S1-S6 claim, but a failure is
 // reported prominently and the run is not presented as integration-verified.
-import { CTransError } from "@ctrans/core";
-import type { StageResult } from "@ctrans/core";
+import { CTransError } from "@axion-ct/core";
+import type { StageResult } from "@axion-ct/core";
 import {
   SandboxIsolationError,
   SandboxRunner,
@@ -12,7 +12,7 @@ import {
   type SandboxCapabilities,
   type SandboxRunResult,
   type SandboxRunSpec,
-} from "@ctrans/sandbox";
+} from "@axion-ct/sandbox";
 
 import type { SandboxRun } from "./stages.js";
 

@@ -1,5 +1,5 @@
 {
-  "name": "@ctrans/codegen-py",
+  "name": "@axion-ct/codegen-py",
   "version": "0.1.0",
   "private": false,
   "type": "module",
@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@astral-sh/ruff-wasm-nodejs": "0.17.1",
-    "@ctrans/core": "workspace:*"
+    "@axion-ct/core": "workspace:*"
   },
   "license": "MIT",
   "engines": {

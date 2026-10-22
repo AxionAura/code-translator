@@ -6,7 +6,7 @@
 import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { join, resolve, sep } from "node:path";
 
-import { CTransError } from "@ctrans/core";
+import { CTransError } from "@axion-ct/core";
 
 import type { RepairAttemptRecord, RepairStopReason } from "./types.js";
 

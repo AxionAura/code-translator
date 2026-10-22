@@ -48,4 +48,4 @@ export {
   type ValidationCapabilities,
   type ValidationCapabilityOptions,
 } from "./capabilities.js";
-export const packageName = "@ctrans/validator";
+export const packageName = "@axion-ct/validator";

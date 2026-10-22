@@ -7,7 +7,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 
-import { createPyToJsTranslator, PytestToVitestMapper } from "@ctrans/codegen-js";
+import { createPyToJsTranslator, PytestToVitestMapper } from "@axion-ct/codegen-js";
 import {
   CTransError,
   DEFAULT_INTAKE_CAPS,
@@ -31,10 +31,10 @@ import {
   type UnitTranslator,
   type SyntaxValidator,
   type TypeValidator,
-} from "@ctrans/core";
-import { createPythonBridgeParser } from "@ctrans/parser-py";
-import { createOxcSyntaxValidator, OracleTypeValidator } from "@ctrans/parser-js";
-import { MODULE_MAPPINGS, createRegistryLookup } from "@ctrans/registry";
+} from "@axion-ct/core";
+import { createPythonBridgeParser } from "@axion-ct/parser-py";
+import { createOxcSyntaxValidator, OracleTypeValidator } from "@axion-ct/parser-js";
+import { MODULE_MAPPINGS, createRegistryLookup } from "@axion-ct/registry";
 import {
   classifyFailures,
   runRepairLoop,
@@ -44,12 +44,12 @@ import {
   JOURNAL_FILE,
   type RepairProposer,
   type RepairRunResult,
-} from "@ctrans/repair";
+} from "@axion-ct/repair";
 import {
   SandboxIsolationError,
   type ContainerRunOptions,
   type SandboxCapabilities,
-} from "@ctrans/sandbox";
+} from "@axion-ct/sandbox";
 import {
   assembleStages,
   assertStageEvidence,
@@ -64,7 +64,7 @@ import {
   type S7Result,
   type SmokeHarness,
   type TestOutcome,
-} from "@ctrans/validator";
+} from "@axion-ct/validator";
 
 export interface ProjectRepairOptions {
   readonly proposer: RepairProposer;

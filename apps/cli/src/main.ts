@@ -4,16 +4,16 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 
-import { CTransError } from "@ctrans/core";
+import { CTransError } from "@axion-ct/core";
 import {
   detectCapabilities,
   detectContainerCapabilities,
   validateContainerOptions,
   type ContainerRunOptions,
-} from "@ctrans/sandbox";
-import { DisabledRepairProposer } from "@ctrans/repair";
-import type { SmokeHarness } from "@ctrans/validator";
-import { assertStageEvidence, STAGE_ORDER } from "@ctrans/validator";
+} from "@axion-ct/sandbox";
+import { DisabledRepairProposer } from "@axion-ct/repair";
+import type { SmokeHarness } from "@axion-ct/validator";
+import { assertStageEvidence, STAGE_ORDER } from "@axion-ct/validator";
 
 import { buildAiWiring, summarizeAiJournal } from "./ai-wiring.js";
 import {

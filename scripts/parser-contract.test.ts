@@ -1,13 +1,13 @@
 // Cross-frontend parser contract: every front-end (Python bridge, tree-sitter
 // fallback, oxc, Babel) must satisfy the same structural invariants of the
-// @ctrans/core ParseResult — without flattening language-specific ASTs (D-002).
+// @axion-ct/core ParseResult — without flattening language-specific ASTs (D-002).
 import { beforeAll, describe, expect, it } from "vitest";
-import type { AstNode, ParseResult, SourceSpan } from "@ctrans/core";
-import { scanSourceLines } from "@ctrans/core";
-import { createPythonBridgeParser, type PythonBridgeParser } from "@ctrans/parser-py";
-import { createOxcJsParser, type OxcJsParser } from "@ctrans/parser-js";
-import { createBabelJsParser, type BabelJsParser } from "@ctrans/parser-js";
-import { createTreeSitterPythonParser, type TreeSitterPythonParser } from "@ctrans/parser-py";
+import type { AstNode, ParseResult, SourceSpan } from "@axion-ct/core";
+import { scanSourceLines } from "@axion-ct/core";
+import { createPythonBridgeParser, type PythonBridgeParser } from "@axion-ct/parser-py";
+import { createOxcJsParser, type OxcJsParser } from "@axion-ct/parser-js";
+import { createBabelJsParser, type BabelJsParser } from "@axion-ct/parser-js";
+import { createTreeSitterPythonParser, type TreeSitterPythonParser } from "@axion-ct/parser-py";
 
 let pythonBridge: PythonBridgeParser;
 let treeSitter: TreeSitterPythonParser;

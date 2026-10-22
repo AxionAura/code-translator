@@ -2,7 +2,7 @@
 // with provider configuration, and the API key comes from the environment only
 // (`CTRANS_AI_KEY`) — never from flags, config files, or the repository
 // (docs/security.md §4, ADR D-025).
-import { CTransError } from "@ctrans/core";
+import { CTransError } from "@axion-ct/core";
 import {
   AiAmbiguityResolver,
   AiJournal,
@@ -12,8 +12,8 @@ import {
   ResponseCache,
   type AiCaps,
   type ChatModel,
-} from "@ctrans/ai";
-import { AiRepairProposer } from "@ctrans/repair";
+} from "@axion-ct/ai";
+import { AiRepairProposer } from "@axion-ct/repair";
 
 import { resolveAiKey, type AiKeyResolution } from "./keys.js";
 

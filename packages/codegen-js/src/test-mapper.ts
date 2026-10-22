@@ -16,8 +16,8 @@ import type {
   ModuleGraphModel,
   RegistryLookup,
   UnitTranslationContext,
-} from "@ctrans/core";
-import { CTransError, normalizeModuleId, targetPathForModule } from "@ctrans/core";
+} from "@axion-ct/core";
+import { CTransError, normalizeModuleId, targetPathForModule } from "@axion-ct/core";
 
 import { LoweringContext, ScopeStack } from "./context.js";
 import { Emitter } from "./lower.js";
@@ -65,12 +65,12 @@ export interface TestMapperContext {
 
 interface FixtureDef {
   readonly name: string;
-  readonly functionNode: import("@ctrans/core").AstNode;
+  readonly functionNode: import("@axion-ct/core").AstNode;
 }
 
 interface ParametrizeSpec {
   readonly names: readonly string[];
-  readonly cases: readonly import("@ctrans/core").AstNode[];
+  readonly cases: readonly import("@axion-ct/core").AstNode[];
 }
 
 export class PytestToVitestMapper {
@@ -107,7 +107,7 @@ export class PytestToVitestMapper {
     const body = moduleBody(this.unit.parseResult.ast);
     // Pass 1: collect fixtures (this module) and detect unsupported module-level
     // constructs (imports of pytest plugins etc.).
-    const moduleLevelTestClasses: import("@ctrans/core").AstNode[] = [];
+    const moduleLevelTestClasses: import("@axion-ct/core").AstNode[] = [];
     for (const statement of body) {
       if (statement.kind === "FunctionDef" && isFixtureDef(statement)) {
         const name = String(scalar(statement, "name") ?? "");
@@ -370,7 +370,7 @@ export class PytestToVitestMapper {
 
   // ---- tests --------------------------------------------------------------------
 
-  private emitTestFunction(node: import("@ctrans/core").AstNode): void {
+  private emitTestFunction(node: import("@axion-ct/core").AstNode): void {
     const name = String(scalar(node, "name") ?? "");
     const decorators = kids(node, "decorator_list");
     const parametrize = decorators
@@ -491,7 +491,7 @@ export class PytestToVitestMapper {
   }
 
   private renderParamCase(
-    caseNode: import("@ctrans/core").AstNode,
+    caseNode: import("@axion-ct/core").AstNode,
     names: readonly string[],
   ): string {
     // A case is a tuple (or a single value for one param): lower each element.
@@ -507,7 +507,7 @@ export class PytestToVitestMapper {
     return `{ ${names[0]}: ${value} }`;
   }
 
-  private emitTestClass(node: import("@ctrans/core").AstNode): void {
+  private emitTestClass(node: import("@axion-ct/core").AstNode): void {
     const className = String(scalar(node, "name") ?? "");
     const body = kids(node, "body");
     const hasInit = body.some(
@@ -586,7 +586,7 @@ export class PytestToVitestMapper {
   // statement machinery runs; ledger provenance preserved).
   private renderFunction(
     functionName: string,
-    defNode: import("@ctrans/core").AstNode,
+    defNode: import("@axion-ct/core").AstNode,
     params: readonly string[],
     wrapOpen?: string,
     wrapClose?: string,
@@ -607,7 +607,7 @@ export class PytestToVitestMapper {
 
   // ---- statements (test subset) -------------------------------------------------
 
-  private renderTestStatement(node: import("@ctrans/core").AstNode, indent: string): string {
+  private renderTestStatement(node: import("@axion-ct/core").AstNode, indent: string): string {
     switch (node.kind) {
       case "Assert":
         return this.renderAssert(node, indent);
@@ -630,7 +630,7 @@ export class PytestToVitestMapper {
     }
   }
 
-  private renderAssert(node: import("@ctrans/core").AstNode, indent: string): string {
+  private renderAssert(node: import("@axion-ct/core").AstNode, indent: string): string {
     const test = kid(node, "test")!;
     const msg = kid(node, "msg");
     const messageText = msg !== null ? `, ${this.emitter.lowerExpr(msg)}` : "";
@@ -646,7 +646,7 @@ export class PytestToVitestMapper {
     return `${indent}expect(${mapped.text})${messageText};`;
   }
 
-  private mapAssertTest(test: import("@ctrans/core").AstNode): {
+  private mapAssertTest(test: import("@axion-ct/core").AstNode): {
     kind: string;
     text: string;
     rationale: string;
@@ -777,7 +777,7 @@ export class PytestToVitestMapper {
     };
   }
 
-  private renderWith(node: import("@ctrans/core").AstNode, indent: string): string {
+  private renderWith(node: import("@axion-ct/core").AstNode, indent: string): string {
     const items = kids(node, "items");
     // pytest.raises(E) as the sole context manager → toThrow.
     if (items.length === 1) {
@@ -811,8 +811,8 @@ export class PytestToVitestMapper {
   }
 
   private renderRaises(
-    node: import("@ctrans/core").AstNode,
-    contextExpr: import("@ctrans/core").AstNode,
+    node: import("@axion-ct/core").AstNode,
+    contextExpr: import("@axion-ct/core").AstNode,
     indent: string,
   ): string {
     const args = kids(contextExpr, "args");
@@ -871,7 +871,7 @@ export class PytestToVitestMapper {
     ].join("\n");
   }
 
-  private parseParametrize(decorator: import("@ctrans/core").AstNode): ParametrizeSpec | null {
+  private parseParametrize(decorator: import("@axion-ct/core").AstNode): ParametrizeSpec | null {
     if (decorator.kind !== "Call") return null;
     const func = kid(decorator, "func")!;
     if (!(func.kind === "Attribute" && scalar(func, "attr") === "parametrize")) return null;

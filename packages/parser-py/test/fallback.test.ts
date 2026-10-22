@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
 
-import type { AstNode } from "@ctrans/core";
+import type { AstNode } from "@axion-ct/core";
 
 import { createPythonBridgeParser, type PythonBridgeParser } from "../src/client.js";
 import { createTreeSitterPythonParser, type TreeSitterPythonParser } from "../src/fallback.js";

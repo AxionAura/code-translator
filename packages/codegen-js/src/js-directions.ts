@@ -5,7 +5,7 @@
 // `as` assertions where strict TS rejects operators on unknowns — assertions are
 // erased at runtime, so behavior is provably preserved).
 //
-// The input is the normalized ESTree envelope from @ctrans/parser-js (generic
+// The input is the normalized ESTree envelope from @axion-ct/parser-js (generic
 // kinds/fields). Unsupported RUNTIME constructs (enums, namespaces, decorators,
 // parameter properties, legacy decorators) are never dropped: marker + ledger
 // `unsupported`, matching the M4/M6 convention.
@@ -21,7 +21,7 @@ import {
   type UnitEmission,
   type UnitTranslationContext,
   type UnitTranslator,
-} from "@ctrans/core";
+} from "@axion-ct/core";
 import { format } from "prettier";
 
 import { relativeImportSpecifier } from "./translator.js";
@@ -1268,7 +1268,7 @@ abstract class JsPrinterBase {
         const right = this.operandExpression(rightNode, operator);
         // Prettier/JS require explicit parens when ?? mixes with && / || —
         // parenthesize a child logical expression of a different kind.
-        const needsParens = (child: import("@ctrans/core").AstNode): boolean => {
+        const needsParens = (child: import("@axion-ct/core").AstNode): boolean => {
           if (child.kind !== "LogicalExpression") return false;
           return String(child.fields["operator"] ?? "") !== operator;
         };

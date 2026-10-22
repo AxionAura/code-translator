@@ -9,10 +9,10 @@ import {
   buildModuleGraph,
   type AnalyzedUnit,
   type ModuleGraphModel,
-} from "@ctrans/core";
-import { createOxcJsParser, type OxcJsParser } from "@ctrans/parser-js";
+} from "@axion-ct/core";
+import { createOxcJsParser, type OxcJsParser } from "@axion-ct/parser-js";
 import { createJsToPyTranslator } from "../src/index.js";
-import type { UnitTranslator } from "@ctrans/core";
+import type { UnitTranslator } from "@axion-ct/core";
 
 let js: OxcJsParser;
 

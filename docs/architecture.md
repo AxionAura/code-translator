@@ -47,22 +47,22 @@ pnpm workspaces, TypeScript (Node ≥22.18; ≥26 recommended for Temporal-based
 
 ```
 packages/
-  core/          @ctrans/core    — semantic layer, module graph, ledger, pipeline
+  core/          @axion-ct/core    — semantic layer, module graph, ledger, pipeline
                                  — orchestration, config schema, error model, logger
-  parser-py/     @ctrans/parser-py   — CPython bridge (ast+symtable+tokenize → JSON) + tree-sitter fallback
-  parser-js/     @ctrans/parser-js   — oxc-parser wrapper + typescript@6 semantic oracle adapter
-  codegen-js/    @ctrans/codegen-js  — Python AST → TS/JS lowering + emitter (+ helper template)
-  codegen-py/    @ctrans/codegen-py  — JS/TS AST → Python lowering + emitter (+ helper template)
-  registry/      @ctrans/registry    — dependency-mapping data (JSON) + schema + resolver queries
-  validator/     @ctrans/validator   — validation stages, capability detection, reports
-  sandbox/       @ctrans/sandbox     — process execution: hardened spawn, prlimit, bwrap, docker driver
-  repair/        @ctrans/repair      — failure classification, bounded repair loop, change tracking
-  ai/            @ctrans/ai          — ChatModel interface, provider adapters, prompt packer, secret gate
+  parser-py/     @axion-ct/parser-py   — CPython bridge (ast+symtable+tokenize → JSON) + tree-sitter fallback
+  parser-js/     @axion-ct/parser-js   — oxc-parser wrapper + typescript@6 semantic oracle adapter
+  codegen-js/    @axion-ct/codegen-js  — Python AST → TS/JS lowering + emitter (+ helper template)
+  codegen-py/    @axion-ct/codegen-py  — JS/TS AST → Python lowering + emitter (+ helper template)
+  registry/      @axion-ct/registry    — dependency-mapping data (JSON) + schema + resolver queries
+  validator/     @axion-ct/validator   — validation stages, capability detection, reports
+  sandbox/       @axion-ct/sandbox     — process execution: hardened spawn, prlimit, bwrap, docker driver
+  repair/        @axion-ct/repair      — failure classification, bounded repair loop, change tracking
+  ai/            @axion-ct/ai          — ChatModel interface, provider adapters, prompt packer, secret gate
 apps/
   cli/           ctrans              — CLI (commander-style, zero framework religion)
 ```
 
-Dependency direction (acyclic, one-way for types; ADR D-017): `@ctrans/core` is the **base layer** — it owns every cross-package type (`ParseResult`, spans, diagnostics, token/scope shapes, the error base) and the engine interfaces (e.g. `PythonParser`), and orchestrates through those interfaces instead of importing implementations. Implementation packages depend on core; `apps/cli` wires the concrete implementations:
+Dependency direction (acyclic, one-way for types; ADR D-017): `@axion-ct/core` is the **base layer** — it owns every cross-package type (`ParseResult`, spans, diagnostics, token/scope shapes, the error base) and the engine interfaces (e.g. `PythonParser`), and orchestrates through those interfaces instead of importing implementations. Implementation packages depend on core; `apps/cli` wires the concrete implementations:
 
 ```
 cli(4) → repair(3) → {validator(2), ai(2)} → {parser-*, codegen-*, registry, sandbox}(1) → core(0)
@@ -72,7 +72,7 @@ Numbers are layers; a package may depend only on strictly lower layers, enforced
 
 Not a package on purpose: the **Python bridge parser script** (`parser-py/python/bridge.py`) — a dependency-free Python 3.12+ script that the TS side spawns; it is shipped inside the `parser-py` package and version-gated against the interpreter found at runtime.
 
-## 4. Core data model (in `@ctrans/core`)
+## 4. Core data model (in `@axion-ct/core`)
 
 | Artifact | Contents | Notes |
 | --- | --- | --- |
@@ -80,7 +80,7 @@ Not a package on purpose: the **Python bridge parser script** (`parser-py/python
 | `SemanticModel` | scopes, symbol tables, resolved references, `CommonType` annotations (best effort; `unknown` when absent) | built per module from ParseResult + front-end-specific resolvers |
 | `ModuleGraph` | nodes = modules, edges = imports (static + dynamic), SCCs, topological order, entry points, test modules | drives translation order and context packing |
 | `ModuleContract` | export surface: symbol name → signature summary + `CommonType` | the "header" of a module; what dependents are allowed to know |
-| `TransformationLedger` | per-construct entries: `DecisionKind`, mapping id, span, rationale, warnings, AI escalation ref (if any) | schema + validation live in `@ctrans/core` (`src/ledger.ts`); M4's lowering produces entries; serialized to `.ctrans/ledger.json` |
+| `TransformationLedger` | per-construct entries: `DecisionKind`, mapping id, span, rationale, warnings, AI escalation ref (if any) | schema + validation live in `@axion-ct/core` (`src/ledger.ts`); M4's lowering produces entries; serialized to `.ctrans/ledger.json` |
 | `SemanticModel` (M3) | per-module scopes, symbols (declarations + references), conservative `AnnotatedType`s, unresolved references, semantic diagnostics | built by `analyzeModule` (core) from a ParseResult; Python is symtable-driven, JS/TS is built from the normalized AST (language differences modeled explicitly — D-002) |
 | `ModuleGraph` (M3) | modules, resolved/unresolved/external imports, dynamic-import edges, entry/test flags, iterative-Tarjan SCCs, deterministic dependency-first ordering | built by `buildModuleGraph` from parsed inputs; resolution is against the analyzed file set only — never the filesystem, never guessed |
 | `ModuleContract` (M3) | export surface with `CommonType`s, oracle type displays as separate provenance | `extractModuleContract`; Python honors `__all__` else the public-name convention |

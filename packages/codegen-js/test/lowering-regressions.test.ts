@@ -8,10 +8,10 @@ import { join } from "node:path";
 
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { analyzeModule, buildModuleGraph } from "@ctrans/core";
-import { createPythonBridgeParser, type PythonBridgeParser } from "@ctrans/parser-py";
+import { analyzeModule, buildModuleGraph } from "@axion-ct/core";
+import { createPythonBridgeParser, type PythonBridgeParser } from "@axion-ct/parser-py";
 import { createPyToJsTranslator } from "../src/translator.js";
-import { createRegistryLookup } from "@ctrans/registry";
+import { createRegistryLookup } from "@axion-ct/registry";
 
 let py: PythonBridgeParser;
 
@@ -153,7 +153,7 @@ describe("M4 audit regressions: honest lowering", () => {
     ].join("\n");
     const { files } = await translateTs(source);
     // The generated module must pass strict S2 as well as execute correctly.
-    const { OracleTypeValidator } = await import("@ctrans/parser-js");
+    const { OracleTypeValidator } = await import("@axion-ct/parser-js");
     const typeValidator = new OracleTypeValidator();
     const s2 = await typeValidator.validate(
       [...files.entries()]

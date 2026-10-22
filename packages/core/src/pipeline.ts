@@ -1,7 +1,7 @@
 // Pipeline orchestration (docs/translation-pipeline.md): parse → analyze → graph →
 // translate → format → validate → report. Core owns the stages and the claim ladder;
 // language-specific translation and validation are injected through these interfaces
-// (D-017: the CLI wires @ctrans/codegen-js and @ctrans/parser-js implementations).
+// (D-017: the CLI wires @axion-ct/codegen-js and @axion-ct/parser-js implementations).
 import type { LedgerEntry } from "./ledger.js";
 import { validateLedgerEntries } from "./ledger.js";
 import { analyzeModule, type SemanticModel } from "./semantic.js";
@@ -45,9 +45,9 @@ export interface TranslateOptions {
   readonly target: TargetLanguage;
   // D-006 integer policy; default "number" (precision diagnostics), "bigint" exact.
   readonly intMode?: IntMode;
-  // Per-unit translator (implemented by @ctrans/codegen-js for M4's directions).
+  // Per-unit translator (implemented by @axion-ct/codegen-js for M4's directions).
   readonly translateUnit: UnitTranslator;
-  // S1: target syntax validation (implemented with @ctrans/parser-js at the wiring
+  // S1: target syntax validation (implemented with @axion-ct/parser-js at the wiring
   // layer — codegen cannot import parser-js under the layer rules).
   readonly validateSyntax?: SyntaxValidator;
   // S2: type validation for TypeScript targets (oracle-backed); JS targets skip.

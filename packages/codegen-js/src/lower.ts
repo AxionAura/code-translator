@@ -14,8 +14,8 @@ import {
   type AnnotatedType,
   type CommonType,
   type RegistryLookup,
-} from "@ctrans/core";
-import type { AstNode } from "@ctrans/core";
+} from "@axion-ct/core";
+import type { AstNode } from "@axion-ct/core";
 import { analyzeMatchStatement, matchAmbiguityRequest, type MatchPlan } from "./match.js";
 
 import {

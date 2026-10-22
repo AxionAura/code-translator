@@ -3,7 +3,11 @@
 // always visible with a stable, meaningful reason — never a pass, never a failure.
 import { describe, expect, it } from "vitest";
 
-import { SandboxIsolationError, type SandboxRunResult, type SandboxRunSpec } from "@ctrans/sandbox";
+import {
+  SandboxIsolationError,
+  type SandboxRunResult,
+  type SandboxRunSpec,
+} from "@axion-ct/sandbox";
 
 import { runS4, runS5, runS6, runS7, sourceRunnerScript, type BuildTarget } from "../src/index.js";
 

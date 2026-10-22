@@ -6,14 +6,14 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 
-import { CTransError, type StageResult, type ValidationStageName } from "@ctrans/core";
-import { createOxcSyntaxValidator, OracleTypeValidator } from "@ctrans/parser-js";
-import { createPythonBridgeParser } from "@ctrans/parser-py";
+import { CTransError, type StageResult, type ValidationStageName } from "@axion-ct/core";
+import { createOxcSyntaxValidator, OracleTypeValidator } from "@axion-ct/parser-js";
+import { createPythonBridgeParser } from "@axion-ct/parser-py";
 import {
   SandboxIsolationError,
   type ContainerRunOptions,
   type SandboxCapabilities,
-} from "@ctrans/sandbox";
+} from "@axion-ct/sandbox";
 import {
   assembleStages,
   assertStageEvidence,
@@ -27,7 +27,7 @@ import {
   type S7Result,
   type SmokeHarness,
   type TestOutcome,
-} from "@ctrans/validator";
+} from "@axion-ct/validator";
 
 import { runnerToolchain } from "./toolchain.js";
 

@@ -5,7 +5,7 @@
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { dirname, isAbsolute, join, resolve } from "node:path";
 
-import { CTransError } from "@ctrans/core";
+import { CTransError } from "@axion-ct/core";
 
 export interface AiConfig {
   readonly enabled: boolean;

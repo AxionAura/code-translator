@@ -1,6 +1,6 @@
-# @ctrans/parser-js
+# @axion-ct/parser-js
 
-JavaScript/TypeScript front-end for Code Translator: parses JS/TS/JSX/TSX into the shared parser contract defined in `@ctrans/core` (`ParseResult`, spans, comments, module info — see `docs/architecture.md` §4).
+JavaScript/TypeScript front-end for Code Translator: parses JS/TS/JSX/TSX into the shared parser contract defined in `@axion-ct/core` (`ParseResult`, spans, comments, module info — see `docs/architecture.md` §4).
 
 ## Front-ends
 

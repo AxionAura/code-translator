@@ -7,7 +7,7 @@ import {
   type AmbiguityRequest,
   type AmbiguityResolver,
   type LedgerEscalation,
-} from "@ctrans/core";
+} from "@axion-ct/core";
 
 import { AiBudget, estimateTokens, type AiCaps } from "./budget.js";
 import { ResponseCache } from "./cache.js";

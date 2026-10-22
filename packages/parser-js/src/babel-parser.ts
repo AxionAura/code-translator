@@ -11,8 +11,8 @@ import type {
   JsParseOptions,
   ParseResult,
   ParserDescription,
-} from "@ctrans/core";
-import { scanSourceLines } from "@ctrans/core";
+} from "@axion-ct/core";
+import { scanSourceLines } from "@axion-ct/core";
 import { JsParserInternalError, JsParserUnavailableError, JsSyntaxError } from "./errors.js";
 import { extractModuleInfo } from "./module-info.js";
 import { ByteOffsetMap, convertProgram, toSpan } from "./normalize.js";

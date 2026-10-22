@@ -13,7 +13,7 @@ import type {
   PythonParseOptions,
   PythonParser,
   SourceSpan,
-} from "@ctrans/core";
+} from "@axion-ct/core";
 import {
   PythonBridgeCrashError,
   PythonBridgeInternalError,
@@ -26,7 +26,7 @@ import {
   PythonSourceLimitError,
   PythonSyntaxError,
 } from "./errors.js";
-import { byteColumn, scanSourceLines } from "@ctrans/core";
+import { byteColumn, scanSourceLines } from "@axion-ct/core";
 import {
   BRIDGE_PROTOCOL_VERSION,
   validateEnvelope,

@@ -3,8 +3,8 @@
 // statements in JS input, and unsupported-pattern classification.
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { analyzeModule, buildModuleGraph } from "@ctrans/core";
-import { createOxcJsParser, type OxcJsParser } from "@ctrans/parser-js";
+import { analyzeModule, buildModuleGraph } from "@axion-ct/core";
+import { createOxcJsParser, type OxcJsParser } from "@axion-ct/parser-js";
 import { createJsToPyTranslator } from "../src/index.js";
 
 let js: OxcJsParser;

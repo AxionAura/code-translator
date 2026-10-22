@@ -4,10 +4,10 @@
 // nested conditionals, sequence expressions (JS→Py).
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { analyzeModule, buildModuleGraph } from "@ctrans/core";
-import { createOxcJsParser, createOxcSyntaxValidator, type OxcJsParser } from "@ctrans/parser-js";
+import { analyzeModule, buildModuleGraph } from "@axion-ct/core";
+import { createOxcJsParser, createOxcSyntaxValidator, type OxcJsParser } from "@axion-ct/parser-js";
 import { TsToJsTranslator } from "../src/js-directions.js";
-import { createJsToPyTranslator } from "@ctrans/codegen-py";
+import { createJsToPyTranslator } from "@axion-ct/codegen-py";
 
 let js: OxcJsParser;
 
@@ -70,7 +70,7 @@ describe("floor completion: JS→Py", () => {
     expect(output).toContain("if __ctrans_truthy");
     expect(output).toContain("== 1");
     expect(output).toContain("_ctrans_tmp");
-    const { createPythonBridgeParser } = await import("@ctrans/parser-py");
+    const { createPythonBridgeParser } = await import("@axion-ct/parser-py");
     const bridge = await createPythonBridgeParser();
     try {
       await bridge.parse(output, { filename: "out.py" });

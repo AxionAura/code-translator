@@ -1,6 +1,6 @@
 // Shared repair types (roadmap M9). Patches are untrusted model output: the
 // scope is explicit (one emitted unit), and every consumer re-validates it.
-import type { LedgerEscalation, StageResult, ValidationStageName } from "@ctrans/core";
+import type { LedgerEscalation, StageResult, ValidationStageName } from "@axion-ct/core";
 
 import type { ClassifiedFailure, FailureCategory } from "./categories.js";
 

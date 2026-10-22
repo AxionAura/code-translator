@@ -15,7 +15,7 @@ import {
   type ChatModel,
   type ChatRequest,
   type SecretGate,
-} from "@ctrans/ai";
+} from "@axion-ct/ai";
 
 import { applyUnifiedDiff, parseUnifiedDiff, validatePatchPolicy } from "./diff.js";
 import type { RepairProposal, RepairProposer, RepairRequest } from "./types.js";

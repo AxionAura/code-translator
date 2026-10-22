@@ -17,7 +17,7 @@ import { promisify } from "node:util";
 import { beforeAll, describe, expect, it } from "vitest";
 import { format } from "prettier";
 
-import { detectCapabilities } from "@ctrans/sandbox";
+import { detectCapabilities } from "@axion-ct/sandbox";
 
 import { runnerToolchain } from "../apps/cli/src/main.ts";
 import { runProject, type ProjectRunReport } from "../apps/cli/src/project-run.ts";

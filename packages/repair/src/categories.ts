@@ -3,7 +3,7 @@
 // Rules are evidence-based — a skipped stage is never a failure, and
 // infrastructure problems (timeout/spawn/isolation) are never classified as
 // source defects (they are reported as non-repairable infrastructure failures).
-import type { LedgerEntry, StageResult, ValidationStageName } from "@ctrans/core";
+import type { LedgerEntry, StageResult, ValidationStageName } from "@axion-ct/core";
 
 export type FailureCategory =
   | "syntax"

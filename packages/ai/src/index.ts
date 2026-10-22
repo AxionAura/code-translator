@@ -46,4 +46,4 @@ export {
 export { packAmbiguityPrompt, type PackOptions, type PackedPrompt } from "./packer.js";
 export { AiJournal, type JournalEntry, type JournalOutcome } from "./journal.js";
 export { AiAmbiguityResolver, parseOptionId, type AiResolverOptions } from "./resolver.js";
-export const packageName = "@ctrans/ai";
+export const packageName = "@axion-ct/ai";

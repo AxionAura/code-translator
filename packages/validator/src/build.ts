@@ -6,7 +6,7 @@
 // failures (timeout, spawn, container) are skips, never source defects.
 import { join } from "node:path";
 
-import type { StageResult } from "@ctrans/core";
+import type { StageResult } from "@axion-ct/core";
 import {
   SandboxIsolationError,
   SandboxRunner,
@@ -14,7 +14,7 @@ import {
   type SandboxCapabilities,
   type SandboxRunResult,
   type SandboxRunSpec,
-} from "@ctrans/sandbox";
+} from "@axion-ct/sandbox";
 
 import type { SandboxRun } from "./stages.js";
 

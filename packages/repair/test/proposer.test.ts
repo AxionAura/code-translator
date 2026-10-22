@@ -3,7 +3,7 @@
 // outcomes for provider failures, declines, caps, and oversized packets.
 import { describe, expect, it } from "vitest";
 
-import { FakeChatModel, type FakeReply } from "@ctrans/ai";
+import { FakeChatModel, type FakeReply } from "@axion-ct/ai";
 
 import { AiRepairProposer } from "../src/index.js";
 import { EMITTED_TEXT, FIX_DIFF, requestFor } from "./helpers.js";

@@ -2,7 +2,7 @@
 // The ONLY capability an adapter has is `complete()` — no tools, no function
 // calling, no execution (OWASP LLM06 mitigation). Provider specifics stay inside
 // adapters; engine code only sees this interface.
-import { CTransError } from "@ctrans/core";
+import { CTransError } from "@axion-ct/core";
 
 export interface ChatMessage {
   readonly role: "user" | "assistant";

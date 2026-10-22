@@ -16,9 +16,9 @@ import { join } from "node:path";
 
 import { afterAll, describe, expect, it } from "vitest";
 
-import { detectCapabilities } from "@ctrans/sandbox";
-import type { RepairProposal, RepairProposer, RepairRequest } from "@ctrans/repair";
-import { RepairJournal } from "@ctrans/repair";
+import { detectCapabilities } from "@axion-ct/sandbox";
+import type { RepairProposal, RepairProposer, RepairRequest } from "@axion-ct/repair";
+import { RepairJournal } from "@axion-ct/repair";
 
 import { runnerToolchain, runCliCommand } from "../src/main.ts";
 import { runProject, type ProjectRunOptions } from "../src/project-run.ts";

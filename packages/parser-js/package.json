@@ -1,5 +1,5 @@
 {
-  "name": "@ctrans/parser-js",
+  "name": "@axion-ct/parser-js",
   "version": "0.1.0",
   "private": false,
   "type": "module",
@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@babel/parser": "^8.0.6",
-    "@ctrans/core": "workspace:*",
+    "@axion-ct/core": "workspace:*",
     "oxc-parser": "^0.153.0",
     "typescript": "~6.0.3"
   },

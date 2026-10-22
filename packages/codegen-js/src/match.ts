@@ -4,7 +4,7 @@
 // implementations share one analysis here — the pipeline's ambiguity pre-pass
 // (collectMatchAmbiguities) and the lowering (lowerMatch) MUST agree on the
 // offered options, so both consume the same analysis.
-import type { AmbiguityRequest, AstNode, SourceSpan } from "@ctrans/core";
+import type { AmbiguityRequest, AstNode, SourceSpan } from "@axion-ct/core";
 
 export interface LiteralCase {
   readonly kind: "literal";

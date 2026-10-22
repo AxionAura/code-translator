@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { analyzeModule, buildModuleGraph } from "@ctrans/core";
-import { createOxcJsParser, type OxcJsParser } from "@ctrans/parser-js";
+import { analyzeModule, buildModuleGraph } from "@axion-ct/core";
+import { createOxcJsParser, type OxcJsParser } from "@axion-ct/parser-js";
 import { createJsToPyTranslator } from "../src/index.js";
 import { REVERSE_MATRIX } from "./reverse-matrix.data.js";
 
@@ -86,7 +86,7 @@ describe("ReverseMatrix: javascript/typescript → python", () => {
       // S1: the generated Python must re-parse through the bridge (reference
       // grammar) — unsupported entries still emit parseable code (markers are
       // comments), so this runs for ALL entries.
-      const { createPythonBridgeParser } = await import("@ctrans/parser-py");
+      const { createPythonBridgeParser } = await import("@axion-ct/parser-py");
       const bridge = await createPythonBridgeParser();
       try {
         await bridge.parse(output, { filename: "out.py" });

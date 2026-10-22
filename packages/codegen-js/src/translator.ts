@@ -18,10 +18,10 @@ import {
   type UnitEmission,
   type UnitTranslationContext,
   type UnitTranslator,
-} from "@ctrans/core";
+} from "@axion-ct/core";
 import { format } from "prettier";
 
-import { type AmbiguityRequest } from "@ctrans/core";
+import { type AmbiguityRequest } from "@axion-ct/core";
 import { LoweringContext, ScopeStack } from "./context.js";
 import { collectMatchStatements, matchAmbiguityRequest } from "./match.js";
 import {

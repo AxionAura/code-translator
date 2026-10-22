@@ -1,8 +1,8 @@
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { analyzeModule, buildModuleGraph } from "@ctrans/core";
-import { createPythonBridgeParser, type PythonBridgeParser } from "@ctrans/parser-py";
-import { createOxcSyntaxValidator } from "@ctrans/parser-js";
+import { analyzeModule, buildModuleGraph } from "@axion-ct/core";
+import { createPythonBridgeParser, type PythonBridgeParser } from "@axion-ct/parser-py";
+import { createOxcSyntaxValidator } from "@axion-ct/parser-js";
 import { createPyToJsTranslator, type PyToJsTranslator } from "../src/translator.js";
 
 let py: PythonBridgeParser;
@@ -18,7 +18,7 @@ async function translateTs(source: string, filename = "mod.py") {
   const parseResult = await py.parse(source, { filename });
   const unit = { filename, parseResult, model: analyzeModule(parseResult) };
   const graphInputs = { filename: unit.filename, parseResult: unit.parseResult };
-  const { buildModuleGraph } = await import("@ctrans/core");
+  const { buildModuleGraph } = await import("@axion-ct/core");
   const graph = buildModuleGraph([graphInputs]);
   const emission = await tsTranslator.translateUnit(unit, graph);
   const shared = await tsTranslator.finalizeUnits();
@@ -79,7 +79,7 @@ describe("python → typescript translator", () => {
     // kind was null and `list.append` lowered to a raw `.append()` — invalid JS
     // with no ledger warning. The collected field type must drive the registry
     // mapping (NO_REGISTRY keeps the honest unmapped-method warning instead).
-    const { createRegistryLookup } = await import("@ctrans/registry");
+    const { createRegistryLookup } = await import("@axion-ct/registry");
     const parseResult = await py.parse(
       "class Shelf:\n    def __init__(self):\n        self.books = []\n\n    def add(self, book):\n        self.books.append(book)\n        return len(self.books)\n",
       { filename: "mod.py" },
@@ -114,7 +114,7 @@ describe("python → typescript translator", () => {
       { filename: "pkg/main.py" },
     );
     const helper = await py.parse("thing = 1\n", { filename: "pkg/helper.py" });
-    const { buildModuleGraph } = await import("@ctrans/core");
+    const { buildModuleGraph } = await import("@axion-ct/core");
     const graph = buildModuleGraph([
       { filename: "pkg/main.py", parseResult },
       { filename: "pkg/helper.py", parseResult: helper },

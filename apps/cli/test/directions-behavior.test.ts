@@ -1,16 +1,16 @@
 // Reverse-direction behavior evidence (roadmap M7 WS H): for each new direction,
-// the SOURCE and the GENERATED module execute under `@ctrans/sandbox` with the
+// the SOURCE and the GENERATED module execute under `@axion-ct/sandbox` with the
 // same call harness, and their JSON results must match. Source JS and TS execute
 // via node (TS through Node's own type stripping — the reference erasure);
 // generated Python executes via python3; generated TS executes via node stripping.
 // Nothing executes on the host outside the sandbox.
-import { detectCapabilities, SandboxRunner } from "@ctrans/sandbox";
+import { detectCapabilities, SandboxRunner } from "@axion-ct/sandbox";
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { createOxcJsParser, type OxcJsParser } from "@ctrans/parser-js";
-import { analyzeModule, buildModuleGraph, type AnalyzedUnit } from "@ctrans/core";
-import { createJsToPyTranslator } from "@ctrans/codegen-py";
-import { JsToTsTranslator, TsToJsTranslator } from "@ctrans/codegen-js";
+import { createOxcJsParser, type OxcJsParser } from "@axion-ct/parser-js";
+import { analyzeModule, buildModuleGraph, type AnalyzedUnit } from "@axion-ct/core";
+import { createJsToPyTranslator } from "@axion-ct/codegen-py";
+import { JsToTsTranslator, TsToJsTranslator } from "@axion-ct/codegen-js";
 
 let js: OxcJsParser;
 

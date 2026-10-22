@@ -1,6 +1,6 @@
 r"""CTrans Python parse bridge - protocol v1 (docs/decisions.md D-018).
 
-Stdlib-only parser process for @ctrans/parser-py. Reads Python source bytes on
+Stdlib-only parser process for @axion-ct/parser-py. Reads Python source bytes on
 stdin, emits exactly one JSON envelope on stdout. The bridge operates purely on
 the input's *syntax* (ast / symtable / tokenize): it never imports or executes
 user source, never reads user files, and is spawned in isolated mode

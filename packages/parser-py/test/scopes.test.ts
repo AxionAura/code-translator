@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
 
-import type { ScopeInfo } from "@ctrans/core";
+import type { ScopeInfo } from "@axion-ct/core";
 
 import { createPythonBridgeParser, type PythonBridgeParser } from "../src/client.js";
 

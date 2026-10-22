@@ -2,8 +2,8 @@
 // generators here only — the core package itself has no dependency on them (the
 // dependency direction is parsers → core; see ADR D-017).
 import type { ParseResult } from "../src/parse-result.js";
-import { createPythonBridgeParser, type PythonBridgeParser } from "@ctrans/parser-py";
-import { createOxcJsParser, type OxcJsParser } from "@ctrans/parser-js";
+import { createPythonBridgeParser, type PythonBridgeParser } from "@axion-ct/parser-py";
+import { createOxcJsParser, type OxcJsParser } from "@axion-ct/parser-js";
 
 let pyParser: Promise<PythonBridgeParser> | null = null;
 let jsParser: Promise<OxcJsParser> | null = null;

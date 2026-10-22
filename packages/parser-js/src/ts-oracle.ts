@@ -15,8 +15,8 @@ import type {
   TsOracleSourceFile,
   TsTypeAtQuery,
   TsTypeSummary,
-} from "@ctrans/core";
-import { lineIndexOf, scanSourceLines } from "@ctrans/core";
+} from "@axion-ct/core";
+import { lineIndexOf, scanSourceLines } from "@axion-ct/core";
 import { TsOracleVersionError } from "./errors.js";
 import { ByteOffsetMap } from "./normalize.js";
 

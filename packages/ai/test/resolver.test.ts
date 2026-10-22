@@ -3,7 +3,7 @@
 // deterministically; model output can never invent an option.
 import { describe, expect, it } from "vitest";
 
-import type { AmbiguityRequest } from "@ctrans/core";
+import type { AmbiguityRequest } from "@axion-ct/core";
 
 import {
   AiAmbiguityResolver,

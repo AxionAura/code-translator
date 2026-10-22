@@ -34,4 +34,4 @@ export {
   type SandboxRunResult,
   type SandboxRunSpec,
 } from "./runner.js";
-export const packageName = "@ctrans/sandbox";
+export const packageName = "@axion-ct/sandbox";

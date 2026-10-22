@@ -8,7 +8,7 @@ import type {
   LedgerEntry,
   LedgerEscalation,
   TargetLanguage,
-} from "@ctrans/core";
+} from "@axion-ct/core";
 
 export const CTW_TUPLE_ARRAY = "CTW-TUPLE-ARRAY";
 export const CTW_DICT_KEY_COERCION = "CTW-DICT-KEY-COERCION";

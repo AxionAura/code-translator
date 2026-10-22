@@ -5,9 +5,9 @@
 // demand it — executed behavior via the generated runtime.
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { analyzeModule, buildModuleGraph } from "@ctrans/core";
-import { createPythonBridgeParser, type PythonBridgeParser } from "@ctrans/parser-py";
-import { createRegistryLookup } from "@ctrans/registry";
+import { analyzeModule, buildModuleGraph } from "@axion-ct/core";
+import { createPythonBridgeParser, type PythonBridgeParser } from "@axion-ct/parser-py";
+import { createRegistryLookup } from "@axion-ct/registry";
 import { PytestToVitestMapper, type TranslatedTestModule } from "../src/test-mapper.js";
 
 async function translateTest(

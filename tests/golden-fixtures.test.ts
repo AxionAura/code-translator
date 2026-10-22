@@ -12,12 +12,12 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { format } from "prettier";
 
-import type { PipelineInput } from "@ctrans/core";
-import { runPipeline, type TargetLanguage } from "@ctrans/core";
-import { createPyToJsTranslator } from "@ctrans/codegen-js";
-import { createRegistryLookup } from "@ctrans/registry";
-import { createPythonBridgeParser, type PythonParser } from "@ctrans/parser-py";
-import { createOxcSyntaxValidator, OracleTypeValidator } from "@ctrans/parser-js";
+import type { PipelineInput } from "@axion-ct/core";
+import { runPipeline, type TargetLanguage } from "@axion-ct/core";
+import { createPyToJsTranslator } from "@axion-ct/codegen-js";
+import { createRegistryLookup } from "@axion-ct/registry";
+import { createPythonBridgeParser, type PythonParser } from "@axion-ct/parser-py";
+import { createOxcSyntaxValidator, OracleTypeValidator } from "@axion-ct/parser-js";
 
 const FIXTURES_ROOT = new URL("./fixtures/", import.meta.url).pathname;
 const ACCEPT = process.env["FIXTURES_ACCEPT"] === "1";

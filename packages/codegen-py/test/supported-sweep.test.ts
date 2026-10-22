@@ -4,8 +4,8 @@
 // arm set mechanically.
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { analyzeModule, buildModuleGraph } from "@ctrans/core";
-import { createOxcJsParser, type OxcJsParser } from "@ctrans/parser-js";
+import { analyzeModule, buildModuleGraph } from "@axion-ct/core";
+import { createOxcJsParser, type OxcJsParser } from "@axion-ct/parser-js";
 import { createJsToPyTranslator } from "../src/index.js";
 
 let js: OxcJsParser;
@@ -139,7 +139,7 @@ describe("supported-surface sweep (JS/TS → Python)", () => {
       const output = shared.files.find((file) => file.targetPath === "mod.py");
       expect(output, `${entry.id}: no module emitted`).toBeDefined();
       // S1: the bridge is the reference grammar — the emitted module re-parses.
-      const { createPythonBridgeParser } = await import("@ctrans/parser-py");
+      const { createPythonBridgeParser } = await import("@axion-ct/parser-py");
       const bridge = await createPythonBridgeParser();
       try {
         await bridge.parse(output!.content, { filename: "out.py" });

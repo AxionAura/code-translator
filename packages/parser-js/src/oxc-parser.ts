@@ -12,8 +12,8 @@ import type {
   JsParseOptions,
   ParseResult,
   ParserDescription,
-} from "@ctrans/core";
-import { scanSourceLines } from "@ctrans/core";
+} from "@axion-ct/core";
+import { scanSourceLines } from "@axion-ct/core";
 import { BabelJsParser } from "./babel-parser.js";
 import {
   JsParserInternalError,

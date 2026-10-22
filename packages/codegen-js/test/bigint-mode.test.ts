@@ -8,9 +8,9 @@ import { join } from "node:path";
 
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { analyzeModule, buildModuleGraph } from "@ctrans/core";
-import { createPythonBridgeParser, type PythonBridgeParser } from "@ctrans/parser-py";
-import { createRegistryLookup } from "@ctrans/registry";
+import { analyzeModule, buildModuleGraph } from "@axion-ct/core";
+import { createPythonBridgeParser, type PythonBridgeParser } from "@axion-ct/parser-py";
+import { createRegistryLookup } from "@axion-ct/registry";
 import { createPyToJsTranslator, type PyToJsTranslator } from "../src/translator.js";
 
 let py: PythonBridgeParser;
@@ -173,7 +173,7 @@ describe("intMode=bigint: executed behavior vs Python", () => {
   it("executes the generated TypeScript with Python-identical results", async () => {
     const { files } = await translate(tsTranslator, "typescript", workflow);
     // Strict S2 must pass in bigint mode (bigint arithmetic is natively sound).
-    const { OracleTypeValidator: Validator } = await import("@ctrans/parser-js");
+    const { OracleTypeValidator: Validator } = await import("@axion-ct/parser-js");
     const s2 = await new Validator().validate(
       [...files.entries()]
         .filter(([path]) => path.endsWith(".ts"))
@@ -204,7 +204,7 @@ describe("intMode=bigint: executed behavior vs Python", () => {
 
   it("executes the generated JavaScript (type-stripped runtime) identically", async () => {
     const { files } = await translate(jsTranslator, "javascript", workflow);
-    const { createOxcSyntaxValidator: makeValidator } = await import("@ctrans/parser-js");
+    const { createOxcSyntaxValidator: makeValidator } = await import("@axion-ct/parser-js");
     const s1 = await makeValidator().then((validator) =>
       validator.validate(
         [...files.entries()].map(([path, content]) => ({
@@ -266,7 +266,7 @@ describe("intMode=bigint: executed behavior vs Python", () => {
 
   it("runs the S1 validator on bigint-mode TypeScript output", async () => {
     const { files } = await translate(tsTranslator, "typescript", "x = 2 ** 64\n");
-    const { createOxcSyntaxValidator: makeValidator } = await import("@ctrans/parser-js");
+    const { createOxcSyntaxValidator: makeValidator } = await import("@axion-ct/parser-js");
     const s1 = await makeValidator().then((validator) =>
       validator.validate(
         [...files.entries()].map(([path, content]) => ({

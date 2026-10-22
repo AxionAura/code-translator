@@ -1,21 +1,21 @@
 // End-to-end repair against the REAL pipeline: parse Python, translate with
-// @ctrans/codegen-js, corrupt the emitted TypeScript, then let the bounded loop
+// @axion-ct/codegen-js, corrupt the emitted TypeScript, then let the bounded loop
 // repair it using a deterministic FakeChatModel and the real S1/S2 validators.
 // Also pins that the M8 ambiguity path still resolves through the same model
 // contract (no regression from the repair layer).
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { FakeChatModel, AiAmbiguityResolver } from "@ctrans/ai";
+import { FakeChatModel, AiAmbiguityResolver } from "@axion-ct/ai";
 import {
   analyzeModule,
   buildModuleGraph,
   runPipeline,
   type AmbiguityRequest,
   type StageResult,
-} from "@ctrans/core";
-import { createPyToJsTranslator } from "@ctrans/codegen-js";
-import { createOxcSyntaxValidator, OracleTypeValidator } from "@ctrans/parser-js";
-import { createPythonBridgeParser, type PythonBridgeParser } from "@ctrans/parser-py";
+} from "@axion-ct/core";
+import { createPyToJsTranslator } from "@axion-ct/codegen-js";
+import { createOxcSyntaxValidator, OracleTypeValidator } from "@axion-ct/parser-js";
+import { createPythonBridgeParser, type PythonBridgeParser } from "@axion-ct/parser-py";
 
 import {
   AiRepairProposer,

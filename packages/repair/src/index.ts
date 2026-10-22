@@ -51,4 +51,4 @@ export type {
   RepairRunResult,
   RepairStopReason,
 } from "./types.js";
-export const packageName = "@ctrans/repair";
+export const packageName = "@axion-ct/repair";

@@ -8,7 +8,7 @@ import {
   formatCapabilityReport,
   pyrightEntryPath,
   type ValidationCapabilities,
-} from "@ctrans/validator";
+} from "@axion-ct/validator";
 
 import { jsonOutput } from "./output.js";
 import { runnerToolchain } from "./toolchain.js";

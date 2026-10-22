@@ -20,7 +20,7 @@
     "isolatedModules": true,
     "types": ["node"],
     "paths": {
-      "@ctrans/*": ["./packages/*/src/index.ts"]
+      "@axion-ct/*": ["./packages/*/src/index.ts"]
     }
   }
 }

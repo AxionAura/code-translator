@@ -11,7 +11,7 @@ import { join } from "node:path";
 import { promisify } from "node:util";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { detectCapabilities } from "@ctrans/sandbox";
+import { detectCapabilities } from "@axion-ct/sandbox";
 
 import { runnerToolchain } from "../src/main.ts";
 import { runProject, type ProjectRunReport } from "../src/project-run.ts";

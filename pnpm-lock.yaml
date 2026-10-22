@@ -11,28 +11,28 @@ importers:
       '@astral-sh/ruff-wasm-nodejs':
         specifier: 0.17.1
         version: 0.17.1
-      '@ctrans/codegen-js':
+      '@axion-ct/codegen-js':
         specifier: workspace:*
         version: link:packages/codegen-js
-      '@ctrans/codegen-py':
+      '@axion-ct/codegen-py':
         specifier: workspace:*
         version: link:packages/codegen-py
-      '@ctrans/core':
+      '@axion-ct/core':
         specifier: workspace:*
         version: link:packages/core
-      '@ctrans/parser-js':
+      '@axion-ct/parser-js':
         specifier: workspace:*
         version: link:packages/parser-js
-      '@ctrans/parser-py':
+      '@axion-ct/parser-py':
         specifier: workspace:*
         version: link:packages/parser-py
-      '@ctrans/registry':
+      '@axion-ct/registry':
         specifier: workspace:*
         version: link:packages/registry
-      '@ctrans/sandbox':
+      '@axion-ct/sandbox':
         specifier: workspace:*
         version: link:packages/sandbox
-      '@ctrans/validator':
+      '@axion-ct/validator':
         specifier: workspace:*
         version: link:packages/validator
       '@types/node':
@@ -62,34 +62,34 @@ importers:
 
   apps/cli:
     dependencies:
-      '@ctrans/ai':
+      '@axion-ct/ai':
         specifier: workspace:*
         version: link:../../packages/ai
-      '@ctrans/codegen-js':
+      '@axion-ct/codegen-js':
         specifier: workspace:*
         version: link:../../packages/codegen-js
-      '@ctrans/codegen-py':
+      '@axion-ct/codegen-py':
         specifier: workspace:*
         version: link:../../packages/codegen-py
-      '@ctrans/core':
+      '@axion-ct/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@ctrans/parser-js':
+      '@axion-ct/parser-js':
         specifier: workspace:*
         version: link:../../packages/parser-js
-      '@ctrans/parser-py':
+      '@axion-ct/parser-py':
         specifier: workspace:*
         version: link:../../packages/parser-py
-      '@ctrans/registry':
+      '@axion-ct/registry':
         specifier: workspace:*
         version: link:../../packages/registry
-      '@ctrans/repair':
+      '@axion-ct/repair':
         specifier: workspace:*
         version: link:../../packages/repair
-      '@ctrans/sandbox':
+      '@axion-ct/sandbox':
         specifier: workspace:*
         version: link:../../packages/sandbox
-      '@ctrans/validator':
+      '@axion-ct/validator':
         specifier: workspace:*
         version: link:../../packages/validator
       pyright:
@@ -104,7 +104,7 @@ importers:
 
   packages/ai:
     dependencies:
-      '@ctrans/core':
+      '@axion-ct/core':
         specifier: workspace:*
         version: link:../core
       '@secretlint/core':
@@ -119,7 +119,7 @@ importers:
 
   packages/codegen-js:
     dependencies:
-      '@ctrans/core':
+      '@axion-ct/core':
         specifier: workspace:*
         version: link:../core
       prettier:
@@ -131,7 +131,7 @@ importers:
       '@astral-sh/ruff-wasm-nodejs':
         specifier: 0.17.1
         version: 0.17.1
-      '@ctrans/core':
+      '@axion-ct/core':
         specifier: workspace:*
         version: link:../core
 
@@ -139,12 +139,12 @@ importers:
 
   packages/parser-js:
     dependencies:
+      '@axion-ct/core':
+        specifier: workspace:*
+        version: link:../core
       '@babel/parser':
         specifier: ^8.0.6
         version: 8.0.6
-      '@ctrans/core':
-        specifier: workspace:*
-        version: link:../core
       oxc-parser:
         specifier: ^0.153.0
         version: 0.153.0
@@ -154,7 +154,7 @@ importers:
 
   packages/parser-py:
     dependencies:
-      '@ctrans/core':
+      '@axion-ct/core':
         specifier: workspace:*
         version: link:../core
       tree-sitter-python:
@@ -166,41 +166,41 @@ importers:
 
   packages/registry:
     dependencies:
-      '@ctrans/core':
+      '@axion-ct/core':
         specifier: workspace:*
         version: link:../core
 
   packages/repair:
     dependencies:
-      '@ctrans/ai':
+      '@axion-ct/ai':
         specifier: workspace:*
         version: link:../ai
-      '@ctrans/core':
+      '@axion-ct/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
-      '@ctrans/codegen-js':
+      '@axion-ct/codegen-js':
         specifier: workspace:*
         version: link:../codegen-js
-      '@ctrans/parser-js':
+      '@axion-ct/parser-js':
         specifier: workspace:*
         version: link:../parser-js
-      '@ctrans/parser-py':
+      '@axion-ct/parser-py':
         specifier: workspace:*
         version: link:../parser-py
 
   packages/sandbox:
     dependencies:
-      '@ctrans/core':
+      '@axion-ct/core':
         specifier: workspace:*
         version: link:../core
 
   packages/validator:
     dependencies:
-      '@ctrans/core':
+      '@axion-ct/core':
         specifier: workspace:*
         version: link:../core
-      '@ctrans/sandbox':
+      '@axion-ct/sandbox':
         specifier: workspace:*
         version: link:../sandbox
 

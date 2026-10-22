@@ -10,7 +10,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
 
-import type { StageResult } from "@ctrans/core";
+import type { StageResult } from "@axion-ct/core";
 
 const exec = promisify(execFile);
 

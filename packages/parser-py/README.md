@@ -1,6 +1,6 @@
-# @ctrans/parser-py
+# @axion-ct/parser-py
 
-Python front-end for Code Translator: parses Python source into the shared parser contract defined in `@ctrans/core` (`ParseResult`, spans, tokens, scopes — see `docs/architecture.md` §4).
+Python front-end for Code Translator: parses Python source into the shared parser contract defined in `@axion-ct/core` (`ParseResult`, spans, tokens, scopes — see `docs/architecture.md` §4).
 
 ## Front-ends
 

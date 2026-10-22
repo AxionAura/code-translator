@@ -3,7 +3,11 @@
 // S7 is opt-in with bounded harness input.
 import { describe, expect, it } from "vitest";
 
-import { SandboxIsolationError, type SandboxRunResult, type SandboxRunSpec } from "@ctrans/sandbox";
+import {
+  SandboxIsolationError,
+  type SandboxRunResult,
+  type SandboxRunSpec,
+} from "@axion-ct/sandbox";
 
 import { runS4, runS7, type SmokeHarness } from "../src/index.js";
 

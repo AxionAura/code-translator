@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
 
-import type { AstNode, SourceSpan, TokenInfo } from "@ctrans/core";
+import type { AstNode, SourceSpan, TokenInfo } from "@axion-ct/core";
 
 import { createPythonBridgeParser, type PythonBridgeParser } from "../src/client.js";
 

@@ -3,7 +3,7 @@
 // string-matching stderr. All errors extend CTransError for machine-readable codes.
 // Explicit field assignment (not parameter properties): the unbuilt CLI runs
 // sources through Node strip-only mode, which rejects transform-only syntax.
-import { CTransError } from "@ctrans/core";
+import { CTransError } from "@axion-ct/core";
 
 // The sandbox refused/failed to establish its execution boundary.
 export class SandboxIsolationError extends CTransError {

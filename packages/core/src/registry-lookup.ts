@@ -1,5 +1,5 @@
 // D-017 layer injection: the dependency registry lives one layer up
-// (@ctrans/registry); codegen consumes it only through this core-defined lookup
+// (@axion-ct/registry); codegen consumes it only through this core-defined lookup
 // interface, wired by the CLI. The default implementation (no registry wired)
 // reports null for every query — the honest M4 surface (unmapped warnings).
 export type RegistryFidelity = "full" | "partial" | "lossy";

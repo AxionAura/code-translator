@@ -15,7 +15,7 @@ import {
   type CommandProbe,
   type ContainerCapabilities,
   type SandboxCapabilities,
-} from "@ctrans/sandbox";
+} from "@axion-ct/sandbox";
 
 const execFileP = promisify(execFile);
 

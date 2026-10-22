@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
 
-import type { AstNode } from "@ctrans/core";
+import type { AstNode } from "@axion-ct/core";
 
 import { createOxcJsParser, type OxcJsParser } from "../src/oxc-parser.js";
 

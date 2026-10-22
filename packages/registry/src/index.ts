@@ -13,7 +13,7 @@
 //   usage-tested in M5 (`math`, `json`, `sys`, `random`);
 // - the `requests` -> fetch sync-to-async module entry consumed by the M5
 //   async-rewire engine (docs/dependency-mapping.md §6).
-import type { RegistryLookup } from "@ctrans/core";
+import type { RegistryLookup } from "@axion-ct/core";
 import type { SyncAsync } from "./async.js";
 
 export type RegistryFidelity = "full" | "partial" | "lossy";

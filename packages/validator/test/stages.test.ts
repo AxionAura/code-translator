@@ -4,7 +4,7 @@
 // no translated code is executed by these tests.
 import { describe, expect, it } from "vitest";
 
-import type { SandboxRunResult } from "@ctrans/sandbox";
+import type { SandboxRunResult } from "@axion-ct/sandbox";
 
 import {
   runS5,

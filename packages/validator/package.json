@@ -1,5 +1,5 @@
 {
-  "name": "@ctrans/validator",
+  "name": "@axion-ct/validator",
   "version": "0.1.0",
   "private": false,
   "type": "module",
@@ -14,8 +14,8 @@
     "build": "tsc -p tsconfig.build.json"
   },
   "dependencies": {
-    "@ctrans/core": "workspace:*",
-    "@ctrans/sandbox": "workspace:*"
+    "@axion-ct/core": "workspace:*",
+    "@axion-ct/sandbox": "workspace:*"
   },
   "license": "MIT",
   "engines": {

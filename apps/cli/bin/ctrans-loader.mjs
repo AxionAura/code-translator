@@ -8,8 +8,8 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const PACKAGES_ROOT = new URL("../../../packages/", import.meta.url);
 
 export async function resolve(specifier, context, nextResolve) {
-  if (specifier.startsWith("@ctrans/") && !specifier.slice(8).includes("/")) {
-    const name = specifier.slice("@ctrans/".length);
+  if (specifier.startsWith("@axion-ct/") && !specifier.slice("@axion-ct/".length).includes("/")) {
+    const name = specifier.slice("@axion-ct/".length);
     const source = new URL(`${name}/src/index.ts`, PACKAGES_ROOT);
     if (existsSync(fileURLToPath(source))) {
       return { url: pathToFileURL(fileURLToPath(source)).href, shortCircuit: true };

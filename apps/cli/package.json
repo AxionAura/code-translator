@@ -1,5 +1,5 @@
 {
-  "name": "@ctrans/cli",
+  "name": "@axion-ct/cli",
   "version": "0.1.0",
   "private": false,
   "type": "module",
@@ -11,16 +11,16 @@
     "build": "tsc -p tsconfig.build.json"
   },
   "dependencies": {
-    "@ctrans/codegen-js": "workspace:*",
-    "@ctrans/core": "workspace:*",
-    "@ctrans/parser-js": "workspace:*",
-    "@ctrans/parser-py": "workspace:*",
-    "@ctrans/registry": "workspace:*",
-    "@ctrans/sandbox": "workspace:*",
-    "@ctrans/validator": "workspace:*",
-    "@ctrans/codegen-py": "workspace:*",
-    "@ctrans/ai": "workspace:*",
-    "@ctrans/repair": "workspace:*",
+    "@axion-ct/codegen-js": "workspace:*",
+    "@axion-ct/core": "workspace:*",
+    "@axion-ct/parser-js": "workspace:*",
+    "@axion-ct/parser-py": "workspace:*",
+    "@axion-ct/registry": "workspace:*",
+    "@axion-ct/sandbox": "workspace:*",
+    "@axion-ct/validator": "workspace:*",
+    "@axion-ct/codegen-py": "workspace:*",
+    "@axion-ct/ai": "workspace:*",
+    "@axion-ct/repair": "workspace:*",
     "pyright": "1.1.406",
     "typescript": "~6.0.3",
     "vitest": "5.0.3"

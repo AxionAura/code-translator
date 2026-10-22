@@ -3,8 +3,8 @@
 // remaining statement/expression arms both translators share.
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { analyzeModule, buildModuleGraph } from "@ctrans/core";
-import { createOxcJsParser, createOxcSyntaxValidator, type OxcJsParser } from "@ctrans/parser-js";
+import { analyzeModule, buildModuleGraph } from "@axion-ct/core";
+import { createOxcJsParser, createOxcSyntaxValidator, type OxcJsParser } from "@axion-ct/parser-js";
 import { JsToTsTranslator, TsToJsTranslator } from "../src/js-directions.js";
 
 let js: OxcJsParser;

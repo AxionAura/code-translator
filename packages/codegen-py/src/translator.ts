@@ -1,6 +1,6 @@
 // JavaScript/TypeScript → Python translator (roadmap M7 WS B). Deliberate,
 // tested mappings per docs/language-support.md §2 (TS/JS→Py column) over the
-// normalized ESTree envelope from @ctrans/parser-js — never a syntax-level print.
+// normalized ESTree envelope from @axion-ct/parser-js — never a syntax-level print.
 //
 // Policy highlights:
 // - Native operators where semantics match (arithmetic on numbers, `/` is float in
@@ -31,7 +31,7 @@ import {
   type UnitEmission,
   type UnitTranslationContext,
   type UnitTranslator,
-} from "@ctrans/core";
+} from "@axion-ct/core";
 
 import { renderPyRuntime } from "./helpers.js";
 

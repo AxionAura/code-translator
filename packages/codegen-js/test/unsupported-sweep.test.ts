@@ -5,8 +5,8 @@
 // directions exercises every arm mechanically.
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { analyzeModule, buildModuleGraph } from "@ctrans/core";
-import { createOxcJsParser, type OxcJsParser } from "@ctrans/parser-js";
+import { analyzeModule, buildModuleGraph } from "@axion-ct/core";
+import { createOxcJsParser, type OxcJsParser } from "@axion-ct/parser-js";
 import { JsToTsTranslator, TsToJsTranslator } from "../src/js-directions.js";
 
 let js: OxcJsParser;

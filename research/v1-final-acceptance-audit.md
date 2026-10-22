@@ -27,7 +27,7 @@ All commands were run from the repository root at `3ab1cde` unless noted. Exit c
 | Nightly writer | `node scripts/benchmark-nightly.mjs perf` | **exit 0**; wrote the date-stamped result (the generated file was restored to its committed value after the check) |
 | Strict container tests | `pnpm exec vitest run packages/sandbox/test/container.test.ts --reporter=verbose` | **exit 0**, 12/12; argv security, refusal, exit-125 classification, timeout cleanup, and a **real Docker run with `fedora:44`** |
 | Dist entry | `node apps/cli/bin/ctrans-dist.mjs --version`, `check`, `translate` | **exit 0**; version `0.1.0`, translation emitted valid TS |
-| Package contents | `pnpm --filter @ctrans/cli pack …`, `@ctrans/parser-py` pack | **exit 0**; CLI tar has `dist/main.js` + compiled bin; parser-py has `python/bridge.py` |
+| Package contents | `pnpm --filter @axion-ct/cli pack …`, `@axion-ct/parser-py` pack | **exit 0**; CLI tar has `dist/main.js` + compiled bin; parser-py has `python/bridge.py` |
 | Package metadata | script over root + 11 packages | `0.1.0`, MIT, non-private packages, dist exports/files; **OK** |
 | Lockfile | `pnpm install --frozen-lockfile --offline` | **exit 0**, already up to date |
 | Clean clone | `git clone`, `pnpm install`, `pnpm verify`, dist `--version` at `3ab1cde` | **exit 0**; 1087/1087, doc links OK, dist reports `0.1.0` |
@@ -165,14 +165,14 @@ tarballs, the documented release procedure, security claims, and a clean consume
 No publishing, tagging, pushing, or registry mutation was performed.
 
 **High finding: the packaged CLI was missing its runtime toolchain.** In a clean
-`pnpm deploy` of `@ctrans/cli`, `translate --to py`, `doctor`, and project S5
+`pnpm deploy` of `@axion-ct/cli`, `translate --to py`, `doctor`, and project S5
 validation failed with `Cannot find module 'pyright/package.json'` or
 `Cannot find module 'vitest/package.json'`. `pyright`, `vitest`, and `typescript`
 were only root devDependencies; the published CLI dependency graph therefore did
 not contain them. This is release-blocking because JS/TS→Python S2, `doctor`,
 `validate`, and project S5/S6 are core V1 surfaces.
 
-**Fix.** `@ctrans/cli` now declares the pinned `pyright` 1.1.406,
+**Fix.** `@axion-ct/cli` now declares the pinned `pyright` 1.1.406,
 `typescript ~6.0.3`, and `vitest` 5.0.3 runtime dependencies. The sandbox
 toolchain resolver now prefers the pnpm virtual-store root (the node_modules that
 owns `.pnpm`) instead of a package-local link, so mounted paths resolve inside the
@@ -181,14 +181,14 @@ source-mode launchers are development-only. `tests/dist-entry.test.ts` pins the
 runtime dependency declarations and the packaged file list. Commit `16aa56a`.
 
 **Packaging evidence.** All eleven publishable tarballs contain `dist/` (plus
-`python/bridge.py` for `@ctrans/parser-py`), `LICENSE`, and the rewritten
+`python/bridge.py` for `@axion-ct/parser-py`), `LICENSE`, and the rewritten
 `workspace:*` dependencies as `0.1.0`; the CLI bin is mode 0755. The root
 `code-translator` package is `private: true` and is not a release artifact;
 `pnpm -r pack` also produces a root tarball for local inspection, so only the
 eleven named packages may be packed/published.
 
 **Clean-consumer evidence (no network).**
-- `pnpm --filter @ctrans/cli deploy --prod --legacy /tmp/ctrans-deploy3` → **exit 0**.
+- `pnpm --filter @axion-ct/cli deploy --prod --legacy /tmp/ctrans-deploy3` → **exit 0**.
 - Deployed `node bin/ctrans-dist.mjs --version` → `0.1.0`.
 - Deployed `doctor --json` → **exit 0** with required capabilities available.
 - Deployed `translate sample.js --to py` → **exit 0**, claim 3 (S1/S2/S3 pass).
@@ -206,11 +206,27 @@ held: validator 94.94%, sandbox 86.39%; CLI 82.56%, no floor). The targeted
 project/golden-repair suites pass after the toolchain resolver fix.
 
 **External prerequisites (UNVERIFIED).** npm authentication, ownership of the
-`@ctrans` scope, registry availability/policy, 2FA, and the actual publish
-operation were not checked or performed; they require network access and explicit
-authorization. Live gVisor, live keychain retrieval, Windows CredMan, and a full
-strict toolchain image remain unverified.
+then-current `@ctrans` scope (subsequently migrated to `@axion-ct`), registry
+availability/policy, 2FA, and the actual publish operation were not checked or
+performed; they require network access and explicit authorization. Live gVisor,
+live keychain retrieval, Windows CredMan, and a full strict toolchain image remain
+unverified.
 
 **Verdict: READY WITH DOCUMENTED LIMITATIONS.** The release-blocking packaging
 defect is fixed and verified in a clean consumer; remaining publication steps are
 external and require maintainer authorization.
+
+## 11. npm scope migration (2026-10-22)
+
+The `@ctrans` npm organization was unavailable, so the maintainer created
+`@axion-ct`. All eleven package names, internal dependency declarations, imports,
+source loader, TypeScript/Vitest aliases, lockfile entries, tests, and release
+documentation were migrated to `@axion-ct/*`. Version `0.1.0` is unchanged and the
+root `code-translator` package remains private. `@ctrans` was never published.
+
+Verification after migration: `pnpm verify` **exit 0** (110 files, 1091/1091 tests,
+doc links); all eleven packages pack successfully; packed manifests contain no
+`workspace:` or old-scope specifiers, and every internal dependency is
+`@axion-ct/*@0.1.0`; a clean deploy passes `doctor`, JS/TS→Python, and a claim-5
+project S5/S6 run. Migration commit is recorded in `PROJECT_STATE.md` §19.
+No publish, tag, push, or registry mutation occurred.

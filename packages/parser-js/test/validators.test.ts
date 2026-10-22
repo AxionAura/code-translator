@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 
 import { maxAstDepth, maxBracketDepth, MAX_SAFE_NESTING_DEPTH } from "../src/safety.js";
 import { createOxcSyntaxValidator, OracleTypeValidator } from "../src/validators.js";
-import type { AstNode } from "@ctrans/core";
+import type { AstNode } from "@axion-ct/core";
 
 describe("S1 syntax validator", () => {
   it("passes clean files and files with supported helper output", async () => {

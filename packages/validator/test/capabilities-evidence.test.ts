@@ -8,7 +8,7 @@ import type {
   ContainerCapabilities,
   ContainerRuntimeStatus,
   SandboxCapabilities,
-} from "@ctrans/sandbox";
+} from "@axion-ct/sandbox";
 
 import {
   assembleStages,
@@ -20,7 +20,7 @@ import {
   ValidationEvidenceError,
   type ValidationCapabilityOptions,
 } from "../src/index.js";
-import type { StageResult, ValidationStageName } from "@ctrans/core";
+import type { StageResult, ValidationStageName } from "@axion-ct/core";
 
 function sandbox(bwrap = true): SandboxCapabilities {
   return {

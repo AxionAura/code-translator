@@ -11,7 +11,7 @@ import type {
   SymbolFlag,
   TaggedValue,
   TokenInfo,
-} from "@ctrans/core";
+} from "@axion-ct/core";
 
 export const BRIDGE_PROTOCOL_VERSION = 1;
 

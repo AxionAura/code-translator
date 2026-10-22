@@ -6,8 +6,8 @@
 // package __init__.py — namespace packages are out of M4 scope).
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { analyzeModule, buildModuleGraph, type ParseResult } from "@ctrans/core";
-import { createPythonBridgeParser, type PythonBridgeParser } from "@ctrans/parser-py";
+import { analyzeModule, buildModuleGraph, type ParseResult } from "@axion-ct/core";
+import { createPythonBridgeParser, type PythonBridgeParser } from "@axion-ct/parser-py";
 import { createPyToJsTranslator, type PyToJsTranslator } from "../src/translator.js";
 
 let py: PythonBridgeParser;

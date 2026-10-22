@@ -15,9 +15,9 @@ import type {
   PythonParser,
   SourceSpan,
   TokenInfo,
-} from "@ctrans/core";
+} from "@axion-ct/core";
 import { TreeSitterParseError } from "./errors.js";
-import { byteColumn, scanSourceLines } from "@ctrans/core";
+import { byteColumn, scanSourceLines } from "@axion-ct/core";
 
 type WebTreeSitter = typeof import("web-tree-sitter");
 type TSParser = InstanceType<WebTreeSitter["Parser"]>;

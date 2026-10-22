@@ -3,7 +3,7 @@
 // start (unavailable interpreter) or reports an unsupported runtime. The selected
 // parser is always visible in the result (parser.id / parser.fidelity), so this is a
 // recorded downgrade, never a silent switch.
-import type { PythonParser } from "@ctrans/core";
+import type { PythonParser } from "@axion-ct/core";
 import { PythonBridgeParser, type PythonBridgeParserOptions } from "./client.js";
 import { PY_BRIDGE_UNAVAILABLE, PY_RUNTIME_UNSUPPORTED } from "./errors.js";
 import { createTreeSitterPythonParser } from "./fallback.js";

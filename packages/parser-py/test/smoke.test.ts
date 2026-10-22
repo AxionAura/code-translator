@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import { BRIDGE_PROTOCOL_VERSION, packageName } from "../src/index.js";
 
-describe("@ctrans/parser-py package", () => {
+describe("@axion-ct/parser-py package", () => {
   it("keeps its identity export", () => {
-    expect(packageName).toBe("@ctrans/parser-py");
+    expect(packageName).toBe("@axion-ct/parser-py");
   });
 
   it("exposes the public front-end surface", async () => {

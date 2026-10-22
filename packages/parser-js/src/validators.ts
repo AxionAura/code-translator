@@ -2,7 +2,7 @@
 // target files with the same production parser; S2 type-checks TypeScript targets
 // through the pinned TypeScript 6 oracle. Both return honest stage results -
 // `skipped(reason)` when they cannot meaningfully run.
-import type { StageResult, SyntaxValidator, TypeValidator } from "@ctrans/core";
+import type { StageResult, SyntaxValidator, TypeValidator } from "@axion-ct/core";
 import { OxcJsParser, createOxcJsParser } from "./oxc-parser.js";
 import { TypeScriptSemanticOracle } from "./ts-oracle.js";
 

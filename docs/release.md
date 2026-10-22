@@ -2,7 +2,7 @@
 
 Status: **release-ready for a local/distribution review; nothing has been
 published.** All packages are version `0.1.0` under the MIT license. The release is
-a monorepo of eleven packages; the CLI is `@ctrans/cli` with the `ctrans` bin.
+a monorepo of eleven packages; the CLI is `@axion-ct/cli` with the `ctrans` bin.
 
 ## Build
 
@@ -35,11 +35,11 @@ translation phase on the development host; machine-local).
 ## Packaging
 
 ```bash
-pnpm --filter @ctrans/cli pack --pack-destination /tmp/ctrans-pack
+pnpm --filter @axion-ct/cli pack --pack-destination /tmp/ctrans-pack
 ```
 
 Every publishable package contains only `dist/` (plus `python/bridge.py` for
-`@ctrans/parser-py`, which is required at runtime). `@ctrans/cli` contains `dist/`
+`@axion-ct/parser-py`, which is required at runtime). `@axion-ct/cli` contains `dist/`
 and only its compiled bin (`bin/ctrans-dist.mjs`); the source-mode launchers are
 development-only and are excluded from the tarball. Package metadata includes
 `license: MIT`, `engines.node >= 22.18`, and a bin that points at the compiled
@@ -57,11 +57,11 @@ publication command.
 
 The CLI depends on all implementation packages, so publish dependencies first:
 
-1. `@ctrans/core`
-2. `@ctrans/parser-py`, `@ctrans/parser-js`, `@ctrans/registry`, `@ctrans/sandbox`
-3. `@ctrans/codegen-js`, `@ctrans/codegen-py`, `@ctrans/ai`
-4. `@ctrans/validator`, `@ctrans/repair`
-5. `@ctrans/cli`
+1. `@axion-ct/core`
+2. `@axion-ct/parser-py`, `@axion-ct/parser-js`, `@axion-ct/registry`, `@axion-ct/sandbox`
+3. `@axion-ct/codegen-js`, `@axion-ct/codegen-py`, `@axion-ct/ai`
+4. `@axion-ct/validator`, `@axion-ct/repair`
+5. `@axion-ct/cli`
 
 Use the explicit per-package commands and per-package verification steps in
 [publication-plan.md](publication-plan.md). Do **not** use `pnpm -r publish` for
@@ -77,7 +77,7 @@ published by this milestone.
 - Node.js ≥ 22.18.
 - `python3` ≥ 3.12 for the Python front-end and S6/source execution.
 - The pinned `pyright`, `typescript`, and `vitest` toolchain is installed as an
-  `@ctrans/cli` runtime dependency; no separate installation is required.
+  `@axion-ct/cli` runtime dependency; no separate installation is required.
 - `bwrap` for default network-isolated execution with a least-privilege filesystem
   allowlist (otherwise S5/S6/S7 and Python S4 are skipped/refused, not faked);
   `prlimit` is optional; Docker/Podman plus an operator-provided image are required

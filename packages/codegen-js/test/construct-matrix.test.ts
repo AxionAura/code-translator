@@ -1,11 +1,11 @@
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { analyzeModule, buildModuleGraph } from "@ctrans/core";
-import type { ParseResult } from "@ctrans/core";
-import { createPythonBridgeParser, type PythonBridgeParser } from "@ctrans/parser-py";
-import { createOxcSyntaxValidator } from "@ctrans/parser-js";
+import { analyzeModule, buildModuleGraph } from "@axion-ct/core";
+import type { ParseResult } from "@axion-ct/core";
+import { createPythonBridgeParser, type PythonBridgeParser } from "@axion-ct/parser-py";
+import { createOxcSyntaxValidator } from "@axion-ct/parser-js";
 import { createPyToJsTranslator, type PyToJsTranslator } from "../src/translator.js";
-import { createRegistryLookup } from "@ctrans/registry";
+import { createRegistryLookup } from "@axion-ct/registry";
 import { MATRIX } from "./construct-matrix.data.js";
 
 let py: PythonBridgeParser;

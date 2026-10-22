@@ -1,7 +1,7 @@
 // Responsibility (docs/architecture.md §3): Python front-end — CPython bridge
 // (ast/symtable/tokenize via a subprocess, D-003/D-018) with a tree-sitter fallback
-// behind the same @ctrans/core PythonParser interface.
-export const packageName = "@ctrans/parser-py";
+// behind the same @axion-ct/core PythonParser interface.
+export const packageName = "@axion-ct/parser-py";
 
 export { PythonBridgeParser, createPythonBridgeParser } from "./client.js";
 export type { PythonBridgeParserOptions } from "./client.js";

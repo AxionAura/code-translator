@@ -30,10 +30,10 @@ describe("Babel fallback parity", () => {
     expect(babelResult.module!.hasModuleSyntax).toBe(true);
     expect(babelResult.comments.length).toBe(oxcResult.comments.length);
     // Identical byte spans for the function declaration across front-ends.
-    const oxcFn = (oxcResult.ast.fields["body"] as import("@ctrans/core").AstNode[]).find(
+    const oxcFn = (oxcResult.ast.fields["body"] as import("@axion-ct/core").AstNode[]).find(
       (node) => node.kind === "FunctionDeclaration",
     );
-    const babelFn = (babelResult.ast.fields["body"] as import("@ctrans/core").AstNode[]).find(
+    const babelFn = (babelResult.ast.fields["body"] as import("@axion-ct/core").AstNode[]).find(
       (node) => node.kind === "FunctionDeclaration",
     );
     expect(babelFn?.span).toEqual(oxcFn?.span);

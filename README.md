@@ -130,4 +130,6 @@ pnpm test:coverage
 ```
 
 Release status: version `0.1.0`, MIT, compiled `dist` entries, packed contents
-verified; **nothing has been published** (see [docs/release.md](docs/release.md)).
+verified; the eleven release packages use the `@axion-ct/*` scope. **Nothing has
+been published** (see [docs/release.md](docs/release.md) and
+[docs/publication-plan.md](docs/publication-plan.md)).

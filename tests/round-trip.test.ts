@@ -4,14 +4,14 @@
 // harness — the JSON results must match. Known-lossy constructs (f-string format
 // specs, metaclasses, …) are excluded by construction: the workload stays inside
 // the doubly-supported subset (documented, not hidden).
-import { detectCapabilities, SandboxRunner } from "@ctrans/sandbox";
+import { detectCapabilities, SandboxRunner } from "@axion-ct/sandbox";
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { analyzeModule, buildModuleGraph, type AnalyzedUnit } from "@ctrans/core";
-import { createPythonBridgeParser, type PythonBridgeParser } from "@ctrans/parser-py";
-import { createOxcJsParser, type OxcJsParser } from "@ctrans/parser-js";
-import { createPyToJsTranslator } from "@ctrans/codegen-js";
-import { createJsToPyTranslator } from "@ctrans/codegen-py";
+import { analyzeModule, buildModuleGraph, type AnalyzedUnit } from "@axion-ct/core";
+import { createPythonBridgeParser, type PythonBridgeParser } from "@axion-ct/parser-py";
+import { createOxcJsParser, type OxcJsParser } from "@axion-ct/parser-js";
+import { createPyToJsTranslator } from "@axion-ct/codegen-js";
+import { createJsToPyTranslator } from "@axion-ct/codegen-py";
 
 // The round-trip workload: constructs BOTH directions support with matching
 // semantics (arithmetic on numbers, conditionals, counting loops, arrays +

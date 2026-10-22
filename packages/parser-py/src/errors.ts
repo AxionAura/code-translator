@@ -1,5 +1,5 @@
-import { CTransError } from "@ctrans/core";
-import type { SourceSpan } from "@ctrans/core";
+import { CTransError } from "@axion-ct/core";
+import type { SourceSpan } from "@axion-ct/core";
 
 // Machine-readable codes for the Python front-end (AGENTS.md §7). Exported as constants
 // so callers (and the fallback selector) can branch on codes without instanceof chains.

@@ -17,9 +17,9 @@ import {
   ASYNC_BOUNDARY_MODULE,
   NO_REGISTRY,
   type RegistryLookup,
-} from "@ctrans/core";
-import { createPythonBridgeParser, type PythonBridgeParser } from "@ctrans/parser-py";
-import { createRegistryLookup } from "@ctrans/registry";
+} from "@axion-ct/core";
+import { createPythonBridgeParser, type PythonBridgeParser } from "@axion-ct/parser-py";
+import { createRegistryLookup } from "@axion-ct/registry";
 import { createPyToJsTranslator } from "../src/translator.js";
 
 let py: PythonBridgeParser;

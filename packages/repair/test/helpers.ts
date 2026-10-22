@@ -1,7 +1,7 @@
 // Shared fixtures for the repair tests. Deterministic only: no clocks, no
 // network, no providers (FakeChatModel / scripted proposers).
-import { hashText } from "@ctrans/ai";
-import type { LedgerEntry, StageResult, ValidationStageName } from "@ctrans/core";
+import { hashText } from "@axion-ct/ai";
+import type { LedgerEntry, StageResult, ValidationStageName } from "@axion-ct/core";
 
 import { classifyFailures, type ClassifiedFailure } from "../src/categories.js";
 import type { RepairProposal, RepairProposer, RepairRequest } from "../src/types.js";

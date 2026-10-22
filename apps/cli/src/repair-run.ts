@@ -11,7 +11,7 @@ import {
   type AmbiguityResolver,
   type TargetLanguage,
   type TranslationReport,
-} from "@ctrans/core";
+} from "@axion-ct/core";
 import {
   JOURNAL_DIRECTORY,
   JOURNAL_FILE,
@@ -19,7 +19,7 @@ import {
   runRepairLoop,
   type RepairProposer,
   type RepairRunResult,
-} from "@ctrans/repair";
+} from "@axion-ct/repair";
 
 import { runTranslation, writeTranslationArtifacts } from "./translate.js";
 

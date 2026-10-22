@@ -1,4 +1,4 @@
-// S5/S6 validation (roadmap M6 WS D/E): the @ctrans/validator implementations of
+// S5/S6 validation (roadmap M6 WS D/E): the @axion-ct/validator implementations of
 // the test-execution and differential stages. Everything runs through the
 // SandboxRunner — source Python and translated JS are BOTH untrusted.
 //
@@ -12,13 +12,13 @@
 // evidence for the exercised inputs only — never universal equivalence.
 import { join } from "node:path";
 
-import type { StageResult } from "@ctrans/core";
+import type { StageResult } from "@axion-ct/core";
 import {
   SandboxRunner,
   type SandboxCapabilities,
   type SandboxRunResult,
   type SandboxRunSpec,
-} from "@ctrans/sandbox";
+} from "@axion-ct/sandbox";
 
 export type SandboxRun = (spec: SandboxRunSpec) => Promise<SandboxRunResult>;
 
@@ -61,7 +61,7 @@ export interface S5Options {
   readonly rerunFlaky?: boolean;
   // Strict container execution (M10); requires `container`.
   readonly strict?: boolean;
-  readonly container?: import("@ctrans/sandbox").ContainerRunOptions;
+  readonly container?: import("@axion-ct/sandbox").ContainerRunOptions;
   // Test seam: scripted sandbox executions (no process spawn).
   readonly run?: SandboxRun;
 }
@@ -363,7 +363,7 @@ export interface S6Options {
   readonly pythonPath: string;
   readonly timeoutMs?: number;
   readonly strict?: boolean;
-  readonly container?: import("@ctrans/sandbox").ContainerRunOptions;
+  readonly container?: import("@axion-ct/sandbox").ContainerRunOptions;
   readonly run?: SandboxRun;
 }
 

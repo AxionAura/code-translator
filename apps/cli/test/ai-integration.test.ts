@@ -6,12 +6,12 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, afterEach, describe, expect, it } from "vitest";
 
-import { FakeChatModel, type ChatModel } from "@ctrans/ai";
+import { FakeChatModel, type ChatModel } from "@axion-ct/ai";
 
 import { buildAiWiring, summarizeAiJournal } from "../src/ai-wiring.ts";
 import { runCliCommand } from "../src/main.ts";
 import { checkPath, translatePath } from "../src/translate.ts";
-import type { AmbiguityResolver } from "@ctrans/core";
+import type { AmbiguityResolver } from "@axion-ct/core";
 
 const dirs: string[] = [];
 const originalFetch = globalThis.fetch;

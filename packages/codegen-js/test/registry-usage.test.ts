@@ -7,9 +7,9 @@ import { join } from "node:path";
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { analyzeModule, buildModuleGraph } from "@ctrans/core";
-import { createPythonBridgeParser, type PythonBridgeParser } from "@ctrans/parser-py";
-import { createRegistryLookup } from "@ctrans/registry";
+import { analyzeModule, buildModuleGraph } from "@axion-ct/core";
+import { createPythonBridgeParser, type PythonBridgeParser } from "@axion-ct/parser-py";
+import { createRegistryLookup } from "@axion-ct/registry";
 import { createPyToJsTranslator, type PyToJsTranslator } from "../src/translator.js";
 
 let py: PythonBridgeParser;
@@ -43,7 +43,7 @@ async function translateAndWrite(source: string, name?: string): Promise<LooseMo
   const files = new Map<string, string>();
   for (const file of [...emission.files, ...shared.files]) files.set(file.targetPath, file.content);
   // S1: the emitted output must re-parse.
-  const { createOxcSyntaxValidator: makeValidator } = await import("@ctrans/parser-js");
+  const { createOxcSyntaxValidator: makeValidator } = await import("@axion-ct/parser-js");
   const validator = await makeValidator();
   const s1 = await validator.validate(
     [...files.entries()].map(([path, content]) => ({

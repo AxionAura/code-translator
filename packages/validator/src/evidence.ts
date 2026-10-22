@@ -8,7 +8,7 @@ import {
   type ClaimLevel,
   type StageResult,
   type ValidationStageName,
-} from "@ctrans/core";
+} from "@axion-ct/core";
 
 export class ValidationEvidenceError extends CTransError {
   readonly issues: readonly string[];

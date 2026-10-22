@@ -6,7 +6,7 @@
 // core construct cannot fit, return null (an honest "needs more context").
 import { createHash } from "node:crypto";
 
-import type { AmbiguityRequest } from "@ctrans/core";
+import type { AmbiguityRequest } from "@axion-ct/core";
 
 import { estimateTokens } from "./budget.js";
 

@@ -2,7 +2,7 @@
 // when explicitly allowed and oxc cannot be loaded. The selected parser is always
 // visible in result metadata (parser.id), so this is a recorded downgrade, never a
 // silent switch.
-import type { CTransError, JsParser } from "@ctrans/core";
+import type { CTransError, JsParser } from "@axion-ct/core";
 import { BabelJsParser } from "./babel-parser.js";
 import { JS_PARSER_UNAVAILABLE } from "./errors.js";
 import { OxcJsParser } from "./oxc-parser.js";

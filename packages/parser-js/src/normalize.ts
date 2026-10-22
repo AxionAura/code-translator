@@ -12,7 +12,7 @@ import {
   type AstValue,
   type SourceLines,
   type SourceSpan,
-} from "@ctrans/core";
+} from "@axion-ct/core";
 
 const SKIPPED_KEYS = new Set([
   "start",

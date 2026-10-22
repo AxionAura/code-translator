@@ -6,12 +6,12 @@ import { mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { CTransError, runPipeline } from "@ctrans/core";
-import { createPyToJsTranslator, JsToTsTranslator } from "@ctrans/codegen-js";
-import { createOxcJsParser, createOxcSyntaxValidator } from "@ctrans/parser-js";
-import { createPythonBridgeParser } from "@ctrans/parser-py";
-import { detectCapabilities } from "@ctrans/sandbox";
-import type { StageResult } from "@ctrans/core";
+import { CTransError, runPipeline } from "@axion-ct/core";
+import { createPyToJsTranslator, JsToTsTranslator } from "@axion-ct/codegen-js";
+import { createOxcJsParser, createOxcSyntaxValidator } from "@axion-ct/parser-js";
+import { createPythonBridgeParser } from "@axion-ct/parser-py";
+import { detectCapabilities } from "@axion-ct/sandbox";
+import type { StageResult } from "@axion-ct/core";
 
 import { runProject } from "./project-run.js";
 import { runnerToolchain } from "./toolchain.js";

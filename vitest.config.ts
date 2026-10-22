@@ -9,16 +9,16 @@ export default defineConfig({
   resolve: {
     // Tests exercise sources; package "exports" point at dist for the release build.
     alias: {
-      "@ctrans/core": workspaceSource("core"),
-      "@ctrans/parser-py": workspaceSource("parser-py"),
-      "@ctrans/parser-js": workspaceSource("parser-js"),
-      "@ctrans/codegen-js": workspaceSource("codegen-js"),
-      "@ctrans/codegen-py": workspaceSource("codegen-py"),
-      "@ctrans/registry": workspaceSource("registry"),
-      "@ctrans/sandbox": workspaceSource("sandbox"),
-      "@ctrans/validator": workspaceSource("validator"),
-      "@ctrans/ai": workspaceSource("ai"),
-      "@ctrans/repair": workspaceSource("repair"),
+      "@axion-ct/core": workspaceSource("core"),
+      "@axion-ct/parser-py": workspaceSource("parser-py"),
+      "@axion-ct/parser-js": workspaceSource("parser-js"),
+      "@axion-ct/codegen-js": workspaceSource("codegen-js"),
+      "@axion-ct/codegen-py": workspaceSource("codegen-py"),
+      "@axion-ct/registry": workspaceSource("registry"),
+      "@axion-ct/sandbox": workspaceSource("sandbox"),
+      "@axion-ct/validator": workspaceSource("validator"),
+      "@axion-ct/ai": workspaceSource("ai"),
+      "@axion-ct/repair": workspaceSource("repair"),
     },
   },
   test: {

@@ -23,7 +23,7 @@ Code Translator translates Python ↔ JavaScript ↔ TypeScript at file and proj
 ## 3. Architecture rules
 
 - Package dependency direction is acyclic and fixed (`docs/architecture.md` §5). Introducing a cycle or a bypass (reaching into another package's internals) requires an ADR.
-- All cross-package data crosses as typed interfaces defined in `@ctrans/core`.
+- All cross-package data crosses as typed interfaces defined in `@axion-ct/core`.
 - **No universal AST IR** (decision D-002): source ASTs stay source-shaped; cross-language sharing happens only through the Semantic Layer (types, symbols, module graph, ledger). Do not "simplify" by merging language ASTs.
 - Every translation decision must be recorded in the Transformation Ledger with a `DecisionKind` (`deterministic | semantic | ambiguous | unsupported`). A construct may never be emitted without a ledger entry.
 - Unsupported constructs must never be silently dropped or stubbed with fake behavior; they produce explicit markers + warnings and count as failures in reports.
@@ -36,7 +36,7 @@ Code Translator translates Python ↔ JavaScript ↔ TypeScript at file and proj
 - New language behavior = new fixture. Bug fix = regression fixture first (red), then fix (green).
 - Golden fixtures live under `tests/fixtures/` with the `input/`/`expected/`/`manifest.json` layout defined in `docs/testing.md`. Expected outputs are normalized through canonical formatters (Prettier / `ruff format`) before diffing.
 - No skipped/`.only` tests may be committed. A persistent skip requires an ADR note.
-- Coverage floors: `@ctrans/core` ≥ 85% lines; parser/codegen packages ≥ 90% lines (measured from M4 onward).
+- Coverage floors: `@axion-ct/core` ≥ 85% lines; parser/codegen packages ≥ 90% lines (measured from M4 onward).
 - Tests must be deterministic: no network, no real AI providers, no wall-clock dependence. Sandbox integration tests must tolerate absent optional tools (bwrap/docker) via capability detection.
 
 ## 5. Dependency rules
@@ -49,7 +49,7 @@ Code Translator translates Python ↔ JavaScript ↔ TypeScript at file and proj
 
 ## 6. Security rules
 
-- User source code is untrusted data. Parsing is safe; **execution is not**. All execution of source or translated code goes through `@ctrans/sandbox` (hardened spawn; optional bwrap/docker isolation). Never shell out with `shell: true`, never interpolate user data into command strings.
+- User source code is untrusted data. Parsing is safe; **execution is not**. All execution of source or translated code goes through `@axion-ct/sandbox` (hardened spawn; optional bwrap/docker isolation). Never shell out with `shell: true`, never interpolate user data into command strings.
 - Sandbox defaults: no network, temp cwd, whitelisted env, wall-clock timeout, captured stdio, output size caps.
 - Never execute install lifecycle scripts (`pip install`, `npm install`) of translated projects without an explicit user-consent flag.
 - Secret scanning (embedded, MIT-licensed) runs **before** any content is sent to an AI provider. The scan is a hard gate.

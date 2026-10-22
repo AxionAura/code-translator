@@ -7,7 +7,7 @@
 import { mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
 
-import { MODULE_MAPPINGS, createRegistryLookup } from "@ctrans/registry";
+import { MODULE_MAPPINGS, createRegistryLookup } from "@axion-ct/registry";
 import {
   directionFor,
   runPipeline,
@@ -22,16 +22,16 @@ import {
   type SyntaxValidator,
   type TargetLanguage,
   type UnitTranslator,
-} from "@ctrans/core";
-import { createPyToJsTranslator, JsToTsTranslator, TsToJsTranslator } from "@ctrans/codegen-js";
-import { createJsToPyTranslator } from "@ctrans/codegen-py";
-import { createPythonBridgeParser, type PythonBridgeParser } from "@ctrans/parser-py";
+} from "@axion-ct/core";
+import { createPyToJsTranslator, JsToTsTranslator, TsToJsTranslator } from "@axion-ct/codegen-js";
+import { createJsToPyTranslator } from "@axion-ct/codegen-py";
+import { createPythonBridgeParser, type PythonBridgeParser } from "@axion-ct/parser-py";
 import {
   createOxcJsParser,
   createOxcSyntaxValidator,
   OracleTypeValidator,
-} from "@ctrans/parser-js";
-import { PyrightTypeValidator, pyrightEntryPath } from "@ctrans/validator";
+} from "@axion-ct/parser-js";
+import { PyrightTypeValidator, pyrightEntryPath } from "@axion-ct/validator";
 
 export interface CheckOutcome {
   readonly report: PipelineResult["report"];

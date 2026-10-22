@@ -3,13 +3,13 @@
 // output re-parses (S1) — plus strict S2 for the TS output (honest types).
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { analyzeModule, buildModuleGraph } from "@ctrans/core";
+import { analyzeModule, buildModuleGraph } from "@axion-ct/core";
 import {
   createOxcJsParser,
   createOxcSyntaxValidator,
   OracleTypeValidator,
   type OxcJsParser,
-} from "@ctrans/parser-js";
+} from "@axion-ct/parser-js";
 import { JsToTsTranslator, TsToJsTranslator } from "../src/js-directions.js";
 
 let js: OxcJsParser;
