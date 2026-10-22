@@ -63,10 +63,14 @@ The CLI depends on all implementation packages, so publish dependencies first:
 4. `@ctrans/validator`, `@ctrans/repair`
 5. `@ctrans/cli`
 
-`pnpm -r publish --access public` may work with a logged-in npm account, but the
-exact registry/auth policy is an operator decision. **Do not publish, upload, or
-tag a release without explicit authorization.** No release has been published by
-this milestone.
+Use the explicit per-package commands and per-package verification steps in
+[publication-plan.md](publication-plan.md). Do **not** use `pnpm -r publish` for
+this release: explicit commands make the dependency order and stop point
+unambiguous, and avoid recursive operations that include the private root.
+
+The exact registry/auth policy remains an operator decision. **Do not publish,
+upload, or tag a release without explicit authorization.** No release has been
+published by this milestone.
 
 ## Runtime requirements
 

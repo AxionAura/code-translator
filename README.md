@@ -102,6 +102,7 @@ The CLI prints the claim-ladder level (what validation actually proved), per-fil
 | [docs/security-review-checklist.md](docs/security-review-checklist.md) | Executed security review with per-threat evidence and residual risks |
 | [docs/configuration.md](docs/configuration.md) | `ctrans.config.json` schema, discovery, precedence |
 | [docs/release.md](docs/release.md) | v0.1.0 build/packaging/publishing instructions and limits |
+| [docs/publication-plan.md](docs/publication-plan.md) | Eleven-package publication order, preflight evidence, and authorization boundary |
 | [docs/testing.md](docs/testing.md) | Test strategy and fixture system (`input/` vs `expected/`) |
 | [docs/benchmarks.md](docs/benchmarks.md) | Benchmark framework and metrics |
 | [docs/decisions.md](docs/decisions.md) | Architecture decision records (ADR log) |
