@@ -1,11 +1,12 @@
 # V1 publication plan (`0.1.0`)
 
-Status: **preflight prepared, not executed.** Nothing has been published, tagged,
-or uploaded. Publication requires explicit maintainer authorization and npm
-credentials with publish rights to the `@axion-ct` scope.
+Status: **preflight complete, awaiting explicit publish authorization.** Nothing has
+been published, tagged, or uploaded. The authenticated npm account is
+`code-translator`, which is the **owner** of `@axion-ct`; no publish command has
+been executed.
 
-Prepared from `main` after the 2026-10-22 scope migration and parser-py packaging
-fixes (commits `3918946`, `70d774a`); clean working tree, no tags, no remotes.
+Prepared from `main` at `0f18e12` (clean working tree, no tags, no remotes). The
+scope migration and parser-py packaging fixes are included (`3918946`, `70d774a`).
 
 ## 0. Scope migration
 
@@ -39,24 +40,31 @@ The root package `code-translator` is `private: true` and is **not** a release
 artifact. Do not use `pnpm -r pack` as a publication step: it also produces a
 local tarball of the private root. Pack only the eleven named packages.
 
+No package declares `publishConfig`; scoped packages default to restricted
+access, so the `--access public` flag in every publish command is mandatory. The
+packages also omit `description`, `repository`, and `homepage`; these are registry
+presentation metadata, not publish blockers, and cannot be filled accurately
+without a maintainer-provided repository URL.
+
 ## 2. Preflight results (2026-10-22)
 
 | Check | Result |
 | --- | --- |
-| Git state | `main` after the scope-migration commit; clean tree; no tags or remotes |
+| Git state | `main` at `0f18e12`; clean tree; no tags or remotes |
 | Lockfile | `pnpm install --frozen-lockfile --offline --ignore-scripts` → **exit 0** |
 | Full verification | `pnpm verify` → **exit 0**; 110 files, 1091/1091 tests; doc links OK |
 | Package packing | All eleven `pnpm --filter <pkg> pack` commands → **exit 0** |
 | Tarball metadata | Every tarball has `package.json`, `LICENSE`, `dist/`; `parser-py` contains only `python/bridge.py` (no `__pycache__` bytecode); no `workspace:` or old-scope specs remain |
 | CLI tarball | Contains only `dist/`, `bin/ctrans-dist.mjs` (mode 0755), `package.json`, `LICENSE`; source-mode launchers excluded |
 | Version consistency | All eleven packages are `0.1.0`; every internal dependency is `@axion-ct/*@0.1.0` |
+| Dependency order | Validated: every internal dependency appears earlier in the planned order; no cycles or unlisted packages |
 | Registry URL | `https://registry.npmjs.org/` |
 | Registry reachability | `npm ping` → **exit 0** |
-| npm authentication | `npm whoami` → **exit 1, `ENEEDAUTH`** — this machine is not logged in |
-| Organization | Maintainer reports `@axion-ct` was created; ownership/publish permission is **UNVERIFIED** here |
-| Scope ownership / publish permission | **UNVERIFIED** — requires authenticated access to the `@axion-ct` scope |
-| Package names | All eleven `npm view <pkg> version` calls returned **404**; they are not publicly visible at check time. A 404 does not prove scope ownership. |
-| Publish-time 2FA/OTP | **UNVERIFIED** — requires authenticated account access |
+| npm authentication | `npm whoami` → **exit 0, account `code-translator`** |
+| Organization | `npm org ls axion-ct code-translator --json` → **role `owner`** |
+| Scope publish permission | **Appears authorized** (organization owner); exact registry enforcement is only proven by an actual publish, which was not attempted |
+| Package names | All eleven `npm view <pkg> version` calls returned **404**; they are not publicly visible at check time |
+| Publish-time 2FA/OTP | **Not enabled** (`npm profile get --json` reports `tfa: false`); no OTP is expected. Enabling 2FA is recommended before publication. |
 
 The public registry was checked read-only. No credentials were read, printed,
 stored, or modified.
@@ -77,6 +85,12 @@ All must be true; otherwise stop.
    limitations.
 6. No release tag exists. Do not create one until publication and the post-publish
    smoke test succeed.
+
+**Current status (2026-10-22):** items 1–4 and 6 are verified; npm authentication
+is active as `code-translator` (owner). Two-factor authentication is **not**
+enabled on the account; enabling it is recommended before the first publication.
+Item 5 — explicit maintainer approval of the version, package set, and documented
+limitations — is the remaining gate.
 
 ## 4. Publish order
 
@@ -162,5 +176,6 @@ execution and sandboxed validation depend on the operator environment
 
 This document is a plan only. Executing any publish, dist-tag, unpublish,
 deprecation, tag, push, or GitHub release operation requires explicit maintainer
-authorization. The preflight checks above did not publish or mutate registry
-state.
+authorization. Authentication as an organization owner establishes technical
+access, not approval to release. The preflight checks above did not publish or
+mutate registry state.

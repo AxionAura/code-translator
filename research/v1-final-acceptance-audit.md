@@ -232,3 +232,32 @@ project S5/S6 run. Migration commit: `3918946`. A packaging follow-up (`70d774a`
 restricts `@axion-ct/parser-py` to `python/bridge.py`, excluding a stale
 `__pycache__` bytecode file found during tarball inspection. No publish, tag,
 push, or registry mutation occurred.
+
+## 12. Final npm release preflight (2026-10-22)
+
+Checked at `main` / `0f18e12` with a clean working tree, no tags, and no remotes.
+
+- **Authentication:** `npm whoami` → `code-translator`.
+- **Organization access:** `npm org ls axion-ct code-translator --json` → role
+  `owner`. The account therefore appears authorized to publish public packages
+  under `@axion-ct`; actual registry enforcement is only proven by a real publish,
+  which was not attempted.
+- **2FA:** `npm profile get --json` reports `tfa: false`; no OTP is configured.
+  Enabling 2FA is recommended before publication.
+- **Package names:** all eleven `npm view <pkg> version` calls returned 404, so
+  they remain unpublished.
+- **Metadata/packing:** all eleven packages are `0.1.0`, MIT, public, and use
+  `@axion-ct/*`; every packed internal dependency is `@axion-ct/*@0.1.0`; no
+  `workspace:`, old-scope, generated-cache, test, source, or credential files are
+  present. `parser-py` ships only `python/bridge.py`.
+- **Verification:** `pnpm verify` **exit 0** (110 files, 1091/1091 tests, doc
+  links); dependency order is topologically valid.
+- **Publish configuration:** no package declares `publishConfig`; scoped packages
+  default to restricted, so `--access public` is mandatory and included in the
+  planned per-package commands. `description`/`repository`/`homepage` are absent;
+  these are presentation metadata, not blockers, and require a maintainer-provided
+  repository URL.
+
+Remaining gate: **explicit maintainer authorization** to execute the publication
+plan. No package was published, tagged, pushed, or uploaded, and no registry state
+was changed.
