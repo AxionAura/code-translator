@@ -1,12 +1,29 @@
 # V1 publication plan (`0.1.0`)
 
-Status: **publication authorized and attempted; blocked at the first package by
-npm EOTP. 0 of 11 packages published; no registry mutation.** The authenticated
-npm account is `code-translator`, owner of `@axion-ct`, with 2FA enabled in
-`auth-and-writes` mode. Recovery requires a human-operated interactive terminal;
-this automation session has no TTY. No tag or push was performed.
+Status: **published and verified.** All eleven `@axion-ct/*` packages are live at
+`0.1.0`; registry metadata, CLI smoke tests, and the full verification suite passed.
+See [release-report-v0.1.0.md](release-report-v0.1.0.md). No package was
+republished during post-publication verification.
 
-## Publication attempt (2026-10-22)
+## Published state (2026-10-22)
+
+- All eleven packages: version `0.1.0`, `dist.integrity` present,
+  `latest=0.1.0`, internal dependencies `@axion-ct/*@0.1.0`.
+- `pnpm verify`: **exit 0**; 110 files, 1091/1091 tests.
+- Published CLI: `--help`, `--version`, isolated install, `doctor`, all six
+  translation directions, and a claim-5 sandboxed project run passed.
+- Registry note: a `0.0.0-stage` version is visible on each package as npm
+  staged-publication metadata; `latest` remains `0.1.0`. No registry mutation was
+  performed to remove it.
+- Annotated tag `v0.1.0` is created at this report's commit after checks pass. No
+  push was performed (no remote is configured).
+
+## Historical pre-publication attempts (superseded)
+
+The sections below record the initial EOTP failures before publication. They are
+retained as audit history and do not describe the current release state.
+
+### Publication attempt (2026-10-22, historical)
 
 - Preflight at `main`/`d396f61`: clean tree; `pnpm verify` exit 0 (110 files,
   1091/1091 tests); all eleven tarballs rebuilt and inspected.
@@ -23,7 +40,7 @@ this automation session has no TTY. No tag or push was performed.
   Re-run the preflight and availability check before resuming; never republish an
   existing version.
 
-### EOTP recovery check (2026-10-22)
+### EOTP recovery check (2026-10-22, historical)
 
 - Git: clean `main` at `1c9c651`; no tags or remotes.
 - `npm whoami` → `code-translator`.
@@ -104,7 +121,7 @@ without a maintainer-provided repository URL.
 The public registry was checked read-only. No credentials were read, printed,
 stored, or modified.
 
-## 3. Preconditions before the first publish
+## 3. Preconditions for publication
 
 All must be true; otherwise stop.
 
@@ -121,14 +138,15 @@ All must be true; otherwise stop.
 6. No release tag exists. Do not create one until publication and the post-publish
    smoke test succeed.
 
-**Current status (2026-10-22):** items 1–4 and 6 are verified; npm authentication
-is active as `code-translator` (owner), and 2FA is enabled in `auth-and-writes`
-mode. Item 5 — explicit maintainer approval of the version, package set, and
-documented limitations — is the sole remaining gate.
+**Status for v0.1.0 (2026-10-22):** all six conditions were satisfied, all eleven
+packages were published, and post-publication checks passed. The annotated tag
+`v0.1.0` is created at the release-report commit. These preconditions apply to any
+future version; `0.1.0` is immutable and must not be republished.
 
-## 4. Publish order
+## 4. Published order (v0.1.0)
 
-Publish one package at a time, in this order. Stop immediately on any failure.
+The following is the order used for `v0.1.0`. Do not rerun these commands against
+`0.1.0`; use the same dependency-first order for a future version.
 The order ensures every `@axion-ct/*` dependency is already available.
 
 1. `@axion-ct/core`

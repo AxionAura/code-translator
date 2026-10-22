@@ -2,7 +2,7 @@
 
 A behavior-preserving source-code translator for **Python ↔ JavaScript ↔ TypeScript**, designed to translate whole projects — not just snippets — with explicit, honest reporting of what was translated deterministically, what was adapted semantically, what was ambiguous, and what was not supported.
 
-**Status: M11 complete — v0.1.0 release candidate (not published).** Six translation directions (M7), whole-project validation S1–S7 (M6/M10), the provider-agnostic AI layer (M8), bounded repair (M9), and the M11 CLI: config schema, `validate`/`benchmark` commands, `--json` machine output with stderr-only progress, keychain/0600-file credentials, opt-in disk cache, a compiled `dist` entry, benchmark suites/corpus, and a security review checklist. See [docs/roadmap.md](docs/roadmap.md), [docs/release.md](docs/release.md), and [PROJECT_STATE.md](PROJECT_STATE.md).
+**Status: v0.1.0 published on npm (2026-10-22).** Six translation directions (M7), whole-project validation S1–S7 (M6/M10), the provider-agnostic AI layer (M8), bounded repair (M9), and the M11 CLI: config schema, `validate`/`benchmark` commands, `--json` machine output with stderr-only progress, keychain/0600-file credentials, opt-in disk cache, a compiled `dist` entry, benchmark suites/corpus, and a security review checklist. See [docs/roadmap.md](docs/roadmap.md), [docs/release.md](docs/release.md), and [PROJECT_STATE.md](PROJECT_STATE.md).
 
 ## Quickstart
 
@@ -83,7 +83,7 @@ pnpm benchmark:perf
 pnpm benchmark:nightly
 ```
 
-The CLI prints the claim-ladder level (what validation actually proved), per-file status, and decision counts. Translated output is finalized through Prettier; runtime helpers land in a generated `__ctrans_runtime.ts|js` that carries **zero** dependencies. No release has been published; see [docs/release.md](docs/release.md). Execution isolation is explicit: bwrap enforces network/PID isolation plus a least-privilege filesystem allowlist (no host-root bind), and policy-only mode is never used for S5/S6/S7.
+The CLI prints the claim-ladder level (what validation actually proved), per-file status, and decision counts. Translated output is finalized through Prettier; runtime helpers land in a generated `__ctrans_runtime.ts|js` that carries **zero** dependencies. v0.1.0 is published; see [docs/release.md](docs/release.md) and [docs/release-report-v0.1.0.md](docs/release-report-v0.1.0.md). Execution isolation is explicit: bwrap enforces network/PID isolation plus a least-privilege filesystem allowlist (no host-root bind), and policy-only mode is never used for S5/S6/S7.
 
 ## Documentation index
 
@@ -102,6 +102,7 @@ The CLI prints the claim-ladder level (what validation actually proved), per-fil
 | [docs/security-review-checklist.md](docs/security-review-checklist.md) | Executed security review with per-threat evidence and residual risks |
 | [docs/configuration.md](docs/configuration.md) | `ctrans.config.json` schema, discovery, precedence |
 | [docs/release.md](docs/release.md) | v0.1.0 build/packaging/publishing instructions and limits |
+| [docs/release-report-v0.1.0.md](docs/release-report-v0.1.0.md) | Published v0.1.0 registry, verification, and CLI smoke-test report |
 | [docs/publication-plan.md](docs/publication-plan.md) | Eleven-package publication order, preflight evidence, and authorization boundary |
 | [docs/testing.md](docs/testing.md) | Test strategy and fixture system (`input/` vs `expected/`) |
 | [docs/benchmarks.md](docs/benchmarks.md) | Benchmark framework and metrics |
@@ -129,7 +130,8 @@ pnpm verify            # build → typecheck → lint → format check → tests
 pnpm test:coverage
 ```
 
-Release status: version `0.1.0`, MIT, compiled `dist` entries, packed contents
-verified; the eleven release packages use the `@axion-ct/*` scope. **Nothing has
-been published** (see [docs/release.md](docs/release.md) and
-[docs/publication-plan.md](docs/publication-plan.md)).
+Release status: **v0.1.0 published on npm (2026-10-22)**. The eleven packages use
+the `@axion-ct/*` scope, are MIT-licensed, and ship compiled `dist` entries. See
+[docs/release-report-v0.1.0.md](docs/release-report-v0.1.0.md),
+[docs/release.md](docs/release.md), and
+[docs/publication-plan.md](docs/publication-plan.md).

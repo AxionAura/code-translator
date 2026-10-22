@@ -49,7 +49,7 @@ The committed benchmark artifacts under `benchmarks/results/2026-10-22-*.json` r
 - CLI tar: `dist/main.js`, `bin/ctrans-dist.mjs`, package metadata; parser-py tar includes `python/bridge.py`.
 - Package metadata: version `0.1.0`, MIT, publishable packages (non-private), `files` whitelists, `engines.node >=22.18`, bin at the compiled entry.
 - Clean clone at `3ab1cde` builds and tests successfully with a frozen/offline install.
-- **Nothing has been published or tagged.** `npm whoami` is unauthenticated; registry policy/auth is unverified and publishing requires explicit authorization.
+- **Historical (pre-publication):** at this audit point nothing had been published or tagged; `npm whoami` was unauthenticated and registry policy/auth was unverified. See §16 for the final published state.
 
 ## 5. Documentation inconsistencies found and corrected
 
@@ -235,6 +235,9 @@ push, or registry mutation occurred.
 
 ## 12. Final npm release preflight (2026-10-22)
 
+Historical note: this pre-publication check is superseded by the published state
+in §16.
+
 Checked at `main` / `0f18e12` with a clean working tree, no tags, and no remotes.
 
 - **Authentication:** `npm whoami` → `code-translator`.
@@ -264,6 +267,8 @@ was changed.
 
 ## 13. Final pre-publish verification (2026-10-22, 2FA enabled)
 
+Historical note: this pre-publication verification is superseded by §16.
+
 Checked at `main` / `f4c69ab` with a clean working tree, no tags, and no remotes.
 
 - **Authentication:** `npm whoami` → `code-translator`.
@@ -286,6 +291,9 @@ Remaining gate: **explicit maintainer authorization**. No package was published,
 tagged, pushed, or uploaded, and no registry state was changed.
 
 ## 14. Authorized publication attempt (2026-10-22)
+
+Historical note: this EOTP-blocked attempt predates the successful publication;
+see §16 for the current verified release state.
 
 Explicit authorization was received for all eleven `@axion-ct/*` packages at
 `0.1.0`. The preflight at clean `d396f61` passed: `pnpm verify` exit 0 (110 files,
@@ -311,6 +319,8 @@ availability checks. Never republish an existing version.
 
 ## 15. EOTP recovery check (2026-10-22)
 
+Historical note: this check predates the successful publication; see §16.
+
 At clean `main`/`1c9c651`, `npm whoami` returned `code-translator`; all eleven
 `npm view <pkg> version` checks returned 404, so **0/11 packages are published**.
 
@@ -324,3 +334,33 @@ Recovery requires a human-operated interactive terminal. Run the documented
 `@axion-ct/core` command there, enter the OTP directly at npm’s prompt, verify the
 published version, and only then continue the dependency order. The OTP must never
 be placed in a command argument, file, chat, or log.
+
+## 16. Post-publication verification (2026-10-22)
+
+All eleven packages are published at `0.1.0`. Registry checks confirmed, for each:
+
+- version `0.1.0` exists;
+- `dist.integrity` is present;
+- `dist-tags.latest` is `0.1.0`;
+- internal dependencies use `@axion-ct/*@0.1.0`.
+
+Registry timestamps: `@axion-ct/core` at `2026-10-22T20:10:52.520Z`,
+`@axion-ct/cli` at `2026-10-22T20:33:22.289Z`. The registry also exposes a
+`0.0.0-stage` version on each package; it is npm staged-publication metadata, is
+not tagged `latest`, and was not modified.
+
+Post-publication `pnpm verify` passed: 110 files, 1091/1091 tests, build,
+typecheck, lint, formatting, and doc links.
+
+Published CLI checks passed:
+
+- `ctrans --help` and `ctrans --version` (`0.1.0`) via `npm exec`;
+- clean isolated `npm install` (149 packages);
+- all ten importable packages resolve;
+- `doctor --json` required/strict capabilities available;
+- all six translation directions produce output;
+- sandboxed project run reaches claim 5 with S1–S6 passing.
+
+Full release evidence: `docs/release-report-v0.1.0.md`. Annotated tag `v0.1.0` is
+created at the release-report commit; no push was performed. No package was
+republished and no registry metadata was changed by this audit.

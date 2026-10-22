@@ -1,8 +1,9 @@
 # Release preparation (v0.1.0)
 
-Status: **release-ready for a local/distribution review; nothing has been
-published.** All packages are version `0.1.0` under the MIT license. The release is
-a monorepo of eleven packages; the CLI is `@axion-ct/cli` with the `ctrans` bin.
+Status: **published and verified on npm (2026-10-22).** All eleven packages are
+live at `0.1.0` under the MIT license; see
+[release-report-v0.1.0.md](release-report-v0.1.0.md). The release is a monorepo of
+eleven packages; the CLI is `@axion-ct/cli` with the `ctrans` bin.
 
 ## Build
 
@@ -53,9 +54,10 @@ artifact; pack or publish only the eleven workspace packages below. `pnpm -r pac
 also packs the private root for local inspection and must not be used as a
 publication command.
 
-## Publishing order (only with explicit authorization)
+## Published order (v0.1.0)
 
-The CLI depends on all implementation packages, so publish dependencies first:
+The CLI depends on all implementation packages, so the release was published
+dependency-first:
 
 1. `@axion-ct/core`
 2. `@axion-ct/parser-py`, `@axion-ct/parser-js`, `@axion-ct/registry`, `@axion-ct/sandbox`
@@ -64,13 +66,13 @@ The CLI depends on all implementation packages, so publish dependencies first:
 5. `@axion-ct/cli`
 
 Use the explicit per-package commands and per-package verification steps in
-[publication-plan.md](publication-plan.md). Do **not** use `pnpm -r publish` for
-this release: explicit commands make the dependency order and stop point
-unambiguous, and avoid recursive operations that include the private root.
+[publication-plan.md](publication-plan.md). Do **not** use `pnpm -r publish`:
+explicit commands make the dependency order and stop point unambiguous, and avoid
+recursive operations that include the private root.
 
-The exact registry/auth policy remains an operator decision. **Do not publish,
-upload, or tag a release without explicit authorization.** No release has been
-published by this milestone.
+`v0.1.0` is published and immutable. Do not republish it. Any future release
+requires a new version, explicit authorization, and the same preflight,
+per-package verification, and post-publish checks.
 
 ## Runtime requirements
 
