@@ -284,3 +284,27 @@ Checked at `main` / `f4c69ab` with a clean working tree, no tags, and no remotes
 
 Remaining gate: **explicit maintainer authorization**. No package was published,
 tagged, pushed, or uploaded, and no registry state was changed.
+
+## 14. Authorized publication attempt (2026-10-22)
+
+Explicit authorization was received for all eleven `@axion-ct/*` packages at
+`0.1.0`. The preflight at clean `d396f61` passed: `pnpm verify` exit 0 (110 files,
+1091/1091 tests), all eleven tarballs rebuilt and inspected, and all names
+returned 404.
+
+The first command in the planned order was attempted:
+
+```bash
+pnpm --filter @axion-ct/core publish \
+  --access public --tag latest --no-git-checks --ignore-scripts
+```
+
+Result: **exit 1, `EOTP`** — npm requires a one-time password for this publish.
+The session could not supply an OTP, and none was requested or exposed. The
+sequence stopped immediately at the first package.
+
+Immediate registry verification: all eleven `@axion-ct/*` names still returned
+**404**. **Published packages: 0 of 11.** No tag, push, or other registry mutation
+was performed. Resume from `@axion-ct/core` only in an OTP-capable session (or
+with an authorized 2FA-bypass automation token), after re-running preflight and
+availability checks. Never republish an existing version.

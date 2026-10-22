@@ -1,9 +1,26 @@
 # V1 publication plan (`0.1.0`)
 
-Status: **preflight complete, awaiting explicit publish authorization.** Nothing has
-been published, tagged, or uploaded. The authenticated npm account is
-`code-translator`, which is the **owner** of `@axion-ct`; 2FA is enabled in
-`auth-and-writes` mode. No publish command has been executed.
+Status: **publication authorized and attempted; blocked at the first package by
+npm EOTP. 0 of 11 packages published; no registry mutation.** The authenticated
+npm account is `code-translator`, owner of `@axion-ct`, with 2FA enabled in
+`auth-and-writes` mode. No tag or push was performed.
+
+## Publication attempt (2026-10-22)
+
+- Preflight at `main`/`d396f61`: clean tree; `pnpm verify` exit 0 (110 files,
+  1091/1091 tests); all eleven tarballs rebuilt and inspected.
+- First command attempted: `pnpm --filter @axion-ct/core publish --access public
+  --tag latest --no-git-checks --ignore-scripts`.
+- Result: **exit 1, `EOTP`** — npm requires a one-time password for this publish.
+  The CLI was not run in an interactive OTP-capable session, and no OTP was
+  available or exposed. The attempt stopped before the registry accepted the
+  package.
+- Immediate registry check: all eleven `@axion-ct/*` names still return **404**.
+- **Published packages: none (0/11).**
+- Resume point: `@axion-ct/core`, only after a publish-capable session can supply
+  the OTP (or an authorized automation token with 2FA bypass is configured).
+  Re-run the preflight and availability check before resuming; never republish an
+  existing version.
 
 Prepared from `main` at `f4c69ab` (clean working tree, no tags, no remotes); the
 report update is a documentation-only follow-up. The scope migration and
