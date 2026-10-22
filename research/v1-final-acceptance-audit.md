@@ -134,7 +134,7 @@ capability report, so it is deterministic on hosts with and without bwrap.
 - `npx vitest run packages/validator/test apps/cli/test/{project-run,project-repair,doctor-smoke,commands-m11,cli-m11,cli}.test.ts --maxWorkers=2` → **exit 0, 101/101**.
 - `npx vitest run --maxWorkers=4` → **exit 0, 110 files, 1091/1091**; coverage run also **1091/1091**, floors held (validator 94.94%, sandbox 86.39%).
 - `pnpm build`, `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm docs:check` → **exit 0**.
-- A default-parallel `pnpm verify` attempt on the same tree returned **exit 1** because ten unrelated tests hit their 5 s/30 s/120 s timeouts under host resource exhaustion (load average ~25, swap full). Every timed-out file passed when rerun, and the complete suite passed at four workers. This is recorded as an environment-dependent verification result, not a code failure.
+- A default-parallel `pnpm verify` attempt on an earlier tree returned **exit 1** because ten unrelated tests hit their 5 s/30 s/120 s timeouts under host resource exhaustion (load average ~25, swap full). Every timed-out file passed when rerun, and the complete suite passed at four workers. After host load subsided, a default-parallel `pnpm verify` on the committed tree returned **exit 0** — build, typecheck, lint, format, **1091/1091 tests (110 files)**, and doc links.
 
 **Documentation corrections.** README, `docs/security.md`, the security checklist
 (T7/T12 + gate note), and `docs/release.md` now describe the enforced allowlist and
