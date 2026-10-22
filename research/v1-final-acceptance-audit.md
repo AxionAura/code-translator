@@ -228,5 +228,5 @@ Verification after migration: `pnpm verify` **exit 0** (110 files, 1091/1091 tes
 doc links); all eleven packages pack successfully; packed manifests contain no
 `workspace:` or old-scope specifiers, and every internal dependency is
 `@axion-ct/*@0.1.0`; a clean deploy passes `doctor`, JS/TS→Python, and a claim-5
-project S5/S6 run. Migration commit is recorded in `PROJECT_STATE.md` §19.
-No publish, tag, push, or registry mutation occurred.
+project S5/S6 run. Migration commit: `3918946`. No publish, tag, push, or registry
+mutation occurred.

@@ -4,8 +4,8 @@ Status: **preflight prepared, not executed.** Nothing has been published, tagged
 or uploaded. Publication requires explicit maintainer authorization and npm
 credentials with publish rights to the `@axion-ct` scope.
 
-Prepared from `main` after the 2026-10-22 scope migration (migration commit is
-recorded in `PROJECT_STATE.md` §19); clean working tree, no tags, no remotes.
+Prepared from `main` after the 2026-10-22 scope migration (commit `3918946`);
+clean working tree, no tags, no remotes.
 
 ## 0. Scope migration
 
