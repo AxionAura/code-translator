@@ -18,7 +18,17 @@ export interface RunnerToolchain {
 }
 
 function outerNodeModules(require: NodeRequire, packageName: string): string {
-  for (const searchPath of require.resolve.paths(packageName) ?? []) {
+  const searchPaths = require.resolve.paths(packageName) ?? [];
+  // Prefer a pnpm root that also owns `.pnpm`: a package-local link
+  // (apps/cli/node_modules/vitest after declaring a runtime dependency) points
+  // into the root virtual store and would be unreachable if only the link's
+  // directory were mounted into the sandbox.
+  for (const searchPath of searchPaths) {
+    if (existsSync(join(searchPath, packageName)) && existsSync(join(searchPath, ".pnpm"))) {
+      return searchPath;
+    }
+  }
+  for (const searchPath of searchPaths) {
     if (existsSync(join(searchPath, packageName))) return searchPath;
   }
   const packageJson = require.resolve(`${packageName}/package.json`);

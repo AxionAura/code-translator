@@ -42,9 +42,16 @@ describe("compiled distribution", () => {
     const cli = JSON.parse(readFileSync(join(ROOT, "apps/cli/package.json"), "utf8")) as {
       bin: { ctrans: string };
       files: string[];
+      dependencies: Record<string, string>;
     };
     expect(cli.bin.ctrans).toBe("./bin/ctrans-dist.mjs");
-    expect(cli.files).toContain("dist");
+    expect(cli.files).toEqual(["dist", "bin/ctrans-dist.mjs"]);
+    // The CLI resolves these from its own package at runtime (S2/S5/doctor and
+    // project validation); root devDependency hoisting must not mask a missing
+    // dependency in the published package.
+    expect(cli.dependencies["pyright"]).toBe("1.1.406");
+    expect(cli.dependencies["typescript"]).toBe("~6.0.3");
+    expect(cli.dependencies["vitest"]).toBe("5.0.3");
     // Compiled sources reference sibling .js modules, never repository .ts files.
     const main = readFileSync(DIST_MAIN, "utf8");
     expect(main).not.toMatch(/from "\.\/[^"]+\.ts"/);

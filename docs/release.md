@@ -38,10 +38,20 @@ translation phase on the development host; machine-local).
 pnpm --filter @ctrans/cli pack --pack-destination /tmp/ctrans-pack
 ```
 
-Every package contains only `dist/` (plus `python/bridge.py` for
-`@ctrans/parser-py`, which is required at runtime). Package metadata includes
+Every publishable package contains only `dist/` (plus `python/bridge.py` for
+`@ctrans/parser-py`, which is required at runtime). `@ctrans/cli` contains `dist/`
+and only its compiled bin (`bin/ctrans-dist.mjs`); the source-mode launchers are
+development-only and are excluded from the tarball. Package metadata includes
 `license: MIT`, `engines.node >= 22.18`, and a bin that points at the compiled
-entry. Workspace dependency ranges (`workspace:*`) are rewritten by pnpm on pack.
+entry. Workspace dependency ranges (`workspace:*`) are rewritten to `0.1.0` by
+pnpm on pack. The CLI declares `pyright`, `typescript`, and `vitest` as runtime
+dependencies because S2/S5, `doctor`, and project validation resolve them from the
+installed CLI package.
+
+The workspace root (`code-translator`) is `private: true` and is **not** a release
+artifact; pack or publish only the eleven workspace packages below. `pnpm -r pack`
+also packs the private root for local inspection and must not be used as a
+publication command.
 
 ## Publishing order (only with explicit authorization)
 
@@ -62,6 +72,8 @@ this milestone.
 
 - Node.js ≥ 22.18.
 - `python3` ≥ 3.12 for the Python front-end and S6/source execution.
+- The pinned `pyright`, `typescript`, and `vitest` toolchain is installed as an
+  `@ctrans/cli` runtime dependency; no separate installation is required.
 - `bwrap` for default network-isolated execution with a least-privilege filesystem
   allowlist (otherwise S5/S6/S7 and Python S4 are skipped/refused, not faked);
   `prlimit` is optional; Docker/Podman plus an operator-provided image are required
