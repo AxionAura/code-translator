@@ -39,6 +39,12 @@ describe("compiled distribution", () => {
     expect(core.version).toBe("0.1.0");
     expect(core.exports["."].default).toBe("./dist/index.js");
     expect(core.files).toContain("dist");
+    const parserPy = JSON.parse(
+      readFileSync(join(ROOT, "packages/parser-py/package.json"), "utf8"),
+    ) as { files: string[] };
+    // Ship the bridge script only; a broad "python" whitelist also packed
+    // gitignored __pycache__ bytecode.
+    expect(parserPy.files).toEqual(["dist", "python/bridge.py"]);
     const cli = JSON.parse(readFileSync(join(ROOT, "apps/cli/package.json"), "utf8")) as {
       bin: { ctrans: string };
       files: string[];

@@ -47,7 +47,7 @@ local tarball of the private root. Pack only the eleven named packages.
 | Lockfile | `pnpm install --frozen-lockfile --offline --ignore-scripts` → **exit 0** |
 | Full verification | `pnpm verify` → **exit 0**; 110 files, 1091/1091 tests; doc links OK |
 | Package packing | All eleven `pnpm --filter <pkg> pack` commands → **exit 0** |
-| Tarball metadata | Every tarball has `package.json`, `LICENSE`, `dist/`; `parser-py` also has `python/bridge.py`; no `workspace:` or old-scope specs remain |
+| Tarball metadata | Every tarball has `package.json`, `LICENSE`, `dist/`; `parser-py` contains only `python/bridge.py` (no `__pycache__` bytecode); no `workspace:` or old-scope specs remain |
 | CLI tarball | Contains only `dist/`, `bin/ctrans-dist.mjs` (mode 0755), `package.json`, `LICENSE`; source-mode launchers excluded |
 | Version consistency | All eleven packages are `0.1.0`; every internal dependency is `@axion-ct/*@0.1.0` |
 | Registry URL | `https://registry.npmjs.org/` |

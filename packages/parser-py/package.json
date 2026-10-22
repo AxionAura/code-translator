@@ -24,6 +24,6 @@
   },
   "files": [
     "dist",
-    "python"
+    "python/bridge.py"
   ]
 }
