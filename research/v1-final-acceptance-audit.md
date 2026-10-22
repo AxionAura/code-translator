@@ -4,7 +4,7 @@
 - **Baseline commit:** `3ab1cde` (`docs: record M11 implementation commit and verification evidence`); M11 implementation `78953ef`.
 - **Working tree at audit start:** clean, branch `main`, no uncommitted changes.
 - **Audit scope:** documentation consistency, independent verification of the reported release baseline, security/environment gaps, package/distribution integrity. No runtime code was changed and nothing was published.
-- **Documentation correction commit:** `TBD` (recorded by the follow-up state commit).
+- **Documentation correction commit:** `aa9eed4`.
 
 ## 1. Recommendation
 
