@@ -16,7 +16,8 @@ are marked explicitly and are never presented as verified.
 | T4 prompt injection via code | content-derived data fences, option-only/patch-only outputs, strict validation, no tools | M8/M9 tests; repair policy guard | Verified |
 | T5 API key theft | `CTRANS_AI_KEY` → OS keychain (`security`/`secret-tool`) → 0600 file with warning; symlink/permission checks; keys never in config/flags/logs/cache keys | `apps/cli/test/keys.test.ts`; AI missing-key tests | Verified for env + file; keychain command path unit-injected, no live credential stored in this environment |
 | T6 supply chain | lockfile pinned, pnpm lifecycle-script blocking with an explicit allowlist, MIT/Apache/BSD-only policy, no GPL copying | `AGENTS.md` §5; `pnpm-lock.yaml`; dependency review below | Verified for current tree |
-| T7 sandbox escape / resource abuse | hardened spawn + `prlimit` + bwrap; Docker/Podman strict driver with no network, read-only rootfs, cap-drop, pids/memory/cpu limits, workspace-only rw mount, cleanup; timeouts/output caps | `packages/sandbox/test/{sandbox,container}.test.ts`; project/CLI tests | Verified for host/bwrap; real Docker run with `fedora:44`; no live gVisor |
+| T7 sandbox escape / resource abuse | hardened spawn + `prlimit` + bwrap; Docker/Podman strict driver with no network, read-only rootfs, cap-drop, pids/memory/cpu limits, workspace-only rw mount, cleanup; timeouts/output caps; bwrap uses a least-privilege filesystem allowlist (no host-root bind) and rejects writable toolchain mounts | `packages/sandbox/test/{sandbox,container}.test.ts`; project/CLI tests | Verified for host/bwrap; real Docker run with `fedora:44`; no live gVisor |
+| T12 host filesystem exposure | no host-root bind in bwrap; only system trees, a minimal `/etc` subset, workspace/toolchain/executable mounts; broad sensitive mount roots and writable mounts rejected; `filesystemIsolation` capability reports the actual state | `packages/sandbox/test/sandbox.test.ts` (synthetic sentinel outside mounts is unreadable; broad roots and writable mounts rejected); container argv test | Verified with bwrap; policy-only fallback reports `none` |
 | T8 path traversal / file bombs | output confined to out-dir; intake caps; workspace-relative sandbox paths; cache keys are hex; S7 harness paths validated; config smoke path resolved relative to its file | sandbox spec tests; journal tests; cache tests; S7 tests | Verified |
 | T9 model cost abuse | call/token/request/run caps, attempt caps 3/8, loop detection, cache | M8/M9 tests | Verified |
 | T10 validation weakening | unit-scoped diffs, policy guard, tests/generated artifacts not patchable, real validators re-run | M9/M10 repair tests | Verified |
@@ -40,6 +41,17 @@ are marked explicitly and are never presented as verified.
   with containment check; cache root validated as a real directory (symlink
   refused) with 0700 directory/0600 files and atomic writes; config reads capped at
   64 KiB; key file requires owner-only permissions and rejects symlinks.
+- **Pre-release filesystem boundary (2026-10-22):** the earlier bwrap profile used
+  `--ro-bind / /`, exposing every host-readable file (home directories, SSH keys,
+  dotfiles, unrelated projects, most of `/etc`) to untrusted code. The profile now
+  binds only runtime system trees, a minimal `/etc` subset, `/dev`, `/proc`, a
+  tmpfs `/tmp`, the workspace, declared toolchain paths, and the executable's
+  directory; broad sensitive roots (`/`, `/home`, `/root`, `/etc`, `/var`, `/tmp`,
+  `/proc`, `/sys`, `/dev`, `/usr`, `/bin`, `/sbin`, `/lib*`) are rejected as
+  mounts, and toolchain mounts must be read-only (the workspace is the only
+  writable host path). A synthetic sentinel outside the mounts is unreadable in
+  the regression test. `networkIsolation` and `filesystemIsolation` are reported
+  separately; policy-only mode reports `none` and is never described as enforced.
 - **Secrets and logs**: key values are never logged; AI journal stores hashes; the
   benchmark/JSON outputs contain counts and timings, not prompts or keys; error
   messages are secret-free (tested).

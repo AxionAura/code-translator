@@ -307,6 +307,11 @@ export function formatCapabilityReport(capabilities: ValidationCapabilities): st
       : "required capabilities: MISSING — affected stages are reported skipped with their reasons",
   );
   lines.push(
+    capabilities.sandbox.filesystemIsolation === "bwrap-allowlist"
+      ? "filesystem isolation: bwrap least-privilege allowlist (system trees + minimal /etc + workspace/toolchain mounts)"
+      : "filesystem isolation: none (bwrap unavailable; no host-filesystem boundary)",
+  );
+  lines.push(
     capabilities.strictAvailable
       ? "strict container mode: a Docker/Podman runtime is usable (an explicit image is still required)"
       : "strict container mode: unavailable (no usable Docker/Podman runtime)",

@@ -128,6 +128,16 @@ describe("buildContainerArgv", () => {
     expect(text).not.toContain("CTRANS_AI_KEY");
   });
 
+  it("rejects writable toolchain mounts (the workspace is the only rw path)", () => {
+    expect(() =>
+      buildContainerArgv(options, "/tmp/ws", {
+        strict: true,
+        argv: ["node", "--version"],
+        containerMounts: [{ path: "/tool/node_modules", readOnly: false }],
+      }),
+    ).toThrow(/only the workspace is writable/);
+  });
+
   it("uses the container-native argv when provided", () => {
     const argv = buildContainerArgv(options, "/tmp/ws", {
       strict: true,

@@ -5,10 +5,19 @@
 // resource limits when available, and bwrap unshare-net isolation when usable.
 // The capability report travels with every result — no silent downgrades.
 import { spawn, type ChildProcess } from "node:child_process";
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 
+import { bwrapMountArgs, bwrapSystemMountArgs } from "./bwrap-profile.js";
 import type { SandboxCapabilities } from "./capability.js";
 import {
   buildContainerArgv,
@@ -113,6 +122,24 @@ export interface SandboxRunOptions {
 const BASE_ENV_ALLOWLIST: Readonly<Record<string, string>> = {
   LANG: "C.UTF-8",
 };
+
+const SENSITIVE_MOUNT_ROOTS: ReadonlySet<string> = new Set([
+  "/",
+  "/home",
+  "/root",
+  "/etc",
+  "/var",
+  "/tmp",
+  "/proc",
+  "/sys",
+  "/dev",
+  "/usr",
+  "/bin",
+  "/sbin",
+  "/lib",
+  "/lib64",
+  "/lib32",
+]);
 
 export class SandboxRunner {
   private readonly capabilities: SandboxCapabilities;
@@ -265,6 +292,14 @@ export class SandboxRunner {
           `container mount must be an absolute path without '..': ${mount.path}`,
         );
       }
+      if (SENSITIVE_MOUNT_ROOTS.has(mount.path)) {
+        throw new SandboxSpecError(`refusing to mount a broad host root: ${mount.path}`);
+      }
+      if (mount.readOnly === false) {
+        throw new SandboxSpecError(
+          `container mounts are read-only; only the workspace is writable: ${mount.path}`,
+        );
+      }
     }
     if (spec.containerArgv !== undefined) {
       if (spec.containerArgv.length === 0) {
@@ -304,19 +339,24 @@ export class SandboxRunner {
       wrapped = [this.prlimitPath, ...limits, ...wrapped];
     }
     if (this.capabilities.bwrap.available) {
-      // bwrap binds the workspace read-write (the child needs its cwd), the root
-      // read-only, and unshares network + PID. die-with-parent ties the bubble's
-      // lifetime to ours. A tmpfs /tmp gives the child scratch space; because that
-      // shadows host /tmp, toolchain mount paths under /tmp (clean-clone layouts)
-      // are re-bound explicitly below.
+      // Least privilege: only runtime system trees, a minimal read-only /etc
+      // subset, /dev, /proc, a writable tmpfs /tmp, the workspace, declared
+      // toolchain mounts, and the executable's directory are visible. The host
+      // root is NEVER bound (user homes, SSH keys, unrelated projects, and most
+      // host configuration are therefore absent). See bwrap-profile.ts.
+      const executableDir = this.executableDirectory(argv[0]!);
+      const mounts = new Map(
+        (spec.containerMounts ?? []).map((mount) => [mount.path, mount] as const),
+      );
+      if (executableDir !== null && !mounts.has(executableDir)) {
+        mounts.set(executableDir, { path: executableDir, readOnly: true });
+      }
       wrapped = [
         this.bwrapPath,
         "--unshare-net",
         "--unshare-pid",
         "--die-with-parent",
-        "--ro-bind",
-        "/",
-        "/",
+        ...bwrapSystemMountArgs(),
         "--dev",
         "/dev",
         "--proc",
@@ -326,7 +366,8 @@ export class SandboxRunner {
         "--bind",
         workspace,
         workspace,
-        ...(this.toolchainMounts(spec) ?? []),
+        // Mounts come AFTER the tmpfs so toolchain paths under /tmp are visible.
+        ...bwrapMountArgs([...mounts.values()]),
         "--chdir",
         workspace,
         "--",
@@ -336,15 +377,25 @@ export class SandboxRunner {
     return wrapped;
   }
 
-  // Tool-controlled mount paths that live under the shadowed host /tmp must be
-  // re-bound inside the bubble (workspace + toolchain layouts in temp dirs).
-  private toolchainMounts(spec: SandboxRunSpec): readonly string[] {
-    const args: string[] = [];
-    for (const mount of spec.containerMounts ?? []) {
-      if (!mount.path.startsWith("/tmp/")) continue;
-      args.push(mount.readOnly === false ? "--bind" : "--ro-bind", mount.path, mount.path);
+  // The executable itself may live outside the system trees (e.g. an nvm/node
+  // installation under the user's home). Bind only its directory read-only.
+  private executableDirectory(executable: string): string | null {
+    if (!executable.startsWith("/")) return null;
+    const resolved = resolve(executable);
+    if (!existsSync(resolved)) return null;
+    const directory = dirname(resolved);
+    if (
+      directory === "/" ||
+      directory === "/usr" ||
+      directory === "/usr/bin" ||
+      directory === "/bin" ||
+      directory === "/sbin" ||
+      directory === "/usr/local/bin" ||
+      directory === "/usr/sbin"
+    ) {
+      return null;
     }
-    return args;
+    return directory;
   }
 
   private buildEnv(additions: Readonly<Record<string, string>>): Record<string, string> {

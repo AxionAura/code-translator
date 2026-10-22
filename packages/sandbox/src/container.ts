@@ -9,6 +9,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
 
+import { SandboxSpecError } from "./errors.js";
+
 const execFileP = promisify(execFile);
 
 export type ContainerKind = "docker" | "podman";
@@ -276,9 +278,16 @@ export function buildContainerArgv(
   }
   for (const mount of spec.containerMounts ?? []) {
     if (!mount.path.startsWith("/") || mount.path.includes("..")) {
-      throw new Error(`container mount must be an absolute path without '..': ${mount.path}`);
+      throw new SandboxSpecError(
+        `container mount must be an absolute path without '..': ${mount.path}`,
+      );
     }
-    argv.push("--volume", `${mount.path}:${mount.path}:${mount.readOnly === false ? "rw" : "ro"}`);
+    if (mount.readOnly === false) {
+      throw new SandboxSpecError(
+        `container mounts are read-only; only the workspace is writable: ${mount.path}`,
+      );
+    }
+    argv.push("--volume", `${mount.path}:${mount.path}:ro`);
   }
   argv.push("--env", "LANG=C.UTF-8", "--env", "HOME=/nonexistent-home");
   for (const [key, value] of Object.entries(spec.env ?? {})) {

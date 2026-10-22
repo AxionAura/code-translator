@@ -95,3 +95,62 @@ A documented limitation does not by itself fail V1. The default (non-strict, bwr
 - **Working tree after corrections:** clean after the documentation commit (see follow-up hash).
 - **V1 verdict:** **ACCEPT WITH DOCUMENTED LIMITATIONS**.
 - **No release published, no tag created, no registry action taken.**
+
+## 9. Pre-release security gate addendum (2026-10-22)
+
+**Finding (High): host filesystem exposure through the bwrap profile.** The sandbox
+constructed bubblewrap with `--ro-bind / /`, which mounted the entire host root
+read-only inside the namespace. Untrusted translated/source code could therefore
+read the invoking user's home directory, SSH keys, dotfiles, credentials readable
+by that user, unrelated project data, and most of `/etc`. Network and PID isolation
+were enforced, but the profile contradicted the stated rule that host credentials
+and unrelated host paths are never mounted. The flag appeared in the sandbox
+section, but its host-wide read consequence was not disclosed or tested.
+
+**Fix.** `packages/sandbox/src/bwrap-profile.ts` now constructs a least-privilege
+allowlist: read-only runtime system trees (`/usr`, `/bin`, `/sbin`, `/lib`,
+`/lib64`, `/lib32` where present), a minimal `/etc` subset (loader cache/config,
+passwd/group/nsswitch, resolv.conf/hosts, localtime), `/dev`, a new `/proc`, a
+writable tmpfs `/tmp`, the workspace (rw), declared toolchain mounts (ro), and the
+executable's directory (ro, for e.g. an nvm node binary). The host root is never
+bound. Broad sensitive roots (`/`, `/home`, `/root`, `/etc`, `/var`, `/tmp`) are
+rejected as mount paths (`/`, `/home`, `/root`, `/etc`, `/var`, `/tmp`, `/proc`,
+`/sys`, `/dev`, `/usr`, `/bin`, `/sbin`, `/lib`, `/lib64`, `/lib32`). Toolchain
+mounts must be read-only; the workspace is the only writable host path. The
+capability probe uses the same allowlist and reports
+`filesystemIsolation: "bwrap-allowlist"` or `"none"` independently of
+`networkIsolation`.
+
+**Regression evidence.** `packages/sandbox/test/sandbox.test.ts` creates a synthetic
+sentinel file under `/var/tmp` (outside all declared mounts), runs Python inside the
+sandbox, and asserts the read is denied and the sentinel value never appears on
+stdout; it also asserts broad sensitive mounts and writable toolchain mounts are
+rejected. The container argv builder independently rejects writable mounts. No real
+secret store or personal file is read. The strict-mode refusal test uses a simulated
+capability report, so it is deterministic on hosts with and without bwrap.
+
+**Verification (2026-10-22).**
+- `npx vitest run packages/sandbox/test/sandbox.test.ts packages/sandbox/test/container.test.ts --maxWorkers=2` → **exit 0, 31/31**, including a real `docker run` with local image `fedora:44`, the sentinel read denial, broad-root and writable-mount rejection, and the network-block probe.
+- `npx vitest run packages/validator/test apps/cli/test/{project-run,project-repair,doctor-smoke,commands-m11,cli-m11,cli}.test.ts --maxWorkers=2` → **exit 0, 101/101**.
+- `npx vitest run --maxWorkers=4` → **exit 0, 110 files, 1091/1091**; coverage run also **1091/1091**, floors held (validator 94.94%, sandbox 86.39%).
+- `pnpm build`, `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm docs:check` → **exit 0**.
+- A default-parallel `pnpm verify` attempt on the same tree returned **exit 1** because ten unrelated tests hit their 5 s/30 s/120 s timeouts under host resource exhaustion (load average ~25, swap full). Every timed-out file passed when rerun, and the complete suite passed at four workers. This is recorded as an environment-dependent verification result, not a code failure.
+
+**Documentation corrections.** README, `docs/security.md`, the security checklist
+(T7/T12 + gate note), and `docs/release.md` now describe the enforced allowlist and
+the policy-only fallback accurately; the acceptance audit records the finding.
+`docs/architecture.md`, `docs/research.md`, and D-001 were reconciled to the actual
+Node floor (`>=22.18`), and the duplicate Benchmarks row in `docs/testing.md` was
+removed.
+
+**Residual limitation.** Without bwrap, hardened subprocess mode has no enforced
+filesystem or network boundary; `filesystemIsolation`/`networkIsolation` report
+`none`/`policy-only`, S5/S6/S7 and Python S4 refuse to execute, and only the
+parse-only TypeScript S4 path may proceed. The strict Docker/Podman driver was
+already allowlist-based and is unchanged. No new environment claim is made: live
+gVisor, live keychain, Windows CredMan, and a full S4–S7 strict toolchain image
+remain unverified.
+
+**Gate verdict: PASS WITH DOCUMENTED LIMITATIONS.** The verified High finding is
+fixed and regression-tested; no execution, cleanup, timeout, or resource-limit
+protection was relaxed, and no test was skipped or weakened.

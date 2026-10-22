@@ -11,6 +11,7 @@ const capabilities = {
   bwrap: { available: false, version: null, unavailableReason: "bwrap not found" },
   prlimit: { available: false, version: null, unavailableReason: "prlimit not found" },
   networkIsolation: "policy-only" as const,
+  filesystemIsolation: "none" as const,
 };
 
 function result(overrides: Partial<SandboxRunResult>): SandboxRunResult {

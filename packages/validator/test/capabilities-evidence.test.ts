@@ -33,6 +33,7 @@ function sandbox(bwrap = true): SandboxCapabilities {
     },
     prlimit: { available: true, version: "prlimit 2.39", unavailableReason: null },
     networkIsolation: bwrap ? "enforced" : "policy-only",
+    filesystemIsolation: bwrap ? "bwrap-allowlist" : "none",
   };
 }
 
@@ -172,6 +173,7 @@ describe("detectValidationCapabilities", () => {
     expect(caps.requiredAvailable).toBe(true);
     expect(capabilityExitCode(caps)).toBe(0);
     expect(formatCapabilityReport(caps)).toContain("strict container mode: unavailable");
+    expect(formatCapabilityReport(caps)).toContain("filesystem isolation:");
   });
 
   it("reports gVisor only when the runtime probe succeeded", async () => {

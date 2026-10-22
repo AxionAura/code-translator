@@ -69,6 +69,7 @@ const BASE_OPTIONS: S5Options = {
     bwrap: { available: true, version: "0.12", unavailableReason: null },
     prlimit: { available: true, version: "1", unavailableReason: null },
     networkIsolation: "enforced",
+    filesystemIsolation: "bwrap-allowlist",
   },
   nodeModulesPath: "/tool/node_modules",
   vitestEntryPath: "/tool/node_modules/vitest/vitest.mjs",

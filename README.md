@@ -83,7 +83,7 @@ pnpm benchmark:perf
 pnpm benchmark:nightly
 ```
 
-The CLI prints the claim-ladder level (what validation actually proved), per-file status, and decision counts. Translated output is finalized through Prettier; runtime helpers land in a generated `__ctrans_runtime.ts|js` that carries **zero** dependencies. No release has been published; see [docs/release.md](docs/release.md).
+The CLI prints the claim-ladder level (what validation actually proved), per-file status, and decision counts. Translated output is finalized through Prettier; runtime helpers land in a generated `__ctrans_runtime.ts|js` that carries **zero** dependencies. No release has been published; see [docs/release.md](docs/release.md). Execution isolation is explicit: bwrap enforces network/PID isolation plus a least-privilege filesystem allowlist (no host-root bind), and policy-only mode is never used for S5/S6/S7.
 
 ## Documentation index
 

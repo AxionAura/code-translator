@@ -23,7 +23,6 @@ Status: **implemented V1** (M0–M11); this document remains the maintained test
 | CLI M11 | config schema/precedence, JSON stdout discipline, progress stderr, key storage/cache, validate/benchmark commands, dist entry | `apps/cli/test/{cli-m11,commands-m11,keys}.test.ts`, `packages/ai/test/disk-cache.test.ts`, `tests/dist-entry.test.ts` |
 | Benchmarks | deterministic micro/corpus/perf correctness, result-schema negatives, 500-file smoke, nightly mini-projects | `tests/benchmark.test.ts`, `tests/perf-smoke.test.ts`, CLI benchmark tests |
 | E2E | CLI/source-vs-target workflows and fixture projects | `apps/cli/test/`, `tests/*.test.ts` |
-| Benchmarks | aggregate quality/perf over time (not pass/fail per commit) | `benchmarks/` |
 
 ## 2. Fixture system (`tests/fixtures/`)
 

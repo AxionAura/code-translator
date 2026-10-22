@@ -12,6 +12,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   detectCapabilities,
   SandboxRunner,
+  SandboxSpecError,
   type SandboxCapabilities,
   type SandboxRunSpec,
 } from "../src/index.js";
@@ -46,9 +47,11 @@ describe("sandbox capability report", () => {
     if (capabilities.bwrap.available) {
       expect(capabilities.bwrap.version).toBeTruthy();
       expect(capabilities.networkIsolation).toBe("enforced");
+      expect(capabilities.filesystemIsolation).toBe("bwrap-allowlist");
     } else {
       expect(capabilities.bwrap.unavailableReason).toBeTruthy();
       expect(capabilities.networkIsolation).toBe("policy-only");
+      expect(capabilities.filesystemIsolation).toBe("none");
     }
     expect(capabilities.prlimit.available).toBe(true); // util-linux present in CI
   });
@@ -228,6 +231,74 @@ describe("sandbox enforcement", () => {
       rmSync(target, { recursive: true, force: true });
     }
   });
+
+  it("does not expose host files outside the declared workspace/mounts", async () => {
+    if (!capabilities.bwrap.available) {
+      // Honest policy-only mode: there is no enforced filesystem boundary.
+      expect(capabilities.networkIsolation).toBe("policy-only");
+      return;
+    }
+    const sentinelDir = mkdtempSync(join("/var/tmp", "ctrans-sentinel-"));
+    const sentinel = join(sentinelDir, "synthetic-secret.txt");
+    writeFileSync(sentinel, "SYNTHETIC-SENTINEL-NOT-A-REAL-SECRET\n");
+    try {
+      const code = [
+        "try:",
+        `    value = open(${JSON.stringify(sentinel)}, encoding="utf-8").read()`,
+        '    print("LEAKED" if "SYNTHETIC-SENTINEL" in value else "UNEXPECTED")',
+        "except OSError:",
+        '    print("BLOCKED")',
+      ].join("\n");
+      const result = await runner.run(
+        spec({ argv: [PYTHON, "-c", code], files: [{ path: "main.py", content: "" }] }),
+      );
+      expect(result.outcome).toBe("completed");
+      expect(result.stdout.trim()).toBe("BLOCKED");
+      expect(result.stdout).not.toContain("SYNTHETIC-SENTINEL");
+    } finally {
+      rmSync(sentinelDir, { recursive: true, force: true });
+    }
+  });
+
+  it("refuses broad sensitive mount roots (defense in depth)", async () => {
+    for (const path of [
+      "/",
+      "/home",
+      "/root",
+      "/etc",
+      "/var",
+      "/tmp",
+      "/proc",
+      "/sys",
+      "/dev",
+      "/usr",
+      "/bin",
+      "/sbin",
+      "/lib",
+      "/lib64",
+      "/lib32",
+    ]) {
+      await expect(
+        runner.run(
+          spec({
+            argv: [PYTHON, "-c", "print('x')"],
+            containerMounts: [{ path, readOnly: true }],
+          }),
+        ),
+      ).rejects.toThrow(SandboxSpecError);
+    }
+  });
+
+  it("refuses writable container mounts (only the workspace is writable)", async () => {
+    await expect(
+      runner.run(
+        spec({
+          argv: [PYTHON, "-c", "print('x')"],
+          containerMounts: [{ path: "/usr/local/share/toolchain", readOnly: false }],
+        }),
+      ),
+    ).rejects.toThrow(/only the workspace is writable/);
+  });
 });
 
 // Network isolation is only enforced when bwrap is usable; verify the REAL
@@ -262,9 +333,17 @@ describe("network isolation (capability-aware)", () => {
     expect(result.stdout).toContain("NETWORK-BLOCKED");
   });
 
-  it("fails in strict mode when isolation is required but unavailable", async () => {
-    if (capabilities.bwrap.available) return; // strict-path only testable without bwrap
-    const strict = new SandboxRunner({ capabilities });
+  it("fails in strict mode when isolation is required but unavailable (no downgrade)", async () => {
+    // Deterministic regardless of the host: simulate a policy-only capability
+    // report and assert execution is refused rather than run unsandboxed.
+    const strict = new SandboxRunner({
+      capabilities: {
+        ...capabilities,
+        bwrap: { available: false, version: null, unavailableReason: "test: bwrap absent" },
+        networkIsolation: "policy-only",
+        filesystemIsolation: "none",
+      },
+    });
     await expect(
       strict.run(
         spec({

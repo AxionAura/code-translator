@@ -7,6 +7,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
 
+import { bwrapSystemMountArgs } from "./bwrap-profile.js";
+
 const execFileP = promisify(execFile);
 
 export interface SandboxCapabilities {
@@ -17,6 +19,10 @@ export interface SandboxCapabilities {
   // Honest summary: "enforced" only when bwrap is usable; "policy-only" means
   // no enforced network isolation (static hints + caller policy still apply).
   readonly networkIsolation: "enforced" | "policy-only";
+  // Filesystem boundary actually applied: the bwrap least-privilege allowlist
+  // (system trees + minimal /etc + workspace/toolchain mounts only), or none when
+  // bwrap is unavailable. "none" is never equivalent to the allowlist.
+  readonly filesystemIsolation: "bwrap-allowlist" | "none";
 }
 
 export interface ToolCapability {
@@ -67,17 +73,13 @@ async function probeBwrapUnshare(
         "--unshare-net",
         "--unshare-pid",
         "--die-with-parent",
-        "--ro-bind",
-        "/",
-        "/",
+        ...bwrapSystemMountArgs(),
         "--dev",
         "/dev",
         "--proc",
         "/proc",
-        "--tmpfs",
-        "/tmp",
         "--",
-        "true",
+        "/usr/bin/true",
       ],
       { cwd: probeDir, timeout: 10000 },
     );
@@ -108,9 +110,20 @@ export async function detectCapabilities(
         bwrap: { available: false, version: bwrap.version, unavailableReason: usable.reason },
         prlimit,
         networkIsolation: "policy-only",
+        filesystemIsolation: "none",
       };
     }
-    return { bwrap, prlimit, networkIsolation: "enforced" };
+    return {
+      bwrap,
+      prlimit,
+      networkIsolation: "enforced",
+      filesystemIsolation: "bwrap-allowlist",
+    };
   }
-  return { bwrap, prlimit, networkIsolation: "policy-only" };
+  return {
+    bwrap,
+    prlimit,
+    networkIsolation: "policy-only",
+    filesystemIsolation: "none",
+  };
 }

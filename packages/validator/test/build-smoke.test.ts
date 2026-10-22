@@ -26,6 +26,7 @@ const capabilities = {
   bwrap: { available: true, version: "0.12", unavailableReason: null },
   prlimit: { available: true, version: "1", unavailableReason: null },
   networkIsolation: "enforced" as const,
+  filesystemIsolation: "bwrap-allowlist" as const,
 };
 
 const FILES = new Map([

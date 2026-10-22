@@ -62,9 +62,10 @@ this milestone.
 
 - Node.js ≥ 22.18.
 - `python3` ≥ 3.12 for the Python front-end and S6/source execution.
-- `bwrap` for default network-isolated execution (otherwise stages are skipped, not
-  faked); `prlimit` is optional; Docker/Podman plus an operator-provided image are
-  required only for `--strict`; gVisor is optional and only used when detected.
+- `bwrap` for default network-isolated execution with a least-privilege filesystem
+  allowlist (otherwise S5/S6/S7 and Python S4 are skipped/refused, not faked);
+  `prlimit` is optional; Docker/Podman plus an operator-provided image are required
+  only for `--strict`; gVisor is optional and only used when detected.
 - `CTRANS_AI_KEY`, an OS keychain entry, or a 0600 key file for AI features. AI is
   off by default.
 

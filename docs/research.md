@@ -133,7 +133,7 @@ Each item below was verified with a primary source on 2026-10-06. Full engineeri
 
 | Component | Version / status |
 | --- | --- |
-| Node.js | 24 = Active LTS; 26 LTS late Oct 2026 (ships Temporal). `engines: >=22.12`; recommend ≥26 for datetime fidelity |
+| Node.js | 24 = Active LTS; 26 LTS late Oct 2026 (ships Temporal). Adopted engine floor: `>=22.18` (raised from the initial 22.12 research note for unflagged TypeScript type stripping); recommend ≥26 for datetime fidelity |
 | pnpm | 10.x (10.26); build-script blocking on by default |
 | TypeScript | **6.x for compiler API** (`typescript@6` / `@typescript/typescript6` 6.0.2); 7.x fine for plain build/check |
 | ESLint | 10 (flat config only) |

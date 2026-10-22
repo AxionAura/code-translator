@@ -4,7 +4,7 @@ Format: Context → Decision → Consequences → Status. Superseded ADRs stay f
 
 ## D-001 — Engine language: TypeScript on Node.js (pnpm monorepo)
 **Context.** Engine could be Python, Rust, or TypeScript. Both runtimes are needed at *validation* time regardless (run Python tests on source, JS tests on target). Decisive factors: in-process access to oxc (JS/TS parsing) and typescript@6 Checker (semantic oracle for JS/TS); mature CLI/testing/lint tooling; autonomous-agent maintainability.
-**Decision.** TypeScript (strict) monorepo, Node ≥22.12, pnpm 10 workspaces. Python appears only as the dependency-free bridge script.
+**Decision.** TypeScript (strict) monorepo, Node ≥22.18 (floor raised from the initial 22.12 once the development CLI adopted unflagged TypeScript type stripping, D-022), pnpm 10 workspaces. Python appears only as the dependency-free bridge script.
 **Consequences.** Single language for engine code; Python semantics sourced via subprocess bridge instead of native imports; Rust possible later for hot paths (out of scope V1).
 **Status.** Accepted (2026-10-06).
 

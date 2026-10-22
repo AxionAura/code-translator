@@ -43,7 +43,7 @@ Final Target Project + Reports  (translation report, decision ledger, validation
 
 ## 3. Monorepo layout
 
-pnpm workspaces, TypeScript (Node ≥22.12; ≥26 recommended for Temporal-based datetime fidelity).
+pnpm workspaces, TypeScript (Node ≥22.18; ≥26 recommended for Temporal-based datetime fidelity). The floor is 22.18 because the development CLI relies on unflagged TypeScript type stripping.
 
 ```
 packages/
