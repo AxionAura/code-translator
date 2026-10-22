@@ -308,3 +308,19 @@ Immediate registry verification: all eleven `@axion-ct/*` names still returned
 was performed. Resume from `@axion-ct/core` only in an OTP-capable session (or
 with an authorized 2FA-bypass automation token), after re-running preflight and
 availability checks. Never republish an existing version.
+
+## 15. EOTP recovery check (2026-10-22)
+
+At clean `main`/`1c9c651`, `npm whoami` returned `code-translator`; all eleven
+`npm view <pkg> version` checks returned 404, so **0/11 packages are published**.
+
+Terminal capability was checked before any retry: stdin, stdout, and stderr are
+not TTYs; `tty` reports “not a tty”; opening `/dev/tty` fails with `ENXIO`. This
+automation session therefore cannot display npm’s OTP prompt or accept secure OTP
+input. No publish was attempted, no 2FA bypass or account change was made, and no
+tag, push, or upload occurred.
+
+Recovery requires a human-operated interactive terminal. Run the documented
+`@axion-ct/core` command there, enter the OTP directly at npm’s prompt, verify the
+published version, and only then continue the dependency order. The OTP must never
+be placed in a command argument, file, chat, or log.

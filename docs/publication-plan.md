@@ -3,7 +3,8 @@
 Status: **publication authorized and attempted; blocked at the first package by
 npm EOTP. 0 of 11 packages published; no registry mutation.** The authenticated
 npm account is `code-translator`, owner of `@axion-ct`, with 2FA enabled in
-`auth-and-writes` mode. No tag or push was performed.
+`auth-and-writes` mode. Recovery requires a human-operated interactive terminal;
+this automation session has no TTY. No tag or push was performed.
 
 ## Publication attempt (2026-10-22)
 
@@ -21,6 +22,22 @@ npm account is `code-translator`, owner of `@axion-ct`, with 2FA enabled in
   the OTP (or an authorized automation token with 2FA bypass is configured).
   Re-run the preflight and availability check before resuming; never republish an
   existing version.
+
+### EOTP recovery check (2026-10-22)
+
+- Git: clean `main` at `1c9c651`; no tags or remotes.
+- `npm whoami` → `code-translator`.
+- All eleven `npm view <pkg> version` checks still return **404**; **0/11
+  packages are published**.
+- Terminal capability: stdin, stdout, and stderr are **not TTYs**; `tty` reports
+  “not a tty”; opening `/dev/tty` fails with `ENXIO`. This tool session cannot
+  display an interactive npm OTP prompt or accept secure OTP input.
+- Therefore **no publish was attempted** in this session. No 2FA bypass, account
+  security change, tag, push, or upload was performed.
+- Recovery requires a human-operated interactive terminal on the same machine and
+  npm account. Run the documented `@axion-ct/core` command there, enter the OTP
+  directly at npm's prompt, verify the package, and only then continue the order.
+  Never place the OTP in a command argument, file, chat, or log.
 
 Prepared from `main` at `f4c69ab` (clean working tree, no tags, no remotes); the
 report update is a documentation-only follow-up. The scope migration and

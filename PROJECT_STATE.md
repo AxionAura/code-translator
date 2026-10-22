@@ -340,6 +340,7 @@ Model (`docs/security.md`): local-first; user code is untrusted data; parsing ne
 
 ## 19. Recent Changes
 
+- **2026-10-22 (EOTP recovery check):** at clean `main`/`1c9c651`, `npm whoami` → `code-translator`; all eleven `npm view` checks still return 404 (0/11 published). Terminal check: stdin/stdout/stderr are not TTYs, `tty` reports “not a tty,” and `/dev/tty` opens with `ENXIO`. No publish was attempted in this automation session, and no 2FA bypass, account change, tag, or push was performed. Resume requires a human-operated interactive terminal for the OTP prompt.
 - **2026-10-22 (authorized publication attempt):** explicit authorization was received for all eleven `@axion-ct/*` packages at `0.1.0`. Preflight at clean `d396f61` passed (`pnpm verify` 1091/1091; all eleven tarballs rebuilt and inspected). The first command, `pnpm --filter @axion-ct/core publish --access public --tag latest --no-git-checks --ignore-scripts`, returned **exit 1, `EOTP`**: npm requires a one-time password and the session could not supply one. The attempt stopped immediately. Registry checks confirmed all eleven names remain **404**; **0/11 packages were published**. No tag/push. Resume from `@axion-ct/core` in an OTP-capable session after re-running preflight; never republish an existing version.
 - **2026-10-22 (final npm release preflight):** at clean `main`/`f4c69ab`, `npm whoami` → **`code-translator`**; `npm org ls axion-ct code-translator --json` → **role `owner`**; `npm profile get --json` → **2FA enabled, `auth-and-writes`**. All eleven names remain 404 (unpublished). `pnpm verify` green (1091/1091, 110 files); all eleven `0.1.0` packages repack with no `workspace:`/old-scope/generated artifacts, and the planned dependency order is topologically valid. Publication awaits explicit maintainer authorization; no publish/tag/push/registry mutation. Report commit recorded in the follow-up docs commit.
 - **2026-10-22 (npm scope migration):** the maintainer created the `@axion-ct` npm organization because `@ctrans` was unavailable. All eleven package names, internal dependency declarations, source imports, source loader, TypeScript/Vitest aliases, lockfile, tests, and release documentation were migrated to `@axion-ct/*`; version remains `0.1.0`, root `code-translator` remains private. `pnpm verify` 1091/1091; all eleven packages pack with no `workspace:` or old-scope specs, and every packed internal dependency is `@axion-ct/*@0.1.0`. Clean deploy passes `doctor`, JS→Python, and a claim-5 project run. No publish/tag/push/registry mutation. Migration commit **`3918946`**; packaging follow-up **`70d774a`** restricts `parser-py` to `python/bridge.py`, excluding a stale `__pycache__` bytecode file.
@@ -375,10 +376,11 @@ another milestone:
 
 1. Release operations: authorization was received and the first publish was
    attempted. npm returned **`EOTP`** for `@axion-ct/core`; **0/11 packages were
-   published**. Resume from `@axion-ct/core` only in an OTP-capable publish
-   session (or with an authorized 2FA-bypass automation token), after re-running
-   the preflight and availability checks. Never republish an existing version.
-   See [docs/publication-plan.md](docs/publication-plan.md).
+   published**. This automation session has **no TTY** (`stdin`/`stdout`/`stderr`
+   are non-TTY; `/dev/tty` → `ENXIO`), so the OTP prompt cannot be completed here.
+   Resume from `@axion-ct/core` in a human-operated interactive terminal after
+   re-running the preflight and availability checks. Never republish an existing
+   version. See [docs/publication-plan.md](docs/publication-plan.md).
 2. Verification in environments not available here: live OS-keychain round-trip
    (macOS `security`, Linux `secret-tool` with a stored credential), Windows
    CredMan retrieval, live Podman and gVisor strict runs, and a full S4–S7 strict
