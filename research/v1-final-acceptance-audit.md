@@ -156,3 +156,61 @@ fixed and regression-tested; no execution, cleanup, timeout, or resource-limit
 protection was relaxed, and no test was skipped or weakened. Implementation commit:
 `7d56ebf`; documentation/state finalization follows in a separate commit. Nothing
 was published, tagged, or uploaded, and no registry state changed.
+
+## 10. V1 release readiness audit (2026-10-22)
+
+**Scope.** Verified the reported Git state (`main` at `a93989b`, clean tree, the
+three security commits present in order, no tags or remotes), package metadata and
+tarballs, the documented release procedure, security claims, and a clean consumer.
+No publishing, tagging, pushing, or registry mutation was performed.
+
+**High finding: the packaged CLI was missing its runtime toolchain.** In a clean
+`pnpm deploy` of `@ctrans/cli`, `translate --to py`, `doctor`, and project S5
+validation failed with `Cannot find module 'pyright/package.json'` or
+`Cannot find module 'vitest/package.json'`. `pyright`, `vitest`, and `typescript`
+were only root devDependencies; the published CLI dependency graph therefore did
+not contain them. This is release-blocking because JS/TS→Python S2, `doctor`,
+`validate`, and project S5/S6 are core V1 surfaces.
+
+**Fix.** `@ctrans/cli` now declares the pinned `pyright` 1.1.406,
+`typescript ~6.0.3`, and `vitest` 5.0.3 runtime dependencies. The sandbox
+toolchain resolver now prefers the pnpm virtual-store root (the node_modules that
+owns `.pnpm`) instead of a package-local link, so mounted paths resolve inside the
+sandbox. The packed CLI includes only `dist/` and `bin/ctrans-dist.mjs`; the
+source-mode launchers are development-only. `tests/dist-entry.test.ts` pins the
+runtime dependency declarations and the packaged file list. Commit `16aa56a`.
+
+**Packaging evidence.** All eleven publishable tarballs contain `dist/` (plus
+`python/bridge.py` for `@ctrans/parser-py`), `LICENSE`, and the rewritten
+`workspace:*` dependencies as `0.1.0`; the CLI bin is mode 0755. The root
+`code-translator` package is `private: true` and is not a release artifact;
+`pnpm -r pack` also produces a root tarball for local inspection, so only the
+eleven named packages may be packed/published.
+
+**Clean-consumer evidence (no network).**
+- `pnpm --filter @ctrans/cli deploy --prod --legacy /tmp/ctrans-deploy3` → **exit 0**.
+- Deployed `node bin/ctrans-dist.mjs --version` → `0.1.0`.
+- Deployed `doctor --json` → **exit 0** with required capabilities available.
+- Deployed `translate sample.js --to py` → **exit 0**, claim 3 (S1/S2/S3 pass).
+- Deployed `project <fixture> --to ts` → **exit 0**, claim 5 (S1–S6 pass, S7 skipped).
+- The packed CLI tarball, extracted with the clean deploy's dependencies, reports
+  `0.1.0` and translates JS→Python successfully.
+- A fully offline `pnpm install` from the tarballs could not complete because the
+  local pnpm store lacked `web-tree-sitter@0.27.1` (the repo lockfile pins
+  `0.27.0`); this is an environment/store limitation, not a package defect. A
+  network install was not attempted.
+
+**Verification.** `pnpm verify` → **exit 0** (110 files, 1091/1091 tests, doc
+links); `pnpm test:coverage -- --maxWorkers=4` → **exit 0** (1091/1091; floors
+held: validator 94.94%, sandbox 86.39%; CLI 82.56%, no floor). The targeted
+project/golden-repair suites pass after the toolchain resolver fix.
+
+**External prerequisites (UNVERIFIED).** npm authentication, ownership of the
+`@ctrans` scope, registry availability/policy, 2FA, and the actual publish
+operation were not checked or performed; they require network access and explicit
+authorization. Live gVisor, live keychain retrieval, Windows CredMan, and a full
+strict toolchain image remain unverified.
+
+**Verdict: READY WITH DOCUMENTED LIMITATIONS.** The release-blocking packaging
+defect is fixed and verified in a clean consumer; remaining publication steps are
+external and require maintainer authorization.
