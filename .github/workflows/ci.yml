@@ -18,6 +18,9 @@ jobs:
   verify:
     name: Verify (Node ${{ matrix.node }}, Python ${{ matrix.python }})
     runs-on: ubuntu-24.04
+    container:
+      image: node:${{ matrix.node }}-bookworm
+      options: --privileged --user root
     timeout-minutes: 45
     strategy:
       fail-fast: false
@@ -52,8 +55,8 @@ jobs:
 
       - name: Install sandbox dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends bubblewrap util-linux
+          apt-get update
+          apt-get install -y --no-install-recommends bubblewrap util-linux
 
       - name: Report tool versions
         run: |
@@ -90,6 +93,9 @@ jobs:
   coverage:
     name: Coverage floors
     runs-on: ubuntu-24.04
+    container:
+      image: node:24.15.0-bookworm
+      options: --privileged --user root
     timeout-minutes: 45
     steps:
       - name: Check out source
@@ -114,8 +120,8 @@ jobs:
 
       - name: Install sandbox dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends bubblewrap util-linux
+          apt-get update
+          apt-get install -y --no-install-recommends bubblewrap util-linux
 
       - name: Install dependencies from the lockfile
         run: pnpm install --frozen-lockfile
@@ -129,6 +135,9 @@ jobs:
   public-cli:
     name: Published CLI install (Linux)
     runs-on: ubuntu-24.04
+    container:
+      image: node:24.15.0-bookworm
+      options: --privileged --user root
     timeout-minutes: 30
     steps:
       - name: Check out smoke-test support files
@@ -146,8 +155,8 @@ jobs:
 
       - name: Install sandbox dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends bubblewrap util-linux
+          apt-get update
+          apt-get install -y --no-install-recommends bubblewrap util-linux
 
       - name: Verify the published npm CLI outside the workspace
         run: node scripts/public-cli-smoke.mjs 0.1.1

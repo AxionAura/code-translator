@@ -74,7 +74,7 @@ The forward matrix lives in `packages/codegen-js/test/construct-matrix.data.ts` 
 
 `.github/workflows/ci.yml` runs read-only on pushes to `main`, pull requests targeting `main`, and manual dispatch:
 
-- **Verify matrix (Ubuntu 24.04):** pinned pnpm `10.26.0`, frozen-lockfile install, bubblewrap, and `pnpm verify` on Node 22.18/Python 3.12, Node 22.18/Python 3.14, and Node 24.15/Python 3.13. This samples the supported range; it is not a full Node×Python cross product.
+- **Verify matrix (Ubuntu 24.04 runner, pinned Node container):** pinned pnpm `10.26.0`, frozen-lockfile install, bubblewrap, and `pnpm verify` on Node 22.18/Python 3.12, Node 22.18/Python 3.14, and Node 24.15/Python 3.13. Jobs run in ephemeral privileged Node containers because the standard hosted runner blocks the unprivileged user namespaces Bubblewrap requires; GitHub token permissions remain read-only. This samples the supported range; it is not a full Node×Python cross product.
 - **Coverage:** `pnpm test:coverage -- --maxWorkers=4` followed by `pnpm coverage:check`.
 - **Published CLI install:** `scripts/public-cli-smoke.mjs` installs `@axion-ct/cli@0.1.1` from npm into a temporary directory outside the checkout, checks all internal registry resolutions, runs `doctor`, all six directions, and a claim-5 project fixture.
 - CI is Linux-only. macOS and Windows are not claimed or tested by this workflow.
