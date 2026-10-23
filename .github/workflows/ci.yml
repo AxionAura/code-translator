@@ -53,6 +53,12 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
 
+      - name: Register Python for the minimal bridge environment
+        run: |
+          echo "$pythonLocation/lib" > /etc/ld.so.conf.d/ctrans-python.conf
+          ldconfig
+          env -u LD_LIBRARY_PATH python3 --version
+
       - name: Install sandbox dependencies
         run: |
           apt-get update
@@ -118,6 +124,12 @@ jobs:
         with:
           python-version: "3.14"
 
+      - name: Register Python for the minimal bridge environment
+        run: |
+          echo "$pythonLocation/lib" > /etc/ld.so.conf.d/ctrans-python.conf
+          ldconfig
+          env -u LD_LIBRARY_PATH python3 --version
+
       - name: Install sandbox dependencies
         run: |
           apt-get update
@@ -152,6 +164,12 @@ jobs:
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.14"
+
+      - name: Register Python for the minimal bridge environment
+        run: |
+          echo "$pythonLocation/lib" > /etc/ld.so.conf.d/ctrans-python.conf
+          ldconfig
+          env -u LD_LIBRARY_PATH python3 --version
 
       - name: Install sandbox dependencies
         run: |

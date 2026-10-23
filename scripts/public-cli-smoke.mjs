@@ -245,7 +245,14 @@ try {
   console.log(`public @axion-ct/cli@${expectedVersion} smoke verification passed`);
 } catch (error) {
   console.error(`public @axion-ct/cli@${expectedVersion} smoke verification failed`);
-  console.error(error instanceof Error ? error.message : String(error));
+  if (error instanceof Error) {
+    console.error(error.message);
+    if (typeof error.stderr === "string" && error.stderr.trim() !== "") {
+      console.error(error.stderr.trim());
+    }
+  } else {
+    console.error(String(error));
+  }
   process.exitCode = 1;
 } finally {
   rmSync(temp, { recursive: true, force: true });
