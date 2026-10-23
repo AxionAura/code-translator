@@ -276,10 +276,11 @@ Full log: `docs/decisions.md` (28 ADRs). The ones another AI must not accidental
 
 ## 12. Testing
 
-- **Framework:** Vitest 5.0.3 (single root `vitest.config.ts`; coverage via `@vitest/coverage-v8` 5.0.5; `pnpm test:coverage`).
+- **Framework:** Vitest 5.0.3 (single root `vitest.config.ts`; coverage via `@vitest/coverage-v8` 5.0.5; `pnpm test:coverage` writes a JSON summary and `pnpm coverage:check` enforces the floors).
 - **Number of tests:** 1116 (113 files; P0 integer-precision milestone added three test files with 25 regression/behavior tests).
 - **Passing / Failing / Skipped:** 1116 / 0 / 0 (`pnpm verify` exit 0, 2026-10-22; coverage run also 1116/1116). The earlier post-publication baseline was 1091/1091.
-- **Coverage (floors: core ≥85%, parser/codegen ≥90% lines):** core 92.07% ✓, parser-py 91.82% ✓, parser-js 91.74% ✓, codegen-js 90.86% ✓, codegen-py 90.46% ✓, registry 94.73% ✓, @axion-ct/ai 91.64% ✓, @axion-ct/repair 95.09% ✓, @axion-ct/validator 94.94% ✓; @axion-ct/sandbox 86.05%, CLI 82.56% (no floors; remaining lines are capability/cleanup, config/benchmark edge paths). Measured 2026-10-22.
+- **Coverage (floors: core ≥85%, parser/codegen ≥90% lines):** core 92.08% ✓, parser-py 91.82% ✓, parser-js 91.75% ✓, codegen-js 90.87% ✓, codegen-py 90.46% ✓, registry 94.73% ✓, @axion-ct/ai 91.64% ✓, @axion-ct/repair 95.09% ✓, @axion-ct/validator 94.94% ✓; @axion-ct/sandbox 86.39%, CLI 82.56% (no floors; remaining lines are capability/cleanup, config/benchmark edge paths). Measured 2026-10-24 with `pnpm coverage:check`.
+- **GitHub Actions CI (configured 2026-10-24):** `.github/workflows/ci.yml` runs read-only on `main` pushes/PRs: a three-job Ubuntu verify matrix (Node 22.18 + Python 3.12/3.14, Node 24.15 + Python 3.13), coverage-floor enforcement, and a public-npm `@axion-ct/cli@0.1.1` install/smoke job that checks all six directions and a claim-5 project. Linux-only; no macOS/Windows claim.
 - **Strategy notes:** ConstructMatrix entries assert BOTH emitted code and the ledger's decision class (no silent downgrades); `pnpm fixtures:accept` regenerates goldens and AGENTS.md §11 requires review rationale with them; bugs fix red-first; registry entries are usage-tested against Python semantics, not just lookup-tested.
 
 ## 13. Benchmark Results
@@ -359,7 +360,8 @@ Model (`docs/security.md`): local-first; user code is untrusted data; parsing ne
 
 ## 19. Recent Changes
 
-- **2026-10-23 (v0.1.1 published and verified):** all eleven `@axion-ct/*` packages were published at `0.1.1` (window `15:44:22.016–15:49:18.320 UTC`) with SHA-512 integrity and `latest=0.1.1`. A fresh install of `@axion-ct/cli@0.1.1` from the public registry added 149 packages and resolved all eleven internal packages from npm; the CLI reported `0.1.1`; `doctor` exited 0 (`requiredAvailable`/`strictAvailable` true); all six translation directions exited 0; and `project-barrels-multi-module` reached claim 5 with S5 5/5 and S6 5/5. Annotated tag `v0.1.1` was created at source commit `5a9ed870892a46b80bc589d7251cceef3917f9f8`; `v0.1.0` remains at `716a11b`. Evidence: [docs/release-report-v0.1.1.md](docs/release-report-v0.1.1.md). No push (no remote).
+- **2026-10-24 (GitHub publication + CI/clean-install verification):** the project was published to the public GitHub repository [`AxionAura/code-translator`](https://github.com/AxionAura/code-translator) with existing history/tags and the `v0.1.1` GitHub Release. Added `.github/workflows/ci.yml` (read-only Ubuntu verify matrix, coverage floors, and published-CLI install/smoke), `scripts/check-coverage.mjs`, `scripts/public-cli-smoke.mjs`, a machine-readable coverage summary, and `pnpm coverage:check`. Local validation passed: workflow/script syntax and formatting, `pnpm test:coverage -- --maxWorkers=4` (1116/1116), `pnpm coverage:check`, public `@axion-ct/cli@0.1.1` six-direction + claim-5 project smoke, and the compiled-CLI doctor assertions. CI is Linux-only and samples supported runtime combinations rather than a full Node×Python cross product.
+- **2026-10-23 (v0.1.1 published and verified):** all eleven `@axion-ct/*` packages were published at `0.1.1` (window `15:44:22.016–15:49:18.320 UTC`) with SHA-512 integrity and `latest=0.1.1`. A fresh install of `@axion-ct/cli@0.1.1` from the public registry added 149 packages and resolved all eleven internal packages from npm; the CLI reported `0.1.1`; `doctor` exited 0 (`requiredAvailable`/`strictAvailable` true); all six translation directions exited 0; and `project-barrels-multi-module` reached claim 5 with S5 5/5 and S6 5/5. Annotated tag `v0.1.1` was created at source commit `5a9ed870892a46b80bc589d7251cceef3917f9f8`; `v0.1.0` remains at `716a11b`. Evidence: [docs/release-report-v0.1.1.md](docs/release-report-v0.1.1.md). No push at the time (the GitHub remote was added on 2026-10-24).
 - **2026-10-23 (v0.1.1 patch release prepared locally; historical):** bumped the private root and all eleven publishable packages to `0.1.1`; `workspace:*` internal ranges remain and pack to `@axion-ct/*@0.1.1`. Added [docs/release-notes-v0.1.1.md](docs/release-notes-v0.1.1.md) (integer-precision warning, integral-float/hex-token fixes, explicit `0 ** -1` limitation) and [docs/publication-plan-v0.1.1.md](docs/publication-plan-v0.1.1.md) (checklist and exact dependency-ordered commands). Updated release docs, README, dist-entry version expectations, and PROJECT_STATE. All eleven tarballs were inspected locally; `pnpm verify` and coverage passed (113 files, 1116/1116; codegen-js 90.86%). Read-only checks then returned 404 for all eleven `@axion-ct/*@0.1.1` requests; npm `latest` remained `0.1.0`.
 - **2026-10-22 (P0 integer precision safety, unreleased working tree):** fixed silent number-mode precision loss for constant exponentiation/arithmetic. `constIntegerInfo` in `packages/codegen-js/src/lower.ts` uses exact BigInt analysis for `+`, `-`, `*`, `**`, `//`, `%`, and unary `+`/`-`; unsafe final/intermediate values are `semantic` with `CTW-NUM-INT-ARBITRARY-PRECISION`; safe boundaries (`2 ** 53 - 1`) are deterministic and warning-free; bigint mode remains exact. Regression tests cover both targets, both int modes, boundary/composed/literal/runtime cases, report/claim output, and sandbox-backed safe/bigint execution. **113 files, 1116/1116 tests**; codegen-js coverage 90.86%. Published v0.1.0 still has the pre-fix behavior and needs a patch release. No commit/tag/push/registry change.
 - **2026-10-22 (post-release audit & v1.0 roadmap):** audited the published v0.1.0 without changing source, versions, dependencies, tags, or registry. `pnpm verify` exit 0 (110 files, 1091/1091 tests); coverage exit 0 (floors held); sandbox/container 31/31; project goldens 4/4; published CLI version/help exit 0. Found P0 silent default-number precision loss for `2 ** 53 + 1`/`2 ** 100`; P1 issues: generated provenance still `0.0.0`, no CI/remote, asymmetric behavioral/S5-S6 coverage, diagnostics without spans, unpinned external dependency ranges, and non-explicit claim/partiality. Deliverables: [research/post-release-product-audit.md](research/post-release-product-audit.md) and [docs/v1-roadmap.md](docs/v1-roadmap.md). **v1.0.0 is not complete or released.** No commit/tag/push/registry change was performed by this audit.
@@ -401,15 +403,17 @@ language or UI:
 
 1. v0.1.1 is published and verified: all eleven packages are live at `0.1.1`
    with SHA-512 integrity and `latest=0.1.1`; annotated tag `v0.1.1` points to
-   `5a9ed870892a46b80bc589d7251cceef3917f9f8`. Do not republish `0.1.0` or
+   `5a9ed870892a46b80bc589d7251cceef3917f9f8`. The public GitHub repository and
+   `v0.1.1` release are live at
+   https://github.com/AxionAura/code-translator. Do not republish `0.1.0` or
    `0.1.1`; optional registry cleanup of the `0.0.0-stage` artifacts is a
-   separate maintainer decision. Pushing a tag requires a configured remote and
-   explicit authorization; none is configured here.
+   separate maintainer decision.
 2. Execute the remaining v1.0 P0/P1 backlog: align generated provenance with the
-   package version; add CI and consumer-install reproducibility; make six-direction
-   behavioral/S5-S6 coverage symmetric; add source-span diagnostics; bound external
-   dependency drift; make partiality machine-readable; exercise the strict container
-   path; and address the separately disclosed number-mode `0 ** -1` gap.
+   package version; broaden CI beyond the initial Linux/runtime sample and make
+   six-direction behavioral/S5-S6 coverage symmetric; add source-span
+   diagnostics; bound external dependency drift; make partiality
+   machine-readable; exercise the strict container path; and address the
+   separately disclosed number-mode `0 ** -1` gap.
 3. Verification in environments not available here: live OS-keychain round-trip
    (macOS `security`, Linux `secret-tool` with a stored credential), Windows
    CredMan retrieval, live Podman and gVisor strict runs, and a full S4–S7 strict

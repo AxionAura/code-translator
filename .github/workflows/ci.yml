@@ -1,0 +1,153 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  verify:
+    name: Verify (Node ${{ matrix.node }}, Python ${{ matrix.python }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - node: 22.18.0
+            python: "3.12"
+          - node: 22.18.0
+            python: "3.14"
+          - node: 24.15.0
+            python: "3.13"
+    steps:
+      - name: Check out source
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - name: Install pinned pnpm
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          version: 10.26.0
+
+      - name: Install Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: ${{ matrix.node }}
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install sandbox dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends bubblewrap util-linux
+
+      - name: Report tool versions
+        run: |
+          node --version
+          python3 --version
+          pnpm --version
+          bwrap --version
+
+      - name: Install dependencies from the lockfile
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify build, types, lint, formatting, tests, and docs
+        run: pnpm verify
+
+      - name: Verify compiled CLI doctor capabilities
+        run: |
+          node apps/cli/bin/ctrans-dist.mjs doctor --json > "$RUNNER_TEMP/doctor.json"
+          DOCTOR_JSON="$RUNNER_TEMP/doctor.json" node -e '
+            const fs = require("node:fs");
+            const report = JSON.parse(fs.readFileSync(process.env.DOCTOR_JSON, "utf8"));
+            if (report.requiredAvailable !== true) {
+              throw new Error("compiled CLI doctor did not report requiredAvailable=true");
+            }
+            const capabilities = Object.values(report.capabilities ?? {});
+            for (const requiredName of ["node", "python3", "bwrap", "pyright", "tsc", "vitest"]) {
+              const capability = capabilities.find((entry) => entry.name === requiredName);
+              if (capability?.state !== "available") {
+                throw new Error(`required capability unavailable: ${requiredName}`);
+              }
+            }
+            console.log("compiled CLI doctor: required capabilities available");
+          '
+
+  coverage:
+    name: Coverage floors
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Check out source
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - name: Install pinned pnpm
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          version: 10.26.0
+
+      - name: Install Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24.15.0
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.14"
+
+      - name: Install sandbox dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends bubblewrap util-linux
+
+      - name: Install dependencies from the lockfile
+        run: pnpm install --frozen-lockfile
+
+      - name: Run tests with coverage
+        run: pnpm test:coverage -- --maxWorkers=4
+
+      - name: Enforce documented coverage floors
+        run: pnpm coverage:check
+
+  public-cli:
+    name: Published CLI install (Linux)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out smoke-test support files
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - name: Install Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24.15.0
+
+      - name: Install Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.14"
+
+      - name: Install sandbox dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends bubblewrap util-linux
+
+      - name: Verify the published npm CLI outside the workspace
+        run: node scripts/public-cli-smoke.mjs 0.1.1

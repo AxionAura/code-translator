@@ -66,9 +66,18 @@ The forward matrix lives in `packages/codegen-js/test/construct-matrix.data.ts` 
 
 ## 6. Coverage & gates
 
-- Floors from M4: core ≥85%, parser/codegen ≥90% line coverage (CI-enforced).
+- Floors from M4: core ≥85%, parser/codegen ≥90% line coverage. `pnpm test:coverage` writes `coverage/coverage-summary.json`; `pnpm coverage:check` enforces the floors.
 - Every milestone's DoD includes its test gate (roadmap.md).
 - Tests may not mock what they own: pipeline internals are tested for real; only `ChatModel`, sandbox process edges, and clocks are faked.
+
+### GitHub Actions CI
+
+`.github/workflows/ci.yml` runs read-only on pushes to `main`, pull requests targeting `main`, and manual dispatch:
+
+- **Verify matrix (Ubuntu 24.04):** pinned pnpm `10.26.0`, frozen-lockfile install, bubblewrap, and `pnpm verify` on Node 22.18/Python 3.12, Node 22.18/Python 3.14, and Node 24.15/Python 3.13. This samples the supported range; it is not a full Node×Python cross product.
+- **Coverage:** `pnpm test:coverage -- --maxWorkers=4` followed by `pnpm coverage:check`.
+- **Published CLI install:** `scripts/public-cli-smoke.mjs` installs `@axion-ct/cli@0.1.1` from npm into a temporary directory outside the checkout, checks all internal registry resolutions, runs `doctor`, all six directions, and a claim-5 project fixture.
+- CI is Linux-only. macOS and Windows are not claimed or tested by this workflow.
 
 ## 7. Manual-quality gate (autonomous phases)
 

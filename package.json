@@ -17,6 +17,7 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "coverage:check": "node scripts/check-coverage.mjs",
     "docs:check": "node scripts/check-doc-links.mjs",
     "fixtures:accept": "FIXTURES_ACCEPT=1 vitest run tests/golden-fixtures.test.ts",
     "build": "pnpm -r --workspace-concurrency=4 build",
