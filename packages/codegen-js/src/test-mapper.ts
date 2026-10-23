@@ -19,7 +19,7 @@ import type {
 } from "@axion-ct/core";
 import { CTransError, normalizeModuleId, targetPathForModule } from "@axion-ct/core";
 
-import { LoweringContext, ScopeStack } from "./context.js";
+import { floatLiteralStartsFromTokens, LoweringContext, ScopeStack } from "./context.js";
 import { Emitter } from "./lower.js";
 import { RUNTIME_EXCEPTION_CLASSES, RUNTIME_HELPERS, helperClosure } from "./helpers.js";
 import { importedSymbolKindsFor } from "./translator.js";
@@ -90,7 +90,12 @@ export class PytestToVitestMapper {
   constructor(unit: AnalyzedUnit, context: TestMapperContext) {
     this.unit = unit;
     this.context = context;
-    this.ctx = new LoweringContext("typescript", unit.filename);
+    this.ctx = new LoweringContext(
+      "typescript",
+      unit.filename,
+      "number",
+      floatLiteralStartsFromTokens(unit.parseResult.tokens),
+    );
     const analyzed: UnitTranslationContext["analyzed"] = context.analyzed;
     this.emitter = new Emitter(
       this.ctx,

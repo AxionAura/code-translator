@@ -4,6 +4,12 @@ Status: **published and verified on npm.** Release date: **2026-10-22** (UTC).
 This report records post-publication verification; no package was republished by
 this audit.
 
+> **Historical release.** A `v0.1.1` patch release candidate (integer-precision
+> warning fix, integral-float/hex-token fixes) is prepared locally but **not
+> published**; see [release-notes-v0.1.1.md](release-notes-v0.1.1.md) and
+> [publication-plan-v0.1.1.md](publication-plan-v0.1.1.md). The registry state
+> below is the `0.1.0` state and was not changed by the patch preparation.
+
 ## Published packages
 
 Registry checks used `npm view <pkg>@0.1.0` and `npm view <pkg> dist-tags`.
@@ -69,6 +75,18 @@ The limitations in [release.md](release.md) remain: claim levels are not semanti
 proof; strict validation requires an operator-provided toolchain image; gVisor,
 live keychain retrieval, Windows CredMan, and a full containerized S4–S7 run were
 not exercised in this environment; reverse test translation remains deferred.
+
+## Post-release P0 correction (v0.1.1 prepared, not published)
+
+The post-release audit found a silent number-mode integer-precision gap in the
+published `v0.1.0` artifacts: constant expressions such as `2 ** 53 + 1` and
+`2 ** 100` were emitted as JS numbers with no warning. An exact constant-integer
+analysis and regression suite now exist in the repository, and all eleven packages
+are prepared at `0.1.1`. The fix is **not part of the published `v0.1.0`
+tarballs** and has not been published as `0.1.1`; see
+[release-notes-v0.1.1.md](release-notes-v0.1.1.md) and
+[publication-plan-v0.1.1.md](publication-plan-v0.1.1.md). No package was
+republished and the `v0.1.0` tag was not moved.
 
 ## Release tag
 

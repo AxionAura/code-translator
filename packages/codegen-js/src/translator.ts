@@ -22,7 +22,7 @@ import {
 import { format } from "prettier";
 
 import { type AmbiguityRequest } from "@axion-ct/core";
-import { LoweringContext, ScopeStack } from "./context.js";
+import { floatLiteralStartsFromTokens, LoweringContext, ScopeStack } from "./context.js";
 import { collectMatchStatements, matchAmbiguityRequest } from "./match.js";
 import {
   INT_RESULT_TYPE,
@@ -89,7 +89,12 @@ export class PyToJsTranslator implements UnitTranslator {
     context?: UnitTranslationContext,
   ): Promise<UnitEmission> {
     const extension = this.target === "typescript" ? (".ts" as const) : (".js" as const);
-    const ctx = new LoweringContext(this.target, unit.filename, this.intMode);
+    const ctx = new LoweringContext(
+      this.target,
+      unit.filename,
+      this.intMode,
+      floatLiteralStartsFromTokens(unit.parseResult.tokens),
+    );
     const exportedNames = new Set(pythonExportNames(unit.parseResult, unit.model));
     const emitter = new Emitter(
       ctx,

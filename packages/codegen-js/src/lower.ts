@@ -79,6 +79,50 @@ function taggedDecimal(value: unknown): string | null {
   return null;
 }
 
+// Exact-integer analysis for number mode (D-006). Values that cannot be
+// represented exactly by float64 are still emitted as JS numbers for compatibility,
+// but the operation is classified semantic and warned instead of being presented as
+// deterministic equivalence. `value: null` means "known integer, but too large to
+// materialize here"; it is treated conservatively as unsafe.
+interface ConstIntegerInfo {
+  readonly value: bigint | null;
+  // The value is outside JavaScript's safe-integer range (so the expression is
+  // reported as a precision risk even if the particular value is exactly
+  // representable, e.g. 2 ** 53).
+  readonly unsafe: boolean;
+  // An intermediate or the final value cannot be represented exactly by float64.
+  // This is what makes a later operation unsafe even when its final value is small
+  // (e.g. (2 ** 100 + 1) - 2 ** 100).
+  readonly lossy: boolean;
+}
+
+const MAX_SAFE_INTEGER_BIGINT = BigInt(Number.MAX_SAFE_INTEGER);
+const MIN_SAFE_INTEGER_BIGINT = BigInt(Number.MIN_SAFE_INTEGER);
+
+function isSafeIntegerBigInt(value: bigint): boolean {
+  return value >= MIN_SAFE_INTEGER_BIGINT && value <= MAX_SAFE_INTEGER_BIGINT;
+}
+
+// Conservative exact-representability check for an integer in IEEE-754 float64.
+// Safe-range integers are exact; outside that range only powers of two up to the
+// finite binary64 exponent range are accepted without further proof. Non-powers are
+// treated as lossy (conservative), never as exact.
+function isExactFloatInteger(value: bigint): boolean {
+  if (isSafeIntegerBigInt(value)) return true;
+  const magnitude = value < 0n ? -value : value;
+  if ((magnitude & (magnitude - 1n)) !== 0n) return false;
+  return magnitude.toString(2).length <= 1024;
+}
+
+function constIntegerInfo(value: bigint | null, childLossy = false): ConstIntegerInfo {
+  if (value === null) return { value: null, unsafe: true, lossy: true };
+  return {
+    value,
+    unsafe: !isSafeIntegerBigInt(value),
+    lossy: childLossy || !isExactFloatInteger(value),
+  };
+}
+
 function escapeTemplate(text: string): string {
   return text.replaceAll("\\", "\\\\").replaceAll("`", "\\`").replaceAll("${", "\\${");
 }
@@ -229,6 +273,13 @@ export class Emitter {
   // genuine forward reference, not an unmapped builtin.
   private readonly unitDefinedNames = new Set<string>();
   private readonly selfNames: string[] = [];
+  // A safe enclosing constant expression confirms that an otherwise-risky
+  // subexpression's exact value is consumed without loss; suppress its warning so
+  // e.g. 2 ** 53 - 1 is not reported as unsafe while 2 ** 53 alone still is.
+  private precisionWarningSuppression = 0;
+  // Constant analysis is pure per AST node; cache it so nested expressions are
+  // not re-evaluated from scratch at every ancestor.
+  private readonly constIntegerCache = new Map<AstNode, ConstIntegerInfo | null>();
   private selfFieldTypes: Map<string, AnnotatedType> = new Map();
   private readonly classFieldTypes = new Map<string, Map<string, AnnotatedType>>();
   private exceptBinding: string | null = null;
@@ -684,6 +735,23 @@ export class Emitter {
       return value ? "true" : "false";
     }
     if (typeof value === "number") {
+      if (
+        this.ctx.intMode === "bigint" &&
+        Number.isInteger(value) &&
+        this.isFloatLiteralNode(node)
+      ) {
+        // The bridge's JSON number loses the int/float distinction for 2.0; the
+        // token stream restores it. A Python float stays a JS number in bigint mode.
+        this.ctx.record({
+          span: pySpan(node),
+          sourceKind: "py.Constant(float)",
+          rule: "py.float→js.number",
+          decision: "deterministic",
+          rationale: "float literal correspondence (token-level int/float distinction)",
+          targetSummary: String(value),
+        });
+        return String(value);
+      }
       if (this.ctx.intMode === "bigint" && Number.isInteger(value)) {
         // D-006 exact mode: Python ints are JS bigint literals.
         this.ctx.record({
@@ -896,8 +964,23 @@ export class Emitter {
     const leftNode = kid(node, "left")!;
     const rightNode = kid(node, "right")!;
     const operator = kid(node, "op")!.kind;
-    const left = this.lowerExpr(leftNode);
-    const right = this.lowerExpr(rightNode);
+    // A safe enclosing result means an exactly-representable boundary value in a
+    // child (e.g. 2 ** 53 inside 2 ** 53 - 1) is consumed without precision loss.
+    // Suppress only the child warning; the enclosing operation still records its own
+    // classification below.
+    const finalInfo = this.ctx.intMode === "number" ? this.constIntegerInfo(node) : null;
+    const suppressChildPrecision = finalInfo !== null && !finalInfo.unsafe && !finalInfo.lossy;
+    const lowerOperand = (operand: AstNode): string => {
+      if (!suppressChildPrecision) return this.lowerExpr(operand);
+      this.precisionWarningSuppression += 1;
+      try {
+        return this.lowerExpr(operand);
+      } finally {
+        this.precisionWarningSuppression -= 1;
+      }
+    };
+    const left = lowerOperand(leftNode);
+    const right = lowerOperand(rightNode);
     const span = pySpan(node);
     const leftKind = this.operandKind(leftNode, left);
     const rightKind = this.operandKind(rightNode, right);
@@ -905,6 +988,13 @@ export class Emitter {
     const bothStrings = leftKind === "string" && rightKind === "string";
     const bothArrays = leftKind === "array" && rightKind === "array";
     const dynamic = !bothNumbers && !bothStrings;
+    // D-006 number mode: a constant integer expression whose exact result (or any
+    // intermediate) exceeds float64's safe-integer range must not be presented as
+    // deterministic equivalence. The emitted value stays a number for compatibility;
+    // the ledger records the semantic adaptation and the precision warning.
+    const precisionRisk = this.integerPrecisionRisk(node);
+    const precisionRationale =
+      "constant integer expression exceeds JavaScript's safe-integer range (D-006); emitted as number with precision warning";
     // D-006 bigint mode: statically-provable int operands keep exact native bigint
     // operators; a provable int mixed with a provable float converts across the
     // documented Number boundary; unknown operands go through the bigint-aware
@@ -929,15 +1019,28 @@ export class Emitter {
             : dynamic
               ? "py.add→__ctrans.add"
               : "py.add→js.+",
-          decision: dynamic && !bothArrays ? "semantic" : "deterministic",
-          rationale: bothStrings
-            ? "string concatenation correspondence (both operands statically str)"
-            : bothNumbers
-              ? "numeric addition correspondence"
+          decision: precisionRisk
+            ? "semantic"
+            : dynamic && !bothArrays
+              ? "semantic"
+              : "deterministic",
+          rationale: precisionRisk
+            ? precisionRationale
+            : bothStrings
+              ? "string concatenation correspondence (both operands statically str)"
+              : bothNumbers
+                ? "numeric addition correspondence"
+                : bothArrays
+                  ? "Python list concatenation corresponds to array spread concat (statically typed sequences)"
+                  : "Python raises on str+number while JS concatenates - operand types are not statically known, __ctrans_add preserves Python semantics",
+          adaptation: precisionRisk
+            ? "native operator with precision warning"
+            : dynamic
+              ? "__ctrans_add"
               : bothArrays
-                ? "Python list concatenation corresponds to array spread concat (statically typed sequences)"
-                : "Python raises on str+number while JS concatenates - operand types are not statically known, __ctrans_add preserves Python semantics",
-          adaptation: dynamic ? "__ctrans_add" : bothArrays ? "spread concat" : null,
+                ? "spread concat"
+                : null,
+          warnings: precisionRisk ? [CTW_NUM_PRECISION] : [],
           targetSummary: dynamic ? "add(left, right)" : `${left} + ${right}`,
         });
         if (bothArrays) return `([...${left}, ...${right}])`;
@@ -968,11 +1071,18 @@ export class Emitter {
           span,
           sourceKind: "py.BinOp(Sub)",
           rule: dynamic ? "py.sub→__ctrans.sub" : "py.sub→js.-",
-          decision: dynamic ? "semantic" : "deterministic",
-          rationale: bothNumbers
-            ? "numeric subtraction correspondence"
-            : "operands are statically unknown; JS would coerce - __ctrans_sub raises the Python TypeError",
-          adaptation: dynamic ? "__ctrans_sub" : null,
+          decision: precisionRisk ? "semantic" : dynamic ? "semantic" : "deterministic",
+          rationale: precisionRisk
+            ? precisionRationale
+            : bothNumbers
+              ? "numeric subtraction correspondence"
+              : "operands are statically unknown; JS would coerce - __ctrans_sub raises the Python TypeError",
+          adaptation: precisionRisk
+            ? "native operator with precision warning"
+            : dynamic
+              ? "__ctrans_sub"
+              : null,
+          warnings: precisionRisk ? [CTW_NUM_PRECISION] : [],
           targetSummary: dynamic ? "sub(left, right)" : `${left} - ${right}`,
         });
         if (mixedIntFloat) {
@@ -1012,11 +1122,18 @@ export class Emitter {
           span,
           sourceKind: "py.BinOp(Mult)",
           rule: bothNumbers ? "py.mul→js.*" : "py.mul→__ctrans.mul",
-          decision: bothNumbers ? "deterministic" : "semantic",
-          rationale: bothNumbers
-            ? "numeric multiplication correspondence"
-            : "operands are statically unknown; __ctrans_mul preserves repetition/numeric Python semantics",
-          adaptation: bothNumbers ? null : "__ctrans_mul",
+          decision: precisionRisk ? "semantic" : bothNumbers ? "deterministic" : "semantic",
+          rationale: precisionRisk
+            ? precisionRationale
+            : bothNumbers
+              ? "numeric multiplication correspondence"
+              : "operands are statically unknown; __ctrans_mul preserves repetition/numeric Python semantics",
+          adaptation: precisionRisk
+            ? "native operator with precision warning"
+            : bothNumbers
+              ? null
+              : "__ctrans_mul",
+          warnings: precisionRisk ? [CTW_NUM_PRECISION] : [],
           targetSummary: bothNumbers ? `${left} * ${right}` : "__ctrans_mul(left, right)",
         });
         if (mixedIntFloat) {
@@ -1059,10 +1176,15 @@ export class Emitter {
           sourceKind: "py.BinOp(FloorDiv)",
           rule: "py.floordiv→__ctrans.floorDiv",
           decision: "semantic",
-          rationale: intArgs
-            ? "intMode=bigint: floor division of provable ints is exact (result narrowed to bigint)"
-            : "JS division truncates toward zero; Python floors toward negative infinity",
-          adaptation: "floor division via __ctrans_floorDiv",
+          rationale: precisionRisk
+            ? precisionRationale
+            : intArgs
+              ? "intMode=bigint: floor division of provable ints is exact (result narrowed to bigint)"
+              : "JS division truncates toward zero; Python floors toward negative infinity",
+          adaptation: precisionRisk
+            ? "helper with precision warning"
+            : "floor division via __ctrans_floorDiv",
+          warnings: precisionRisk ? [CTW_NUM_PRECISION] : [],
           targetSummary: "__ctrans_floorDiv(left, right)",
         });
         const floorText = this.helperCall("floorDiv", [left, right]);
@@ -1075,10 +1197,13 @@ export class Emitter {
           sourceKind: "py.BinOp(Mod)",
           rule: "py.mod→__ctrans.mod",
           decision: "semantic",
-          rationale: intArgs
-            ? "intMode=bigint: modulo of provable ints is exact (result narrowed to bigint)"
-            : "Python modulo takes the divisor's sign; JS takes the dividend's",
-          adaptation: "modulo via __ctrans_mod",
+          rationale: precisionRisk
+            ? precisionRationale
+            : intArgs
+              ? "intMode=bigint: modulo of provable ints is exact (result narrowed to bigint)"
+              : "Python modulo takes the divisor's sign; JS takes the dividend's",
+          adaptation: precisionRisk ? "helper with precision warning" : "modulo via __ctrans_mod",
+          warnings: precisionRisk ? [CTW_NUM_PRECISION] : [],
           targetSummary: "__ctrans_mod(left, right)",
         });
         const modText = this.helperCall("mod", [left, right]);
@@ -1124,11 +1249,18 @@ export class Emitter {
           span,
           sourceKind: "py.BinOp(Pow)",
           rule: bothNumbers ? "py.pow→js.**" : "py.pow→__ctrans.pow",
-          decision: bothNumbers ? "deterministic" : "semantic",
-          rationale: bothNumbers
-            ? "exponentiation correspondence for numeric bases"
-            : "operands are statically unknown; __ctrans_pow validates numbers",
-          adaptation: bothNumbers ? null : "__ctrans_pow",
+          decision: precisionRisk ? "semantic" : bothNumbers ? "deterministic" : "semantic",
+          rationale: precisionRisk
+            ? precisionRationale
+            : bothNumbers
+              ? "exponentiation correspondence for numeric bases"
+              : "operands are statically unknown; __ctrans_pow validates numbers",
+          adaptation: precisionRisk
+            ? "native operator with precision warning"
+            : bothNumbers
+              ? null
+              : "__ctrans_pow",
+          warnings: precisionRisk ? [CTW_NUM_PRECISION] : [],
           targetSummary: bothNumbers ? `${left} ** ${right}` : "__ctrans_pow(left, right)",
         });
         if (bothNumbers) return `(${left} ** ${right})`;
@@ -1193,6 +1325,117 @@ export class Emitter {
     }
   }
 
+  private isFloatLiteralNode(node: AstNode): boolean {
+    const start = node.span?.start;
+    return (
+      start !== undefined &&
+      this.ctx.floatLiteralStarts.has(`${String(start.line)}:${String(start.column)}`)
+    );
+  }
+
+  // Exact constant-integer analysis for number mode (D-006). It deliberately uses
+  // BigInt rather than evaluating the source expression as a JS number: the point is
+  // to detect where float64 would lose an exact integer result. A null result means
+  // the expression is not an integer constant (float, string, runtime value, etc.).
+  private constIntegerInfo(node: AstNode): ConstIntegerInfo | null {
+    if (this.constIntegerCache.has(node)) return this.constIntegerCache.get(node) ?? null;
+    const result = this.computeConstIntegerInfo(node);
+    this.constIntegerCache.set(node, result);
+    return result;
+  }
+
+  private computeConstIntegerInfo(node: AstNode): ConstIntegerInfo | null {
+    switch (node.kind) {
+      case "Constant": {
+        const value = node.fields["value"];
+        if (typeof value === "number" && Number.isInteger(value)) {
+          // The bridge encodes an integral float (2.0) as the number 2 as well.
+          // NUMBER-token text distinguishes float/complex spellings; never treat
+          // those as integer constants. Tagged ints are unambiguous.
+          if (this.isFloatLiteralNode(node)) return null;
+          // Do not derive an exact value from an already-rounded unsafe Number.
+          if (!Number.isSafeInteger(value)) return constIntegerInfo(null);
+          return constIntegerInfo(BigInt(value));
+        }
+        const decimal = taggedDecimal(value);
+        if (decimal !== null) {
+          // The source may contain an enormous integer literal; precision analysis
+          // only needs to know it is outside the safe range. Avoid materializing an
+          // unbounded BigInt and mark it conservatively unsafe.
+          if (decimal.replace(/^-/, "").length > 4096) return constIntegerInfo(null);
+          try {
+            return constIntegerInfo(BigInt(decimal));
+          } catch {
+            return constIntegerInfo(null);
+          }
+        }
+        return null;
+      }
+      case "UnaryOp": {
+        const operator = kid(node, "op")!.kind;
+        if (operator !== "USub" && operator !== "UAdd") return null;
+        const operand = this.constIntegerInfo(kid(node, "operand") ?? node);
+        if (operand === null) return null;
+        if (operand.value === null) return constIntegerInfo(null);
+        const value = operator === "USub" ? -operand.value : operand.value;
+        return constIntegerInfo(value, operand.lossy);
+      }
+      case "BinOp": {
+        const operator = kid(node, "op")!.kind;
+        if (!["Add", "Sub", "Mult", "Pow", "FloorDiv", "Mod"].includes(operator)) return null;
+        const left = this.constIntegerInfo(kid(node, "left")!);
+        const right = this.constIntegerInfo(kid(node, "right")!);
+        if (left === null || right === null) return null;
+        const childLossy = left.lossy || right.lossy;
+        if (left.value === null || right.value === null) return constIntegerInfo(null);
+        if (operator === "Pow") {
+          // Negative exponents produce Python floats; this is not an integer result.
+          if (right.value < 0n) return null;
+          let value: bigint;
+          if (right.value === 0n) value = 1n;
+          else if (left.value === 0n) value = 0n;
+          else if (left.value === 1n) value = 1n;
+          else if (left.value === -1n) value = right.value % 2n === 0n ? 1n : -1n;
+          else if (right.value > 100000n) return constIntegerInfo(null);
+          else {
+            const baseBits = (left.value < 0n ? -left.value : left.value).toString(2).length;
+            if (BigInt(baseBits) * right.value > 1000000n) return constIntegerInfo(null);
+            value = left.value ** right.value;
+          }
+          return constIntegerInfo(value, childLossy);
+        }
+        if (operator === "FloorDiv" || operator === "Mod") {
+          if (right.value === 0n) return null; // runtime exception, not a precision result
+          const quotient = left.value / right.value;
+          const remainder = left.value % right.value;
+          const signsDiffer = left.value < 0n !== right.value < 0n;
+          const floored = remainder !== 0n && signsDiffer ? quotient - 1n : quotient;
+          const value = operator === "FloorDiv" ? floored : left.value - floored * right.value;
+          return constIntegerInfo(value, childLossy);
+        }
+        const value =
+          operator === "Add"
+            ? left.value + right.value
+            : operator === "Sub"
+              ? left.value - right.value
+              : left.value * right.value;
+        return constIntegerInfo(value, childLossy);
+      }
+      default:
+        return null;
+    }
+  }
+
+  // Only number mode has the float64 precision divergence; bigint mode is exact.
+  // Suppression is set only while lowering operands of a provably safe enclosing
+  // constant expression.
+  private integerPrecisionRisk(node: AstNode): boolean {
+    if (this.precisionWarningSuppression > 0) return false;
+    if (this.ctx.intMode !== "number") return false;
+    const info = this.constIntegerInfo(node);
+    return info !== null && (info.unsafe || info.lossy);
+  }
+
   // Conservative bigint-mode classification (D-006 exact mode): does this expression
   // carry a Python INT value at runtime, so native bigint operators are exact?
   // Only statically provable int-ness qualifies (constants, int-annotated bindings,
@@ -1201,7 +1444,11 @@ export class Emitter {
   private exprIsInt(node: AstNode): boolean {
     switch (node.kind) {
       case "Constant":
-        return typeof node.fields["value"] === "number" && Number.isInteger(node.fields["value"]);
+        return (
+          typeof node.fields["value"] === "number" &&
+          Number.isInteger(node.fields["value"]) &&
+          !this.isFloatLiteralNode(node)
+        );
       case "UnaryOp": {
         const op = kid(node, "op")!.kind;
         return (op === "USub" || op === "UAdd") && this.exprIsInt(kid(node, "operand") ?? node);
@@ -1295,7 +1542,10 @@ export class Emitter {
   private exprIsFloat(node: AstNode): boolean {
     switch (node.kind) {
       case "Constant":
-        return typeof node.fields["value"] === "number" && !Number.isInteger(node.fields["value"]);
+        return (
+          this.isFloatLiteralNode(node) ||
+          (typeof node.fields["value"] === "number" && !Number.isInteger(node.fields["value"]))
+        );
       case "UnaryOp": {
         const op = kid(node, "op")!.kind;
         return (op === "USub" || op === "UAdd") && this.exprIsFloat(kid(node, "operand") ?? node);
@@ -1491,7 +1741,7 @@ export class Emitter {
       }
       return null;
     }
-    return constantAnnotatedType(node);
+    return constantAnnotatedType(node, (candidate) => this.isFloatLiteralNode(candidate));
   }
 
   // Type annotation a fresh `let` must carry so TypeScript inference matches
@@ -1538,12 +1788,18 @@ export class Emitter {
       return this.unsupportedExpr(node, `py.UnaryOp(${operator})`, "unsupported unary operator");
     }
     if (operandNumber) {
+      const precisionRisk =
+        (operator === "USub" || operator === "UAdd") && this.integerPrecisionRisk(node);
       this.ctx.record({
         span,
         sourceKind: `py.UnaryOp(${operator})`,
         rule: "py.unary→js.unary",
-        decision: "deterministic",
-        rationale: "unary operator correspondence (number-typed operand)",
+        decision: precisionRisk ? "semantic" : "deterministic",
+        rationale: precisionRisk
+          ? "constant unary integer expression exceeds JavaScript's safe-integer range (D-006); emitted as number with precision warning"
+          : "unary operator correspondence (number-typed operand)",
+        adaptation: precisionRisk ? "native operator with precision warning" : null,
+        warnings: precisionRisk ? [CTW_NUM_PRECISION] : [],
         targetSummary: `${native}${operand}`,
       });
       return `(${native}${operand})`;
@@ -5144,12 +5400,18 @@ function literalTsTypeText(node: AstNode): string {
 
 // CommonType for a literal initializer (let bindings keep arithmetic idiomatic);
 // null for anything dynamic.
-function constantAnnotatedType(node: AstNode): AnnotatedType | null {
+function constantAnnotatedType(
+  node: AstNode,
+  isFloatLiteral: (node: AstNode) => boolean = () => false,
+): AnnotatedType | null {
   if (node.kind === "Constant") {
     const value = node.fields["value"];
     if (typeof value === "number") {
       return {
-        type: { kind: "number", numberKind: Number.isInteger(value) ? "int" : "float" },
+        type: {
+          kind: "number",
+          numberKind: isFloatLiteral(node) || !Number.isInteger(value) ? "float" : "int",
+        },
         origin: "inferred",
         confidence: "approximate",
         span: node.span ?? null,
@@ -5173,7 +5435,7 @@ function constantAnnotatedType(node: AstNode): AnnotatedType | null {
     }
   }
   if (node.kind === "UnaryOp" && kid(node, "op")?.kind === "USub") {
-    const operand = constantAnnotatedType(kid(node, "operand") ?? node);
+    const operand = constantAnnotatedType(kid(node, "operand") ?? node, isFloatLiteral);
     return operand;
   }
   if (node.kind === "List") {

@@ -1,6 +1,6 @@
 {
   "name": "code-translator",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Behavior-preserving source code translator for Python, JavaScript and TypeScript. Milestone status in PROJECT_STATE.md, plan in docs/roadmap.md.",
   "license": "MIT",

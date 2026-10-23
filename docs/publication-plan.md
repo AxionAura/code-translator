@@ -1,4 +1,9 @@
-# V1 publication plan (`0.1.0`)
+# V1 publication plan (`0.1.0`, historical)
+
+> **Current patch-release plan:** [publication-plan-v0.1.1.md](publication-plan-v0.1.1.md).
+> This file records the completed `v0.1.0` publication and its evidence. It is not
+> the plan for `0.1.1`; do not reuse its publication commands against a new
+> version without the v0.1.1 checklist.
 
 Status: **published and verified.** All eleven `@axion-ct/*` packages are live at
 `0.1.0`; registry metadata, CLI smoke tests, and the full verification suite passed.

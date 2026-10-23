@@ -8,7 +8,25 @@ import type {
   LedgerEntry,
   LedgerEscalation,
   TargetLanguage,
+  TokenInfo,
 } from "@axion-ct/core";
+
+// Python NUMBER-token spellings with a decimal point, decimal exponent, or
+// imaginary suffix are not integer constants. Hex/binary/octal integers may
+// contain letters such as `e` (0x1e2) and must remain integer literals. The
+// bridge's JSON value alone cannot distinguish 2 from 2.0, so lowering uses the
+// token stream for this distinction.
+export function floatLiteralStartsFromTokens(tokens: readonly TokenInfo[]): ReadonlySet<string> {
+  const starts = new Set<string>();
+  for (const token of tokens) {
+    if (token.kind !== "NUMBER") continue;
+    const text = token.text.replaceAll("_", "");
+    if (/^0[xXbBoO]/.test(text)) continue; // integer bases, including hex letters e/E
+    if (!/[.eEjJ]/.test(text)) continue;
+    starts.add(`${String(token.span.start.line)}:${String(token.span.start.column)}`);
+  }
+  return starts;
+}
 
 export const CTW_TUPLE_ARRAY = "CTW-TUPLE-ARRAY";
 export const CTW_DICT_KEY_COERCION = "CTW-DICT-KEY-COERCION";
@@ -35,14 +53,24 @@ export class LoweringContext {
   // D-006 integer policy: "number" (default) maps Python int to float64 with
   // precision diagnostics; "bigint" is the exact mode (ints become JS bigint).
   readonly intMode: "number" | "bigint";
+  // Start positions of Python NUMBER tokens that are float/complex spellings.
+  // The bridge collapses integral floats (2.0) to a JS number; this lets lowering
+  // avoid treating such a literal as an integer constant.
+  readonly floatLiteralStarts: ReadonlySet<string>;
   private ordinal = 0;
 
-  constructor(target: TargetLanguage, filename: string, intMode: "number" | "bigint" = "number") {
+  constructor(
+    target: TargetLanguage,
+    filename: string,
+    intMode: "number" | "bigint" = "number",
+    floatLiteralStarts: ReadonlySet<string> = new Set(),
+  ) {
     // Explicit field assignment (not a parameter property): the unbuilt CLI runs
     // sources through Node strip-only mode, which rejects transform-only syntax.
     this.target = target;
     this.filename = filename;
     this.intMode = intMode;
+    this.floatLiteralStarts = floatLiteralStarts;
   }
 
   record(entry: {
