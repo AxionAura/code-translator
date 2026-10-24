@@ -1,7 +1,7 @@
 {
   "generator": {
     "name": "code-translator",
-    "version": "0.0.0"
+    "version": "0.1.2"
   },
   "sourceLanguage": "javascript",
   "targetLanguage": "python",
@@ -23,7 +23,7 @@
       "status": "translated",
       "decisionCounts": {
         "deterministic": 20,
-        "semantic": 6,
+        "semantic": 10,
         "ambiguous": 0,
         "unsupported": 0
       }
@@ -31,7 +31,7 @@
   ],
   "decisionTotals": {
     "deterministic": 36,
-    "semantic": 10,
+    "semantic": 14,
     "ambiguous": 0,
     "unsupported": 0
   },

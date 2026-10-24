@@ -6,10 +6,10 @@ from typing import Any
 def __ctrans_js_add(left: Any, right: Any) -> Any:
     """JS + semantics: string if either side is a string, numeric otherwise.
 
-    Object/stringification goes through __ctrans_str (JS toString), never
+    Object/stringification goes through __ctrans_str_js (JS toString), never
     Python's repr-based str()."""
     if isinstance(left, str) or isinstance(right, str):
-        return __ctrans_str(left) + __ctrans_str(right)
+        return __ctrans_str_js(left) + __ctrans_str_js(right)
     if isinstance(left, list) and isinstance(right, list):
         return left + right
     if isinstance(left, (int, float)) and isinstance(right, (int, float)):
@@ -17,14 +17,42 @@ def __ctrans_js_add(left: Any, right: Any) -> Any:
     raise TypeError("unsupported operand for +")
 
 
+def __ctrans_js_div(left: Any, right: Any) -> Any:
+    """JS /: division by zero yields signed Infinity (or NaN for 0/0 and NaN).
+    The divisor's SIGNED ZERO decides the infinity's sign (1 / -0 is -Infinity).
+    Restricted to numeric operands — JS string coercion is outside the subset."""
+    if not isinstance(left, (int, float)) or not isinstance(right, (int, float)):
+        raise TypeError("JS division requires numbers")
+    if right == 0:
+        if left != left or left == 0:
+            return __ctrans_nan()
+        divisor_negative = math.copysign(1.0, float(right)) < 0
+        negative = (left < 0) != divisor_negative
+        return -__ctrans_infinity() if negative else __ctrans_infinity()
+    return left / right
+
+
 def __ctrans_js_map(items: Any, callback: Any) -> Any:
     """Array.map: callback receives (item, index) like JS."""
     if not isinstance(items, list):
         raise TypeError("items.map is not a function")
-    return [callback(item, index) for index, item in enumerate(items)]
+    return [callback(item, index, items) for index, item in enumerate(items)]
 
 
-def __ctrans_str(value: Any) -> str:
+import math
+
+
+def __ctrans_nan() -> float:
+    """JavaScript NaN as a Python float."""
+    return math.nan
+
+
+def __ctrans_infinity() -> float:
+    """JavaScript positive Infinity as a Python float."""
+    return math.inf
+
+
+def __ctrans_str_js(value: Any) -> str:
     """JS String(value): true/false/null spellings; numbers keep JS repr shape."""
     if value is None:
         return "null"
@@ -39,5 +67,5 @@ def __ctrans_str(value: Any) -> str:
     if isinstance(value, dict):
         return "[object Object]"
     if isinstance(value, list):
-        return ",".join(__ctrans_str(item) for item in value)
+        return ",".join(__ctrans_str_js(item) for item in value)
     return str(value)

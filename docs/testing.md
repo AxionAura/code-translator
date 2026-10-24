@@ -23,6 +23,10 @@ Status: **implemented V1** (M0–M11); this document remains the maintained test
 | CLI M11 | config schema/precedence, JSON stdout discipline, progress stderr, key storage/cache, validate/benchmark commands, dist entry | `apps/cli/test/{cli-m11,commands-m11,keys}.test.ts`, `packages/ai/test/disk-cache.test.ts`, `tests/dist-entry.test.ts` |
 | Benchmarks | deterministic micro/corpus/perf correctness, result-schema negatives, 500-file smoke, nightly mini-projects | `tests/benchmark.test.ts`, `tests/perf-smoke.test.ts`, CLI benchmark tests |
 | E2E | CLI/source-vs-target workflows and fixture projects | `apps/cli/test/`, `tests/*.test.ts` |
+| Reliability regressions (v0.1.2) | executed numeric/console behavior (zero-power exception, JS div/rem/coercion in Python, console streams), runtime-integer risk disclosure, unresolved-call provenance, generator-version consistency | `packages/codegen-js/test/reliability-v012.test.ts`, `packages/codegen-py/test/reliability-v012.test.ts`, `tests/reliability-v012.test.ts` |
+| Reverse runtime behavior (sandbox-executed) | generated `__ctrans_runtime.py` helpers executed in the sandbox through a repr-based harness (int-vs-float, NaN/Infinity spellings): js_mod/js_number/js_div boundaries | `packages/codegen-py/test/runtime-behavior.test.ts` |
+| Reverse execution differentials (audit round 2) | translated modules executed next to the executed JS source with identical harnesses: super-argument forwarding, instance-method dispatch, callback arity (1/2/3-param map, 2/3/4-param reduce), preserved dict/list/string routing | `packages/codegen-py/test/reverse-execution.test.ts` |
+| Runtime bridge consistency | every importable (non-internal) codegen-js runtime helper name has a Python-semantic bridge definition; no orphans; truthy bridged with Python semantics | `tests/runtime-bridge-consistency.test.ts` |
 
 ## 2. Fixture system (`tests/fixtures/`)
 

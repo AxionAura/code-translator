@@ -117,19 +117,19 @@ describe("arm completion: helper-callback array methods", () => {
         "}",
       ].join("\n"),
     );
-    expect(output).toContain("__ctrans_js_map(xs, double)");
-    expect(output).toContain("__ctrans_js_filter(xs, big)");
-    expect(output).toContain("__ctrans_js_reduce(xs, addAll, 0, True)");
-    expect(output).toContain("__ctrans_js_find(xs, big)");
-    expect(output).toContain("__ctrans_js_for_each(xs, log)");
+    expect(output).toContain("_ctrans_js_map(xs, double)");
+    expect(output).toContain("_ctrans_js_filter(xs, big)");
+    expect(output).toContain("_ctrans_js_reduce(xs, addAll, 0, True)");
+    expect(output).toContain("_ctrans_js_find(xs, big)");
+    expect(output).toContain("_ctrans_js_for_each(xs, log)");
   });
 
   it("lowers sort/reverse/pop/shift on array receivers", async () => {
     const output = await emit(
       "export function f(xs) {\n  return [xs.sort(), xs.reverse(), xs.pop(), xs.shift()];\n}\n",
     );
-    expect(output).toContain("__ctrans_js_sort(xs)");
-    expect(output).toContain("__ctrans_js_reverse(xs)");
+    expect(output).toContain("_ctrans_js_sort(xs)");
+    expect(output).toContain("_ctrans_js_reverse(xs)");
     expect(output).toContain("xs.pop()");
     expect(output).toContain("xs.pop(0)");
   });
@@ -138,6 +138,6 @@ describe("arm completion: helper-callback array methods", () => {
     const output = await emit(
       "export function f(o) {\n  --o.count;\n  o.total -= 2;\n  return o;\n}\n",
     );
-    expect(output).toContain('__ctrans_js_get(o, "count")');
+    expect(output).toContain('_ctrans_js_get(o, "count")');
   });
 });

@@ -30,6 +30,8 @@ import {
   CTW_NUM_BIGINT_BOUNDARY,
   CTW_NUM_BITWISE,
   CTW_NUM_PRECISION,
+  CTW_NUM_RUNTIME_PRECISION,
+  CTW_CALL_UNRESOLVED,
   CTW_TUPLE_ARRAY,
   CTW_WITH_EXIT_ARGS,
   LoweringContext,
@@ -993,8 +995,10 @@ export class Emitter {
     // deterministic equivalence. The emitted value stays a number for compatibility;
     // the ledger records the semantic adaptation and the precision warning.
     const precisionRisk = this.integerPrecisionRisk(node);
-    const precisionRationale =
-      "constant integer expression exceeds JavaScript's safe-integer range (D-006); emitted as number with precision warning";
+    const runtimePrecisionRisk = this.runtimeIntegerPowRisk(node);
+    const precisionRationale = precisionRisk
+      ? "constant integer expression exceeds JavaScript's safe-integer range (D-006); emitted as number with precision warning"
+      : "runtime integer value is not statically tracked; number mode may exceed float64 precision (D-006: intMode=bigint is exact)";
     // D-006 bigint mode: statically-provable int operands keep exact native bigint
     // operators; a provable int mixed with a provable float converts across the
     // documented Number boundary; unknown operands go through the bigint-aware
@@ -1245,25 +1249,40 @@ export class Emitter {
           });
           return this.helperCall("pow", [left, right]);
         }
+        const numberModePowRequiresHelper = this.zeroNegativePowRisk(node);
+        const powSemantic = precisionRisk || runtimePrecisionRisk || numberModePowRequiresHelper;
         this.ctx.record({
           span,
           sourceKind: "py.BinOp(Pow)",
-          rule: bothNumbers ? "py.pow→js.**" : "py.pow→__ctrans.pow",
-          decision: precisionRisk ? "semantic" : bothNumbers ? "deterministic" : "semantic",
+          rule:
+            bothNumbers && !numberModePowRequiresHelper ? "py.pow→js.**" : "py.pow→__ctrans.pow",
+          decision: powSemantic ? "semantic" : bothNumbers ? "deterministic" : "semantic",
           rationale: precisionRisk
             ? precisionRationale
-            : bothNumbers
-              ? "exponentiation correspondence for numeric bases"
-              : "operands are statically unknown; __ctrans_pow validates numbers",
-          adaptation: precisionRisk
-            ? "native operator with precision warning"
-            : bothNumbers
-              ? null
+            : numberModePowRequiresHelper
+              ? "Python raises ZeroDivisionError for zero raised to a negative/unknown exponent; native JS ** would yield Infinity"
+              : runtimePrecisionRisk
+                ? precisionRationale
+                : bothNumbers
+                  ? "exponentiation correspondence for numeric bases"
+                  : "operands are statically unknown; __ctrans_pow validates numbers",
+          adaptation:
+            bothNumbers && !numberModePowRequiresHelper
+              ? precisionRisk
+                ? "native operator with precision warning"
+                : null
               : "__ctrans_pow",
-          warnings: precisionRisk ? [CTW_NUM_PRECISION] : [],
-          targetSummary: bothNumbers ? `${left} ** ${right}` : "__ctrans_pow(left, right)",
+          warnings: precisionRisk
+            ? [CTW_NUM_PRECISION]
+            : runtimePrecisionRisk
+              ? [CTW_NUM_RUNTIME_PRECISION]
+              : [],
+          targetSummary:
+            bothNumbers && !numberModePowRequiresHelper
+              ? `${left} ** ${right}`
+              : "__ctrans_pow(left, right)",
         });
-        if (bothNumbers) return `(${left} ** ${right})`;
+        if (bothNumbers && !numberModePowRequiresHelper) return `(${left} ** ${right})`;
         return this.helperCall("pow", [left, right]);
       }
       case "BitOr":
@@ -1424,6 +1443,68 @@ export class Emitter {
       default:
         return null;
     }
+  }
+
+  // Numeric zero regardless of Python int/float spelling (0, 0.0, -0.0). The
+  // bridge collapses these to JSON zero; token-level typing is not needed here.
+  private staticallyZeroNumeric(node: AstNode): boolean {
+    if (node.kind === "Constant" && node.fields["value"] === 0) return true;
+    const decimal = taggedDecimal(node.fields["value"]);
+    if (decimal === "0") return true;
+    if (node.kind === "UnaryOp") {
+      const operator = kid(node, "op")?.kind;
+      return (
+        (operator === "USub" || operator === "UAdd") &&
+        this.staticallyZeroNumeric(kid(node, "operand") ?? node)
+      );
+    }
+    return false;
+  }
+
+  private staticallyNonnegativeInteger(node: AstNode): boolean {
+    if (node.kind === "Constant") {
+      const value = node.fields["value"];
+      if (typeof value === "number" && Number.isInteger(value) && value >= 0) return true;
+      const decimal = taggedDecimal(value);
+      if (decimal !== null) {
+        try {
+          return BigInt(decimal) >= 0n;
+        } catch {
+          return false;
+        }
+      }
+    }
+    if (node.kind === "UnaryOp" && kid(node, "op")?.kind === "UAdd") {
+      return this.staticallyNonnegativeInteger(kid(node, "operand") ?? node);
+    }
+    return false;
+  }
+
+  // Number-mode 0 ** negative-or-unknown must go through __ctrans_pow: native JS
+  // yields Infinity while Python raises ZeroDivisionError.
+  private zeroNegativePowRisk(node: AstNode): boolean {
+    if (this.ctx.intMode !== "number") return false;
+    if (node.kind !== "BinOp" || kid(node, "op")?.kind !== "Pow") return false;
+    return (
+      this.staticallyZeroNumeric(kid(node, "left") ?? node) &&
+      !this.staticallyNonnegativeInteger(kid(node, "right") ?? node)
+    );
+  }
+
+  // Runtime int values are not tracked. For exponentiation with statically
+  // int-typed evidence, number mode can silently exceed float64 precision; the
+  // warning discloses that uncertainty without claiming a wrong result.
+  private runtimeIntegerPowRisk(node: AstNode): boolean {
+    if (this.precisionWarningSuppression > 0) return false;
+    if (this.ctx.intMode !== "number") return false;
+    if (node.kind !== "BinOp" || kid(node, "op")?.kind !== "Pow") return false;
+    const left = kid(node, "left");
+    const right = kid(node, "right");
+    if (left === null || right === null) return false;
+    if (this.exprIsFloat(left) || this.exprIsFloat(right)) return false;
+    if (this.zeroNegativePowRisk(node)) return false;
+    if (this.constIntegerInfo(node) !== null) return false;
+    return this.exprIsInt(left) || this.exprIsInt(right);
   }
 
   // Only number mode has the float64 precision divergence; bigint mode is exact.
@@ -2270,15 +2351,17 @@ export class Emitter {
           `builtin "${name}" has no M4 mapping (the dependency/method registry arrives in M5)`,
         );
       }
+      const unresolved = hit === null && !this.unitDefinedNames.has(name);
       this.ctx.record({
         span,
         sourceKind: "py.Call",
         rule: "py.call→js.call",
-        decision: "deterministic",
-        rationale:
-          hit === null
-            ? "callee is not defined in this unit - emitted verbatim (unit-local function declarations hoist like Python's late resolution; unresolved non-builtin names are flagged by validation)"
-            : "call correspondence (function declarations hoist like Python's late resolution)",
+        decision: unresolved ? "semantic" : "deterministic",
+        rationale: unresolved
+          ? "callee is not defined in this unit or its imports; emitted verbatim for external linking, but equivalence is not proven"
+          : "call correspondence (function declarations hoist like Python's late resolution)",
+        adaptation: unresolved ? "unresolved call passed through" : null,
+        warnings: unresolved ? [CTW_CALL_UNRESOLVED] : [],
         targetSummary: `${name}(${argsText.join(", ")})`,
       });
       return `${name}(${argsText.join(", ")})`;

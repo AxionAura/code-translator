@@ -487,7 +487,15 @@ export function __ctrans_pow(a: unknown, b: unknown): __CTRANS_NUM__ {
     if (base === 0) throw new ZeroDivisionError("0.0 cannot be raised to a negative power");
     return base ** exp;
   }
-  return __ctrans_requireNumber(a, "**") ** __ctrans_requireNumber(b, "**");
+  const numericBase = __ctrans_requireNumber(a, "**");
+  const numericExponent = __ctrans_requireNumber(b, "**");
+  if (
+    numericExponent < 0 &&
+    (numericBase === 0 || Object.is(numericBase, -0))
+  ) {
+    throw new ZeroDivisionError("0.0 cannot be raised to a negative power");
+  }
+  return numericBase ** numericExponent;
 }`,
   },
   neg: {

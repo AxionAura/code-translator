@@ -4,6 +4,7 @@
 export const packageName = "@axion-ct/core";
 
 export { CTransError } from "./errors.js";
+export { ENGINE_VERSION } from "./version.js";
 export { analyzeModule } from "./semantic.js";
 export { buildModuleGraph, normalizeModuleId } from "./module-graph.js";
 export type {

@@ -82,13 +82,13 @@ describe("targeted arms: exports and dict surface", () => {
     // makeMap's return is an object literal → dict receiver kind propagates
     // through the import binding? No: imported bindings are unknown — assert the
     // honest helper routing.
-    expect(mainPy).toContain('__ctrans_js_get(m, "set")("k", 1)');
-    expect(mainPy).toContain('__ctrans_js_get(m, "get")("k")');
-    expect(mainPy).toContain('__ctrans_js_get(m, "has")("k")');
-    expect(mainPy).toContain('__ctrans_js_get(m, "keys")()');
-    expect(mainPy).toContain('__ctrans_js_get(m, "values")()');
-    expect(mainPy).toContain('__ctrans_js_get(m, "entries")()');
-    expect(mainPy).toContain('__ctrans_js_get(m, "delete")("k")');
+    expect(mainPy).toContain('_ctrans_js_get(m, "set")("k", 1)');
+    expect(mainPy).toContain('_ctrans_js_get(m, "get")("k")');
+    expect(mainPy).toContain('_ctrans_js_get(m, "has")("k")');
+    expect(mainPy).toContain('_ctrans_js_get(m, "keys")()');
+    expect(mainPy).toContain('_ctrans_js_get(m, "values")()');
+    expect(mainPy).toContain('_ctrans_js_get(m, "entries")()');
+    expect(mainPy).toContain('_ctrans_js_get(m, "delete")("k")');
   });
 
   it("lowers dict surface on literal receivers natively", async () => {
@@ -102,7 +102,7 @@ describe("targeted arms: exports and dict surface", () => {
     await translator.translateUnit(unit, graph);
     const shared = await translator.finalizeUnits!();
     const output = shared.files.find((file) => file.targetPath === "mod.py")!.content;
-    expect(output).toContain('__ctrans_js_get(m, "a")');
+    expect(output).toContain('_ctrans_js_get(m, "a")');
     expect(output).toContain('"a" in m');
     expect(output).toContain("list(m.keys())");
   });

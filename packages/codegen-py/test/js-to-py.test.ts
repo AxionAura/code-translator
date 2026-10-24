@@ -56,7 +56,7 @@ describe("JS → Python (WS B)", () => {
     );
     const output = files.get("mod.py")!;
     expect(output).toContain(
-      'return f"{__ctrans_str_js(name)}: {__ctrans_str_js(count)} {__ctrans_str_js(flag)}"',
+      'return f"{_ctrans_str_js(name)}: {_ctrans_str_js(count)} {_ctrans_str_js(flag)}"',
     );
   });
 
@@ -73,11 +73,11 @@ describe("JS → Python (WS B)", () => {
     );
     const output = files.get("mod.py")!;
     // Dynamic index through the undefined-for-missing helper.
-    expect(output).toContain("__ctrans_js_get(items, 0)");
+    expect(output).toContain("_ctrans_js_get(items, 0)");
     // JS % truncation vs Python's floored %.
-    expect(output).toContain("__ctrans_js_mod(text, 7)");
+    expect(output).toContain("_ctrans_js_mod(text, 7)");
     // Array.includes with JS membership semantics.
-    expect(output).toContain("__ctrans_js_includes(items, 3)");
+    expect(output).toContain("_ctrans_js_includes(items, 3)");
     const runtime = files.get("__ctrans_runtime.py")!;
     expect(runtime).toContain("def __ctrans_js_mod");
     expect(runtime).toContain("def __ctrans_js_get");
@@ -96,9 +96,9 @@ describe("JS → Python (WS B)", () => {
       ].join("\n"),
     );
     const output = files.get("mod.py")!;
-    expect(output).toContain("__ctrans_js_map(xs, lambda x: x * 2)");
-    expect(output).toContain("__ctrans_js_filter(xs, lambda x: x > 2)");
-    expect(output).toContain("__ctrans_push_value(xs, 9)");
+    expect(output).toContain("_ctrans_js_map(xs, lambda x, *_ctrans_extra: x * 2)");
+    expect(output).toContain("_ctrans_js_filter(xs, lambda x, *_ctrans_extra: x > 2)");
+    expect(output).toContain("_ctrans_push_value(xs, 9)");
     expect(output).toContain("len(xs)");
   });
 
@@ -124,7 +124,7 @@ describe("JS → Python (WS B)", () => {
     expect(output).toContain("self.count = start");
     expect(output).toContain("def increment(self):");
     // `this.count += 1` on an instance field: dynamic receiver → helper-backed read.
-    expect(output).toContain("self.count = __ctrans_js_add(self.count, 1)");
+    expect(output).toContain("self.count = _ctrans_js_add(self.count, 1)");
   });
 
   it("reports unsupported constructs loudly", async () => {

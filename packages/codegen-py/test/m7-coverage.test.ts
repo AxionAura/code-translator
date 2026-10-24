@@ -50,7 +50,7 @@ describe("codegen-py coverage arms", () => {
 
   it("lowers nested property access through dynamic helpers", async () => {
     const output = await emit("export function f(config) {\n  return config.database.url;\n}\n");
-    expect(output).toContain("__ctrans_js_get(");
+    expect(output).toContain("_ctrans_js_get(");
   });
 
   it("lowers do-while with continue as unsupported (semantics not reproducible)", async () => {
@@ -84,9 +84,9 @@ describe("codegen-py coverage arms", () => {
     const output = await emit(
       "export function f(s) {\n  return [s.padStart(5, '0'), s.charCodeAt(0), s.substring(1, 3), s.repeat(2)];\n}\n",
     );
-    expect(output).toContain("__ctrans_js_pad_start(s, 5, '0')".replaceAll("'", '"'));
-    expect(output).toContain("__ctrans_js_char_code_at(s, 0)");
-    expect(output).toContain("__ctrans_js_substring(s, 1, 3)");
-    expect(output).toContain("__ctrans_js_repeat(s, 2)");
+    expect(output).toContain("_ctrans_js_pad_start(s, 5, '0')".replaceAll("'", '"'));
+    expect(output).toContain("_ctrans_js_char_code_at(s, 0)");
+    expect(output).toContain("_ctrans_js_substring(s, 1, 3)");
+    expect(output).toContain("_ctrans_js_repeat(s, 2)");
   });
 });

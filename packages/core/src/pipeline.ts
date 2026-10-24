@@ -23,6 +23,7 @@ import {
 } from "./escalation.js";
 import { sourceLanguageOf } from "./direction.js";
 import { extractModuleContract } from "./module-contract.js";
+import { ENGINE_VERSION } from "./version.js";
 
 // M7: "python" is a full target (codegen-py) — its S1 re-parses with the Python
 // parser and its S2 is the injected pyright adapter; JS targets skip S2 honestly.
@@ -467,7 +468,7 @@ export async function runPipeline(
     }));
   const warnings = [...new Set(ledger.flatMap((entry) => entry.warnings))];
   const report = validateTranslationReport({
-    generator: { name: "code-translator", version: "0.0.0" },
+    generator: { name: "code-translator", version: ENGINE_VERSION },
     sourceLanguage: sourceLanguageOf(inputs.map((input) => input.parseResult)),
     targetLanguage: options.target,
     files: analyzed.map((unit) => {

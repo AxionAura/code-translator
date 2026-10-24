@@ -4,13 +4,14 @@
   "to": "typescript",
   "expectedClaimLevel": 3,
   "expectedDecisionCounts": {
-    "deterministic": 72,
-    "semantic": 20,
+    "deterministic": 70,
+    "semantic": 22,
     "ambiguous": 0,
     "unsupported": 0
   },
   "expectedWarnings": [
-    "CTW-NUM-INT-ARBITRARY-PRECISION"
+    "CTW-NUM-INT-ARBITRARY-PRECISION",
+    "CTW-NUM-INT-RUNTIME-UNCERTAIN"
   ],
   "description": "Pins operator mappings on annotated values (int->number D-006), floor-div/mod helpers, truthiness, f-strings."
 }

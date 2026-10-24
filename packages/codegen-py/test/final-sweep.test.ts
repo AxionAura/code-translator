@@ -61,10 +61,10 @@ describe("final sweep: codegen-py string/dict/Object surfaces", () => {
       "export function f(s) {\n  return [s.charAt(1), s.repeat(2), s.padStart(4), s.charCodeAt(0), s.substring(0, 2)];\n}\n",
     );
     expect(output).toContain("s[1 : 1 + 1]");
-    expect(output).toContain("__ctrans_js_repeat(s, 2)");
-    expect(output).toContain("__ctrans_js_pad_start(s, 4)");
-    expect(output).toContain("__ctrans_js_char_code_at(s, 0)");
-    expect(output).toContain("__ctrans_js_substring(s, 0, 2)");
+    expect(output).toContain("_ctrans_js_repeat(s, 2)");
+    expect(output).toContain("_ctrans_js_pad_start(s, 4)");
+    expect(output).toContain("_ctrans_js_char_code_at(s, 0)");
+    expect(output).toContain("_ctrans_js_substring(s, 0, 2)");
   });
 
   it("lowers the Map/dict surface", async () => {
@@ -72,18 +72,18 @@ describe("final sweep: codegen-py string/dict/Object surfaces", () => {
       "export function f(m) {\n  m.set('k', 1);\n  const v = m.get('k');\n  const has = m.has('k');\n  const gone = m.delete('k');\n  return [v, has, gone];\n}\n",
     );
     // Unknown receivers route member reads/calls through the helper (honest).
-    expect(output).toContain('__ctrans_js_get(m, "set")');
-    expect(output).toContain('__ctrans_js_get(m, "get")("k")');
-    expect(output).toContain('__ctrans_js_get(m, "has")("k")');
-    expect(output).toContain('__ctrans_js_get(m, "delete")("k")');
+    expect(output).toContain('_ctrans_js_get(m, "set")');
+    expect(output).toContain('_ctrans_js_get(m, "get")("k")');
+    expect(output).toContain('_ctrans_js_get(m, "has")("k")');
+    expect(output).toContain('_ctrans_js_get(m, "delete")("k")');
   });
 
   it("lowers Object.values/entries/assign", async () => {
     const { output } = await emit(
       "export function f(o) {\n  return [Object.values(o), Object.entries(o), Object.assign({}, o)];\n}\n",
     );
-    expect(output).toContain("__ctrans_js_object_values(o)");
-    expect(output).toContain("__ctrans_js_object_entries(o)");
+    expect(output).toContain("_ctrans_js_object_values(o)");
+    expect(output).toContain("_ctrans_js_object_entries(o)");
     expect(output).toContain("{**{}");
   });
 
@@ -99,15 +99,15 @@ describe("final sweep: codegen-py string/dict/Object surfaces", () => {
     const { output } = await emit(
       "const greeting = 'hi';\nexport function f(name) {\n  return greeting + name;\n}\n",
     );
-    expect(output).toContain("__ctrans_js_add(greeting, name)");
+    expect(output).toContain("_ctrans_js_add(greeting, name)");
   });
 
   it("lowers Array.includes/indexOf on unknown receivers via helpers", async () => {
     const { output } = await emit(
       "export function f(xs, needle) {\n  return [xs.includes(needle), xs.indexOf(needle)];\n}\n",
     );
-    expect(output).toContain("__ctrans_js_includes(xs, needle)");
-    expect(output).toContain("__ctrans_js_index_of(xs, needle)");
+    expect(output).toContain("_ctrans_js_includes(xs, needle)");
+    expect(output).toContain("_ctrans_js_index_of(xs, needle)");
   });
 
   it("lowers pop/shift on unknown receivers with pop-form", async () => {

@@ -38,18 +38,18 @@ describe("final targeted arms (codegen-py)", () => {
     const { output } = await emit(
       "export function f(x, y) {\n  return [Math.floor(x), Math.max(x, y), JSON.stringify({ a: x }), JSON.parse('{}')];\n}\n",
     );
-    expect(output).toContain('__ctrans_math_entry("floor", x)');
-    expect(output).toContain('__ctrans_math_entry("max", x, y)');
+    expect(output).toContain('_ctrans_math_entry("floor", x)');
+    expect(output).toContain('_ctrans_math_entry("max", x, y)');
     expect(output).toContain('__import__("json").dumps(');
     expect(output).toContain('__import__("json").loads("{}")');
   });
 
   it("classifies truthiness arms: literal null, containers, unknowns", async () => {
     const { output } = await emit(
-      "export function f(flag, xs, obj, dyn) {\n  const a = flag ? 1 : 0;\n  if (xs) {\n    return [a, len(obj) > 0, __ctrans_truthy(dyn)];\n  }\n  return 0;\n}\n",
+      "export function f(flag, xs, obj, dyn) {\n  const a = flag ? 1 : 0;\n  if (xs) {\n    return [a, len(obj) > 0, _ctrans_truthy(dyn)];\n  }\n  return 0;\n}\n",
     );
     expect(output).toContain("len(obj) > 0");
-    expect(output).toContain("__ctrans_truthy(dyn)");
+    expect(output).toContain("_ctrans_truthy(dyn)");
   });
 
   it("classifies TS module statements arriving in a .ts input (JS direction)", async () => {

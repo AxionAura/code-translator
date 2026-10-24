@@ -1,10 +1,14 @@
-# Code Translator v0.1.1 — release notes
+# Code Translator v0.1.1 — release notes (historical preparation record)
 
-**Status: prepared locally, not published.** All eleven `@axion-ct/*` packages
-are at `0.1.1` in this working tree. Nothing in this release has been sent to npm,
-no `v0.1.1` git tag exists, and `latest` on npm remains `0.1.0`. Publication
-requires maintainer authorization and the checklist in
-[publication-plan-v0.1.1.md](publication-plan-v0.1.1.md).
+> **Published release.** v0.1.1 was published and verified on npm on
+> **2026-10-23**; see [release-report-v0.1.1.md](release-report-v0.1.1.md). This
+> file is retained as the preparation record of what the patch contains. The
+> "not published" statements below describe the moment of preparation and are
+> superseded by the release report.
+
+Status at preparation time: candidate ready locally, not yet published. All
+eleven `@axion-ct/*` packages at `0.1.1` in the working tree, no registry state
+changed, no `v0.1.1` git tag, npm `latest` still `0.1.0`.
 
 Release date prepared: **2026-10-23**. Previous release:
 [v0.1.0](release-report-v0.1.0.md) (published 2026-10-22).

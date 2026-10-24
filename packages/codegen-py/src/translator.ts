@@ -36,6 +36,7 @@ import {
 import { renderPyRuntime } from "./helpers.js";
 
 const RUNTIME_MODULE = "__ctrans_runtime.py";
+const RUNTIME_MODULE_BASE = "__ctrans_runtime";
 
 const PYTHON_KEYWORDS = new Set([
   "False",
@@ -76,7 +77,7 @@ const PYTHON_KEYWORDS = new Set([
 ]);
 
 // Receiver kinds the type-directed method mappings rely on.
-type ReceiverKind = "array" | "string" | "dict" | "number" | "unknown";
+type ReceiverKind = "array" | "string" | "dict" | "number" | "instance" | "unknown";
 
 export interface JsToPyTranslatorOptions {
   // Injectable ruff entry (tests can stub); default resolves the pinned package.
@@ -121,6 +122,8 @@ export class JsToPyTranslator implements UnitTranslator {
     readonly ledger: readonly LedgerEntry[];
   }[] = [];
   private readonly helpers = new Set<string>();
+  private readonly runtimeBridge = new Set<string>();
+  private needsRuntime = false;
   private readonly ruffFormat: (code: string) => string;
 
   // Explicit field (not a parameter property): the unbuilt CLI runs sources
@@ -143,6 +146,8 @@ export class JsToPyTranslator implements UnitTranslator {
     const printer = new PyPrinter(unit, graph, NO_REGISTRY);
     const raw = printer.printProgram(unit.parseResult.ast);
     for (const helper of printer.helpers) this.helpers.add(helper);
+    for (const name of printer.runtimeBridge) this.runtimeBridge.add(name);
+    if (printer.needsRuntime) this.needsRuntime = true;
     const targetPath = targetPathFor(unit.filename);
     this.pending.push({ targetPath, sourcePath: unit.filename, raw, ledger: printer.ledger });
     return {
@@ -165,15 +170,17 @@ export class JsToPyTranslator implements UnitTranslator {
       });
       ledger.push(...module.ledger);
     }
-    if (this.helpers.size > 0) {
+    if (this.helpers.size > 0 || this.runtimeBridge.size > 0 || this.needsRuntime) {
       files.push({
         targetPath: RUNTIME_MODULE,
         sourcePath: "(runtime)",
-        content: this.ruffFormat(renderPyRuntime([...this.helpers])),
+        content: this.ruffFormat(renderPyRuntime([...this.helpers], [...this.runtimeBridge])),
       });
     }
     this.pending.length = 0;
     this.helpers.clear();
+    this.runtimeBridge.clear();
+    this.needsRuntime = false;
     return { targetExtension: ".py", pathFor: (id) => targetPathFor(id), files, ledger };
   }
 
@@ -192,15 +199,41 @@ export class JsToPyTranslator implements UnitTranslator {
     if (helperNames.length > 0) {
       const names = helperImportNames(helperNames);
       const specifier = relativePyImport(dirname(targetPath), RUNTIME_MODULE);
-      insertions.push(`from ${specifier} import ${names.join(", ")}`);
+      insertions.push(...runtimeImportLines(names, specifier));
     }
     lines.splice(lastImport + 1, 0, ...insertions);
     return lines.join("\n");
   }
 }
 
+// Runtime imports must resolve both as a package (relative) and as a flat
+// output directory (absolute via sys.path[0]); a bare relative import makes
+// top-level output unrunnable (ImportError: attempted relative import with no
+// known parent package).
+// Translated modules reference runtime helpers through a single-underscore
+// alias (`__ctrans_x as _ctrans_x`): Python's private-name mangling rewrites
+// `__x` identifiers inside class bodies, which would break every helper call
+// in a translated class method. The runtime module's def names keep the
+// `__ctrans_` prefix; only references in translated code are aliased.
+function runtimeAlias(name: string): string {
+  return name.startsWith("__ctrans_") ? `_ctrans_${name.slice("__ctrans_".length)}` : name;
+}
+
+function runtimeImportLines(names: readonly string[], specifier: string): string[] {
+  // Callers always pass a dotted (package-relative) specifier, so the absolute
+  // fallback is always emitted alongside it.
+  const relative = `from ${specifier} import ${names.join(", ")}`;
+  const absolute = `from ${RUNTIME_MODULE_BASE} import ${names.join(", ")}`;
+  return ["try:", `    ${relative}`, "except ImportError:", `    ${absolute}`];
+}
+
 function helperImportNames(requested: readonly string[]): string[] {
-  return requested.map((name) => `__ctrans_${snakeCase(name)}`).sort();
+  const names = requested.flatMap((name) =>
+    name === "numeric_constants"
+      ? ["__ctrans_nan", "__ctrans_infinity"]
+      : [`__ctrans_${snakeCase(name)}`],
+  );
+  return [...new Set(names.flatMap((name) => [`${name} as ${runtimeAlias(name)}`]))].sort();
 }
 
 export function snakeCase(name: string): string {
@@ -319,6 +352,12 @@ const PRECEDENCE: Record<string, number> = {
 class PyPrinter {
   readonly ledger: LedgerEntry[] = [];
   readonly helpers = new Set<string>();
+  // codegen-js runtime helper names imported by translated modules (round-trip);
+  // finalizeUnits emits their Python-semantic bridge definitions.
+  readonly runtimeBridge = new Set<string>();
+  // Set when a module imports the runtime in any form (named, default, or
+  // namespace): the runtime file must be emitted for the import to resolve.
+  needsRuntime = false;
   private lines: string[] = [];
   private indent = 0;
   private ordinal = 0;
@@ -432,7 +471,7 @@ class PyPrinter {
 
   private useHelper(name: string): string {
     this.helpers.add(name);
-    return `__ctrans_${snakeCase(name)}`;
+    return `_ctrans_${snakeCase(name)}`;
   }
 
   // ---- scopes ------------------------------------------------------------------
@@ -456,7 +495,21 @@ class PyPrinter {
     return "unknown";
   }
 
+  private isValueNameDefined(name: string): boolean {
+    return Object.values(this.unit.model.symbols).some(
+      (symbol) =>
+        symbol.name === name &&
+        symbol.namespace !== "type" &&
+        symbol.kind !== "type" &&
+        symbol.kind !== "typeParameter",
+    );
+  }
+
   private mangle(name: string): string {
+    // Helper references bind under the single-underscore alias (see
+    // runtimeAlias): Python's class-body mangling would rewrite any `__x`
+    // identifier, breaking every helper call inside a translated method.
+    if (name.startsWith("__ctrans_")) return runtimeAlias(name);
     const existing = this.mangled.get(name);
     if (existing !== undefined) return existing;
     const mangled = PYTHON_KEYWORDS.has(name) ? `${name}_` : name;
@@ -727,6 +780,10 @@ class PyPrinter {
     const root = moduleSource.startsWith(".")
       ? pyRelativeSpecifier(moduleSource)
       : moduleSource.split("/")[0]!;
+    if (root === `.${RUNTIME_MODULE_BASE}` || root === RUNTIME_MODULE_BASE) {
+      this.emitRuntimeImport(names, defaults, namespace, node);
+      return;
+    }
     if (names.length === 0 && defaults.length === 0 && namespace !== null) {
       this.line(`import ${this.mangle(root)} as ${this.mangle(namespace)}`);
     } else if (defaults.length > 0 || namespace !== null) {
@@ -756,6 +813,59 @@ class PyPrinter {
         "external (non-project) import passes through verbatim against the Python package namespace; the registry/S3 report unmapped packages",
       adaptation: "external-verbatim",
       targetSummary: `import ${root}`,
+    });
+  }
+
+  // A translated module may import the generated runtime (round-trip: the
+  // Python→TypeScript leg emits `import … from "./__ctrans_runtime.js"`). The
+  // runtime file is emitted by this translator, not by the module graph, so the
+  // resolved-import path never fires. Register the imported helper names so
+  // finalizeUnits emits their bridge definitions, and emit the import in the
+  // package/flat dual-resolving shape. The runtime module has no default
+  // export, so default and namespace bindings bind the runtime module object.
+  private emitRuntimeImport(
+    names: { imported: string; local: string }[],
+    defaults: string[],
+    namespace: string | null,
+    node: PyNode,
+  ): void {
+    const myDir = dirname(this.unit.filename.replace(/\.(ts|tsx|js|jsx|mjs|cjs)$/, ""));
+    const specifier = relativePyImport(myDir, RUNTIME_MODULE);
+    this.needsRuntime = true;
+    if (names.length > 0) {
+      const clauses = names.map(({ imported, local }) =>
+        imported === local
+          ? `${imported} as ${runtimeAlias(imported)}`
+          : `${imported} as ${this.mangle(local)}`,
+      );
+      for (const lineText of runtimeImportLines(clauses, specifier)) this.line(lineText);
+      for (const { imported, local } of names) {
+        this.runtimeBridge.add(imported);
+        this.declareKind(local, "unknown");
+      }
+    }
+    if (namespace !== null || defaults.length > 0) {
+      const parent = specifier.replace(/(^|\.)__ctrans_runtime$/, "$1");
+      const bindings = [...defaults, ...(namespace !== null ? [namespace] : [])].map(
+        (local) => `__ctrans_runtime as ${this.mangle(local)}`,
+      );
+      this.line("try:");
+      this.line(`    from ${parent} import ${bindings.join(", ")}`);
+      this.line("except ImportError:");
+      for (const local of [...defaults, ...(namespace !== null ? [namespace] : [])]) {
+        this.line(`    import ${RUNTIME_MODULE_BASE} as ${this.mangle(local)}`);
+        this.declareKind(local, "unknown");
+      }
+    }
+    this.record({
+      span: node.span,
+      sourceKind: "js.ImportDeclaration",
+      rule: "js.import→py.import-runtime",
+      decision: "semantic",
+      rationale:
+        "import of the generated __ctrans_runtime module: definitions are emitted by this translator; the import resolves relatively in package layouts and absolutely in flat output",
+      adaptation: "runtime-import-fallback",
+      targetSummary: `from ${specifier} import …`,
     });
   }
 
@@ -1016,6 +1126,10 @@ class PyPrinter {
             : "unknown";
       case "TemplateLiteral":
         return "string";
+      case "ThisExpression":
+        // Inside an instance method, `this` is a class instance. Static
+        // members and module-level `this` are outside the supported subset.
+        return "instance";
       case "NewExpression": {
         const callee = kid(node, "callee");
         if (
@@ -1031,6 +1145,16 @@ class PyPrinter {
           String(scalar(callee, "name") ?? "") === "Set"
         ) {
           return "unknown";
+        }
+        // new KnownClass(...) binds an instance of a class declared in this
+        // unit (source-order limitation: the class must print before the use
+        // site — later-declared classes keep the honest unknown kind).
+        if (
+          callee !== null &&
+          callee.kind === "Identifier" &&
+          this.classNames.has(String(scalar(callee, "name") ?? ""))
+        ) {
+          return "instance";
         }
         return "unknown";
       }
@@ -1225,9 +1349,22 @@ class PyPrinter {
       this.indent += 1;
       const beforeInit = this.lines.length;
       const superCall =
-        constructor !== undefined ? this.findSuperCall(kid(constructor, "value")!) : false;
-      if (superNode !== null && superCall) {
-        this.line("super().__init__()");
+        constructor !== undefined ? this.findSuperCall(kid(constructor, "value")!) : null;
+      if (superNode !== null && superCall !== null) {
+        // JS super(...args) forwards its arguments to the base constructor;
+        // Python's super().__init__(...args) is the corresponding call.
+        const forwarded = kids(superCall, "arguments").map((argument) =>
+          this.printExpression(argument, 0),
+        );
+        this.line(`super().__init__(${forwarded.join(", ")})`);
+        this.semantic(
+          superCall,
+          "js.CallExpression(super)",
+          "js.super(args)→py.super().__init__(args)",
+          "super constructor call forwards its arguments to the base __init__; Python's super() attribute lookup approximates the JS prototype chain for the supported single-inheritance subset",
+          "super().__init__(…)",
+          "super(…)",
+        );
       }
       for (const field of instanceFields) {
         const key = this.propertyKeyText(kid(field, "key")!, field.fields["computed"] === true);
@@ -1296,13 +1433,15 @@ class PyPrinter {
     );
   }
 
-  private findSuperCall(constructor: PyNode): boolean {
+  // Returns the constructor's explicit super(...) CALL (whose arguments must
+  // be forwarded to the base __init__), or null when there is none.
+  private findSuperCall(constructor: PyNode): PyNode | null {
     const block = kid(constructor, "body");
-    if (block === null) return false;
+    if (block === null) return null;
     for (const statement of kids(block, "body")) {
-      if (this.isSuperCallStatement(statement)) return true;
+      if (this.isSuperCallStatement(statement)) return kid(statement, "expression")!;
     }
-    return false;
+    return null;
   }
 
   private isSuperCallStatement(statement: PyNode): boolean {
@@ -1864,6 +2003,42 @@ class PyPrinter {
     switch (node.kind) {
       case "Identifier": {
         const name = String(scalar(node, "name") ?? "");
+        if (name === "NaN") {
+          this.helpers.add("numeric_constants");
+          this.semantic(
+            node,
+            "js.Identifier(NaN)",
+            "js.NaN→py.math-nan",
+            "JavaScript NaN maps to a Python float NaN",
+            "math.nan",
+            "NaN",
+          );
+          return "_ctrans_nan()";
+        }
+        if (name === "Infinity") {
+          this.helpers.add("numeric_constants");
+          this.semantic(
+            node,
+            "js.Identifier(Infinity)",
+            "js.Infinity→py.math-inf",
+            "JavaScript Infinity maps to Python math.inf",
+            "math.inf",
+            "Infinity",
+          );
+          return "_ctrans_infinity()";
+        }
+        if (name === "undefined") {
+          this.record({
+            span: node.span,
+            sourceKind: "js.Identifier(undefined)",
+            rule: "js.undefined→py.None",
+            decision: "semantic",
+            rationale: "undefined collapses to None (tri-state loss documented, policy §2.3)",
+            adaptation: "None",
+            targetSummary: "None",
+          });
+          return "None";
+        }
         return this.mangle(name);
       }
       case "ThisExpression":
@@ -2202,8 +2377,12 @@ class PyPrinter {
       if (node.fields["computed"] === true) {
         return `${objectText}[${this.printExpression(kid(node, "property")!, 0)}]`;
       }
-      // JS objects are dicts in the target model: property writes create keys
-      // (dict semantics) for dict receivers AND untyped receivers alike.
+      // Class-instance receivers take real attribute writes; JS objects that
+      // are dicts in the target model keep dict writes (missing keys create
+      // entries) for dict receivers AND untyped receivers alike.
+      if (this.receiverKindOf(objectNode) === "instance") {
+        return `${objectText}.${this.mangle(propertyName)}`;
+      }
       if (
         this.receiverKindOf(objectNode) !== "string" &&
         this.receiverKindOf(objectNode) !== "array" &&
@@ -2272,17 +2451,28 @@ class PyPrinter {
     const left = kid(node, "left")!;
     const right = kid(node, "right")!;
     if (operator === "==") {
-      this.record({
-        span: node.span,
-        sourceKind: "js.BinaryExpression(==)",
-        rule: "js.==→py.==",
-        decision: "semantic",
-        rationale:
-          "JS == coerces across types; Python == is strict — the mapping is exact for primitives of the same type and documented-loose otherwise (=== shares the mapping)",
-        adaptation: "==",
-        targetSummary: "==",
-      });
-      return `(${this.printExpression(left, 7)} == ${this.printExpression(right, 7)})`;
+      const loose = this.useHelper("js_loose_eq");
+      this.semantic(
+        node,
+        "js.BinaryExpression(==)",
+        "js.==→py.js_loose_eq",
+        "JS == coerces scalars; the helper covers the tested null/boolean/number/string subset",
+        "js_loose_eq helper",
+        "==",
+      );
+      return `${loose}(${this.printExpression(left, 0)}, ${this.printExpression(right, 0)})`;
+    }
+    if (operator === "!=") {
+      const loose = this.useHelper("js_loose_eq");
+      this.semantic(
+        node,
+        "js.BinaryExpression(!=)",
+        "js.!=→py.not-js_loose_eq",
+        "JS != negates the tested loose-equality scalar mapping",
+        "not js_loose_eq helper",
+        "!=",
+      );
+      return `not ${loose}(${this.printExpression(left, 0)}, ${this.printExpression(right, 0)})`;
     }
     if (operator === "===") {
       this.semantic(
@@ -2295,14 +2485,14 @@ class PyPrinter {
       );
       return `(${this.printExpression(left, 7)} == ${this.printExpression(right, 7)})`;
     }
-    if (operator === "!=" || operator === "!==") {
+    if (operator === "!==") {
       this.semantic(
         node,
-        "js.BinaryExpression(!=)",
-        "js.!=→py.!=",
-        "JS inequality maps to Python != (same strictness note as ===)",
+        "js.BinaryExpression(!==)",
+        "js.!==→py.!=",
+        "JS strict inequality maps to Python != (same primitive/object note as ===)",
         "!=",
-        "!=",
+        "!==",
       );
       return `(${this.printExpression(left, 7)} != ${this.printExpression(right, 7)})`;
     }
@@ -2336,11 +2526,23 @@ class PyPrinter {
         node,
         "js.BinaryExpression(%)",
         "js.%→py.js_mod",
-        "JS % truncates toward zero; Python's % floors — the helper preserves the JS sign",
+        "JS % truncates toward zero and yields NaN for a zero divisor; the helper preserves both",
         "js_mod",
         "%",
       );
       return `${mod}(${this.printExpression(left, 0)}, ${this.printExpression(right, 0)})`;
+    }
+    if (operator === "/") {
+      const divide = this.useHelper("js_div");
+      this.semantic(
+        node,
+        "js.BinaryExpression(/)",
+        "js./→py.js_div",
+        "JS division by zero yields signed Infinity or NaN instead of Python's ZeroDivisionError",
+        "js_div",
+        "/",
+      );
+      return `${divide}(${this.printExpression(left, 0)}, ${this.printExpression(right, 0)})`;
     }
     const leftText = this.printExpression(left, PRECEDENCE[operator] ?? 0);
     const rightText = this.printExpression(
@@ -2435,7 +2637,16 @@ class PyPrinter {
       String(scalar(callee, "name") ?? "") === "Number"
     ) {
       const args = kids(node, "arguments");
-      return `__import__("builtins").float(${args.length > 0 ? this.printExpression(args[0]!, 0) : "0"})`;
+      const converted = args.length > 0 ? this.printExpression(args[0]!, 0) : "0";
+      this.semantic(
+        node,
+        "js.Number",
+        "js.Number→py.js_number",
+        "JS Number coercion for the tested scalar subset; null/undefined collapse is semantic",
+        "js_number helper",
+        "Number(...)",
+      );
+      return `${this.useHelper("js_number")}(${converted})`;
     }
     // Math.* surface.
     if (callee.kind === "MemberExpression") {
@@ -2447,8 +2658,50 @@ class PyPrinter {
       ) {
         const method = String(scalar(kid(callee, "property"), "name") ?? "");
         const args = kids(node, "arguments").map((argument) => this.printExpression(argument, 0));
+        this.semantic(
+          node,
+          `js.Math.${method}`,
+          `js.Math.${method}→py.math-entry`,
+          "Math entry maps the documented JS boundary cases (NaN, infinity, signed zero) rather than Python math exceptions",
+          "math_entry helper",
+          `Math.${method}(…)`,
+        );
         const mathFn = this.useHelper("math_entry");
         return `${mathFn}(${JSON.stringify(method)}${args.length > 0 ? `, ${args.join(", ")}` : ""})`;
+      }
+      if (
+        objectNode.kind === "Identifier" &&
+        String(scalar(objectNode, "name") ?? "") === "console" &&
+        node.fields["computed"] !== true
+      ) {
+        const method = String(scalar(kid(callee, "property"), "name") ?? "");
+        if (method === "log" || method === "info" || method === "warn" || method === "error") {
+          const args = kids(node, "arguments").map((argument) => this.printExpression(argument, 0));
+          // Any string-literal argument may carry printf-style directives (JS
+          // console.log scans every argument, not just the first).
+          const formatDirective = kids(node, "arguments").some(
+            (argument) =>
+              argument.kind === "Literal" &&
+              typeof argument.fields["value"] === "string" &&
+              (argument.fields["value"] as string).includes("%"),
+          );
+          this.record({
+            span: node.span,
+            sourceKind: `js.console.${method}`,
+            rule: `js.console.${method}→py.console_${method === "warn" || method === "error" ? "error" : "log"}`,
+            decision: "semantic",
+            rationale: formatDirective
+              ? "basic space-separated JS String() output; printf-style directives are not interpreted"
+              : "basic space-separated JS String() output on the console method's stream",
+            adaptation: `${method === "warn" || method === "error" ? "error" : "log"} helper`,
+            warnings: formatDirective ? ["CTW-CONSOLE-FORMAT-DIRECTIVE"] : [],
+            targetSummary: `console.${method}(…)`,
+          });
+          const helper = this.useHelper(
+            method === "warn" || method === "error" ? "console_error" : "console_log",
+          );
+          return `${helper}(${args.join(", ")})`;
+        }
       }
       if (
         objectNode.kind === "Identifier" &&
@@ -2500,6 +2753,30 @@ class PyPrinter {
       if (dictMapped !== null) return dictMapped;
       const stringMapped = this.tryStringMethod(callee, node);
       if (stringMapped !== null) return stringMapped;
+      // Known class-instance receiver: a direct attribute call. JS prototype
+      // method lookup is approximated by Python attribute lookup (identical
+      // resolution for the supported single-inheritance subset; a missing
+      // method raises AttributeError where JS raises TypeError).
+      const objectNode = kid(callee, "object")!;
+      if (callee.fields["computed"] !== true && this.receiverKindOf(objectNode) === "instance") {
+        const args = kids(node, "arguments").map((argument) =>
+          argument.kind === "SpreadElement"
+            ? `*${this.printExpression(kid(argument, "argument")!, 0)}`
+            : this.printExpression(argument, 0),
+        );
+        const receiverText = this.printExpression(objectNode, 0);
+        const methodName = String(scalar(kid(callee, "property"), "name") ?? "");
+        const callText = `${receiverText}.${this.mangle(methodName)}(${args.join(", ")})`;
+        this.semantic(
+          node,
+          "js.CallExpression(instance-method)",
+          "js.instance-method→py.attribute-call",
+          "method call on a known class-instance receiver resolves through Python attribute lookup; identical resolution for the supported class subset (a missing method raises AttributeError, not JS TypeError)",
+          "obj.method(…)",
+          callText,
+        );
+        return callText;
+      }
     }
     const calleeText =
       callee.kind === "MemberExpression"
@@ -2523,14 +2800,43 @@ class PyPrinter {
       return `${calleeText}(${args.join(", ")})`;
     }
     void prefix;
+    const directCalleeName =
+      callee.kind === "Identifier" ? String(scalar(callee, "name") ?? "") : null;
+    const unresolved =
+      directCalleeName !== null &&
+      directCalleeName !== "" &&
+      !this.isValueNameDefined(directCalleeName);
+    const dynamicMemberCall = callee.kind === "MemberExpression";
+    this.record({
+      span: node.span,
+      sourceKind: "js.CallExpression",
+      rule: unresolved || dynamicMemberCall ? "js.call→py.dynamic-call" : "js.call→py.call",
+      decision: unresolved || dynamicMemberCall ? "semantic" : "deterministic",
+      rationale: unresolved
+        ? "callee has no value binding in the analyzed module; Python emits the same name, but external linkage and behavior are not proven"
+        : dynamicMemberCall
+          ? "member call receiver/method resolution is dynamic; Python emits the attribute call without proving JS behavior"
+          : "call correspondence for a value binding in the analyzed module",
+      adaptation: unresolved ? "unresolved call passed through" : null,
+      warnings: unresolved ? ["CTW-CALL-UNRESOLVED"] : [],
+      targetSummary: `${calleeText}(${args.join(", ")})`,
+    });
     return `${calleeText}(${args.join(", ")})`;
   }
 
-  private arrayMethodCallback(argument: PyNode): { text: string; usesHelper: boolean } | null {
+  private arrayMethodCallback(
+    argument: PyNode,
+    arity: number,
+  ): { text: string; usesHelper: boolean } {
     if (argument.kind === "ArrowFunctionExpression" || argument.kind === "FunctionExpression") {
       const params = kids(argument, "params");
-      if (params.length >= 1 && params[0]!.kind === "Identifier") {
-        return { text: String(scalar(params[0]!, "name") ?? ""), usesHelper: false };
+      if (params.length >= 1 && params.every((param) => param.kind === "Identifier")) {
+        const names = params.map((param) => String(scalar(param, "name") ?? ""));
+        // The helper invokes the callback at the full JS arity; JS tolerates
+        // callbacks that declare fewer parameters, so surplus positions bind
+        // through the translator-reserved rest name instead of raising.
+        const rest = params.length < arity ? ", *_ctrans_extra" : "";
+        return { text: `${names.join(", ")}${rest}`, usesHelper: false };
       }
     }
     return { text: this.printExpression(argument, 0), usesHelper: true };
@@ -2548,8 +2854,8 @@ class PyPrinter {
     const receiverText = this.printExpression(objectNode, 0);
     switch (propertyName) {
       case "map": {
-        const callback = this.arrayMethodCallback(args[0]!);
-        if (callback === null) return null;
+        this.recordMethodHelper(call, "array", "map", "js_map");
+        const callback = this.arrayMethodCallback(args[0]!, 3);
         if (!callback.usesHelper) {
           const mapFn = this.useHelper("js_map");
           return `${mapFn}(${receiverText}, lambda ${callback.text}: ${this.printExpression(kid(args[0]!, "body")!, 0)})`;
@@ -2557,8 +2863,8 @@ class PyPrinter {
         return `${this.useHelper("js_map")}(${receiverText}, ${callback.text})`;
       }
       case "filter": {
-        const callback = this.arrayMethodCallback(args[0]!);
-        if (callback === null) return null;
+        this.recordMethodHelper(call, "array", "filter", "js_filter");
+        const callback = this.arrayMethodCallback(args[0]!, 3);
         const filterFn = this.useHelper("js_filter");
         if (!callback.usesHelper) {
           return `${filterFn}(${receiverText}, lambda ${callback.text}: ${this.printExpression(kid(args[0]!, "body")!, 0)})`;
@@ -2566,52 +2872,68 @@ class PyPrinter {
         return `${filterFn}(${receiverText}, ${callback.text})`;
       }
       case "reduce": {
+        this.recordMethodHelper(call, "array", "reduce", "js_reduce");
         const reduceFn = this.useHelper("js_reduce");
         const hasInitial = args.length > 1;
-        return `${reduceFn}(${receiverText}, ${this.printExpression(args[0]!, 0)}, ${args.length > 1 ? this.printExpression(args[1]!, 0) : "None"}, ${hasInitial ? "True" : "False"})`;
+        // The reduce callback receives (accumulator, item, index); a lambda
+        // built here keeps every declared parameter and tolerates the rest.
+        const callback = this.arrayMethodCallback(args[0]!, 4);
+        const callbackText = callback.usesHelper
+          ? callback.text
+          : `lambda ${callback.text}: ${this.printExpression(kid(args[0]!, "body")!, 0)}`;
+        return `${reduceFn}(${receiverText}, ${callbackText}, ${args.length > 1 ? this.printExpression(args[1]!, 0) : "None"}, ${hasInitial ? "True" : "False"})`;
       }
       case "find": {
+        this.recordMethodHelper(call, "array", "find", "js_find");
+        const callback = this.arrayMethodCallback(args[0]!, 3);
         const findFn = this.useHelper("js_find");
-        const callback = this.arrayMethodCallback(args[0]!);
-        if (callback === null) return null;
         if (!callback.usesHelper) {
           return `${findFn}(${receiverText}, lambda ${callback.text}: ${this.printExpression(kid(args[0]!, "body")!, 0)})`;
         }
         return `${findFn}(${receiverText}, ${callback.text})`;
       }
       case "forEach": {
+        this.recordMethodHelper(call, "array", "forEach", "js_for_each");
+        const callback = this.arrayMethodCallback(args[0]!, 3);
         const forEachFn = this.useHelper("js_for_each");
-        const callback = this.arrayMethodCallback(args[0]!);
-        if (callback === null) return null;
         if (!callback.usesHelper) {
           return `${forEachFn}(${receiverText}, lambda ${callback.text}: ${this.printExpression(kid(args[0]!, "body")!, 0)})`;
         }
         return `${forEachFn}(${receiverText}, ${callback.text})`;
       }
       case "includes":
+        this.recordMethodHelper(call, "array", "includes", "js_includes");
         return `${this.useHelper("js_includes")}(${receiverText}, ${this.printExpression(args[0]!, 0)})`;
       case "indexOf":
+        this.recordMethodHelper(call, "array", "indexOf", "js_index_of");
         return `${this.useHelper("js_index_of")}(${receiverText}, ${this.printExpression(args[0]!, 0)})`;
       case "join":
+        this.recordMethodHelper(call, "array", "join", "js_join");
         return `${this.useHelper("js_join")}(${receiverText}, ${args.length > 0 ? this.printExpression(args[0]!, 0) : '","'})`;
       case "concat": {
+        this.recordMethodHelper(call, "array", "concat", "js_concat");
         return `${this.useHelper("js_concat")}(${receiverText}${args.length > 0 ? `, ${args.map((argument) => this.printExpression(argument, 0)).join(", ")}` : ""})`;
       }
       case "sort": {
+        this.recordMethodHelper(call, "array", "sort", "js_sort");
         return `${this.useHelper("js_sort")}(${receiverText}${args.length > 0 ? `, ${this.printExpression(args[0]!, 0)}` : ""})`;
       }
       case "reverse": {
+        this.recordMethodHelper(call, "array", "reverse", "js_reverse");
         return `${this.useHelper("js_reverse")}(${receiverText})`;
       }
       case "push": {
+        this.recordMethodHelper(call, "array", "push", "push_value");
         const values = args.map((argument) => this.printExpression(argument, 0));
         return `${this.useHelper("push_value")}(${receiverText}${values.length > 0 ? `, ${values.join(", ")}` : ""})`;
       }
       case "unshift": {
+        this.recordMethodHelper(call, "array", "unshift", "unshift_value");
         const values = args.map((argument) => this.printExpression(argument, 0));
         return `${this.useHelper("unshift_value")}(${receiverText}${values.length > 0 ? `, ${values.join(", ")}` : ""})`;
       }
       case "pop":
+        this.recordMethodHelper(call, "array", "pop", null);
         return `${receiverText}.pop()`;
       case "shift":
         this.semantic(
@@ -2642,6 +2964,29 @@ class PyPrinter {
     }
   }
 
+  // One ledger entry per helper-emitted method mapping (AGENTS §3: no
+  // construct is emitted without provenance). tryStringMethod records its own
+  // entry; array/dict routes go through here.
+  private recordMethodHelper(
+    call: PyNode,
+    surface: "array" | "dict",
+    method: string,
+    helperName: string | null,
+  ): void {
+    this.record({
+      span: call.span,
+      sourceKind: `js.${surface === "array" ? "Array" : "Object"}.${method}`,
+      rule: `js.${surface}-method(${method})→py.${helperName ?? "native"}`,
+      decision: "semantic",
+      rationale:
+        helperName === null
+          ? "method correspondence on a provable receiver; JS-specific edge behavior is documented per method"
+          : "JS method semantics (callback arity, edge cases) provided by the generated runtime helper; Python-native equivalents differ where JS defines different edge behavior",
+      adaptation: helperName === null ? null : helperName,
+      targetSummary: `.${method}(…)`,
+    });
+  }
+
   private tryDictMethod(member: PyNode, call: PyNode): string | null {
     const objectNode = kid(member, "object")!;
     const receiverKind = this.receiverKindOf(objectNode);
@@ -2654,16 +2999,22 @@ class PyPrinter {
     const receiverText = this.printExpression(objectNode, 0);
     switch (propertyName) {
       case "has":
+        this.recordMethodHelper(call, "dict", "has", null);
         return `(${this.printExpression(args[0]!, 0)} in ${receiverText})`;
       case "get":
+        this.recordMethodHelper(call, "dict", "get", "js_get");
         return `${this.useHelper("js_get")}(${receiverText}, ${this.printExpression(args[0]!, 0)})`;
       case "keys":
+        this.recordMethodHelper(call, "dict", "keys", null);
         return `list(${receiverText}.keys())`;
       case "values":
+        this.recordMethodHelper(call, "dict", "values", null);
         return `list(${receiverText}.values())`;
       case "entries":
+        this.recordMethodHelper(call, "dict", "entries", "js_object_entries");
         return `${this.useHelper("js_object_entries")}(${receiverText})`;
       case "delete":
+        this.recordMethodHelper(call, "dict", "delete", "js_delete");
         return `${this.useHelper("js_delete")}(${receiverText}, ${this.printExpression(args[0]!, 0)})`;
       default:
         return null;
@@ -2682,6 +3033,27 @@ class PyPrinter {
       member.fields["computed"] === true
         ? null
         : String(scalar(kid(member, "property"), "name") ?? "");
+    const mappedStringMethods = new Set([
+      "toUpperCase",
+      "toLowerCase",
+      "trim",
+      "trimStart",
+      "trimEnd",
+      "startsWith",
+      "endsWith",
+      "includes",
+      "indexOf",
+      "charAt",
+      "charCodeAt",
+      "padStart",
+      "substring",
+      "slice",
+      "split",
+      "repeat",
+      "replace",
+      "replaceAll",
+    ]);
+    if (propertyName === null || !mappedStringMethods.has(propertyName)) return null;
     const args = kids(call, "arguments");
     const receiverText = this.printExpression(objectNode, 0);
     this.semantic(
@@ -2817,6 +3189,17 @@ class PyPrinter {
         `o.${name}`,
       );
       return `${get}(${objectText}, ${JSON.stringify(name)})`;
+    }
+    if (this.receiverKindOf(objectNode) === "instance") {
+      this.semantic(
+        node,
+        "js.MemberExpression(instance)",
+        "js.instance-field→py.attribute",
+        "attribute read on a known class-instance receiver (a missing field raises AttributeError where JS yields undefined)",
+        "obj.field",
+        `o.${name}`,
+      );
+      return `${objectText}.${this.mangle(name)}`;
     }
     if (!isCallTarget && this.receiverKindOf(objectNode) === "unknown") {
       // Property READ on an untyped receiver: undefined-for-missing semantics via

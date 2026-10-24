@@ -378,6 +378,30 @@
     "span": {
       "start": {
         "line": 10,
+        "column": 9
+      },
+      "end": {
+        "line": 10,
+        "column": 30
+      },
+      "startByteOffset": 195,
+      "endByteOffset": 216
+    },
+    "sourceKind": "js.BinaryExpression(/)",
+    "rule": "js./→py.js_div",
+    "decision": "semantic",
+    "rationale": "JS division by zero yields signed Infinity or NaN instead of Python's ZeroDivisionError",
+    "adaptation": "js_div",
+    "targetSummary": "/",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/util/stats.js#008",
+    "unit": "src/util/stats.js",
+    "span": {
+      "start": {
+        "line": 10,
         "column": 17
       },
       "end": {
@@ -393,30 +417,6 @@
     "rationale": "JS .length on arrays/strings maps to len() (functions carry a different .length semantics — documented)",
     "adaptation": "len()",
     "targetSummary": "len(values)",
-    "warnings": [],
-    "escalation": null
-  },
-  {
-    "id": "src/util/stats.js#008",
-    "unit": "src/util/stats.js",
-    "span": {
-      "start": {
-        "line": 10,
-        "column": 9
-      },
-      "end": {
-        "line": 10,
-        "column": 30
-      },
-      "startByteOffset": 195,
-      "endByteOffset": 216
-    },
-    "sourceKind": "js.BinaryExpression",
-    "rule": "js./→py./",
-    "decision": "deterministic",
-    "rationale": "operator correspondence (numeric semantics match for the mapped operand types)",
-    "adaptation": null,
-    "targetSummary": "total / len(values)",
     "warnings": [],
     "escalation": null
   },
@@ -473,6 +473,54 @@
     "unit": "src/util/stats.js",
     "span": {
       "start": {
+        "line": 14,
+        "column": 9
+      },
+      "end": {
+        "line": 14,
+        "column": 50
+      },
+      "startByteOffset": 270,
+      "endByteOffset": 311
+    },
+    "sourceKind": "js.Array.map",
+    "rule": "js.array-method(map)→py.js_map",
+    "decision": "semantic",
+    "rationale": "JS method semantics (callback arity, edge cases) provided by the generated runtime helper; Python-native equivalents differ where JS defines different edge behavior",
+    "adaptation": "js_map",
+    "targetSummary": ".map(…)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/util/stats.js#012",
+    "unit": "src/util/stats.js",
+    "span": {
+      "start": {
+        "line": 14,
+        "column": 31
+      },
+      "end": {
+        "line": 14,
+        "column": 49
+      },
+      "startByteOffset": 292,
+      "endByteOffset": 310
+    },
+    "sourceKind": "js.CallExpression",
+    "rule": "js.call→py.call",
+    "decision": "deterministic",
+    "rationale": "call correspondence for a value binding in the analyzed module",
+    "adaptation": null,
+    "targetSummary": "add(value, factor)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/util/stats.js#013",
+    "unit": "src/util/stats.js",
+    "span": {
+      "start": {
         "line": 13,
         "column": 7
       },
@@ -493,7 +541,7 @@
     "escalation": null
   },
   {
-    "id": "src/util/stats.js#012",
+    "id": "src/util/stats.js#014",
     "unit": "src/util/stats.js",
     "span": {
       "start": {
@@ -517,7 +565,7 @@
     "escalation": null
   },
   {
-    "id": "src/util/stats.js#013",
+    "id": "src/util/stats.js#015",
     "unit": "src/util/stats.js",
     "span": null,
     "sourceKind": "js.exports",
@@ -908,6 +956,30 @@
     "span": {
       "start": {
         "line": 10,
+        "column": 9
+      },
+      "end": {
+        "line": 10,
+        "column": 30
+      },
+      "startByteOffset": 195,
+      "endByteOffset": 216
+    },
+    "sourceKind": "js.BinaryExpression(/)",
+    "rule": "js./→py.js_div",
+    "decision": "semantic",
+    "rationale": "JS division by zero yields signed Infinity or NaN instead of Python's ZeroDivisionError",
+    "adaptation": "js_div",
+    "targetSummary": "/",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/util/stats.js#008",
+    "unit": "src/util/stats.js",
+    "span": {
+      "start": {
+        "line": 10,
         "column": 17
       },
       "end": {
@@ -923,30 +995,6 @@
     "rationale": "JS .length on arrays/strings maps to len() (functions carry a different .length semantics — documented)",
     "adaptation": "len()",
     "targetSummary": "len(values)",
-    "warnings": [],
-    "escalation": null
-  },
-  {
-    "id": "src/util/stats.js#008",
-    "unit": "src/util/stats.js",
-    "span": {
-      "start": {
-        "line": 10,
-        "column": 9
-      },
-      "end": {
-        "line": 10,
-        "column": 30
-      },
-      "startByteOffset": 195,
-      "endByteOffset": 216
-    },
-    "sourceKind": "js.BinaryExpression",
-    "rule": "js./→py./",
-    "decision": "deterministic",
-    "rationale": "operator correspondence (numeric semantics match for the mapped operand types)",
-    "adaptation": null,
-    "targetSummary": "total / len(values)",
     "warnings": [],
     "escalation": null
   },
@@ -1003,6 +1051,54 @@
     "unit": "src/util/stats.js",
     "span": {
       "start": {
+        "line": 14,
+        "column": 9
+      },
+      "end": {
+        "line": 14,
+        "column": 50
+      },
+      "startByteOffset": 270,
+      "endByteOffset": 311
+    },
+    "sourceKind": "js.Array.map",
+    "rule": "js.array-method(map)→py.js_map",
+    "decision": "semantic",
+    "rationale": "JS method semantics (callback arity, edge cases) provided by the generated runtime helper; Python-native equivalents differ where JS defines different edge behavior",
+    "adaptation": "js_map",
+    "targetSummary": ".map(…)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/util/stats.js#012",
+    "unit": "src/util/stats.js",
+    "span": {
+      "start": {
+        "line": 14,
+        "column": 31
+      },
+      "end": {
+        "line": 14,
+        "column": 49
+      },
+      "startByteOffset": 292,
+      "endByteOffset": 310
+    },
+    "sourceKind": "js.CallExpression",
+    "rule": "js.call→py.call",
+    "decision": "deterministic",
+    "rationale": "call correspondence for a value binding in the analyzed module",
+    "adaptation": null,
+    "targetSummary": "add(value, factor)",
+    "warnings": [],
+    "escalation": null
+  },
+  {
+    "id": "src/util/stats.js#013",
+    "unit": "src/util/stats.js",
+    "span": {
+      "start": {
         "line": 13,
         "column": 7
       },
@@ -1023,7 +1119,7 @@
     "escalation": null
   },
   {
-    "id": "src/util/stats.js#012",
+    "id": "src/util/stats.js#014",
     "unit": "src/util/stats.js",
     "span": {
       "start": {
@@ -1047,7 +1143,7 @@
     "escalation": null
   },
   {
-    "id": "src/util/stats.js#013",
+    "id": "src/util/stats.js#015",
     "unit": "src/util/stats.js",
     "span": null,
     "sourceKind": "js.exports",

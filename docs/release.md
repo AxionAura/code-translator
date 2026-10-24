@@ -1,11 +1,16 @@
-# Release preparation (v0.1.1)
+# Release preparation (v0.1.1, historical) — superseded by the published v0.1.1 release
 
-Status: **v0.1.1 prepared locally; not published.** All eleven `@axion-ct/*`
-packages are at `0.1.1` in this working tree. No package has been published, no
-`v0.1.1` tag has been created, and no registry state has been changed; `v0.1.0`
-remains the published version. See
-[release-notes-v0.1.1.md](release-notes-v0.1.1.md) and
-[publication-plan-v0.1.1.md](publication-plan-v0.1.1.md).
+> **Historical preparation document.** The v0.1.1 release described here **was
+> published and verified on npm (2026-10-23)**; see
+> [release-report-v0.1.1.md](release-report-v0.1.1.md). This file is retained as
+> audit evidence for how the candidate was prepared and is not the current
+> release status. Current-status summaries live in [README.md](../README.md) and
+> [PROJECT_STATE.md](../PROJECT_STATE.md).
+
+Status at preparation time: candidate ready locally, not yet published; all
+eleven `@axion-ct/*` packages at `0.1.1` in the working tree, no registry state
+changed, `v0.1.0` the then-published version. The published release used the
+exact commands below after explicit authorization.
 
 The previously published release is **v0.1.0 (2026-10-22)**: all eleven packages
 are live at `0.1.0` under the MIT license; see
@@ -77,10 +82,10 @@ Use the explicit per-package commands and per-package verification steps in
 `pnpm -r publish`: explicit commands make the dependency order and stop point
 unambiguous, and avoid recursive operations that include the private root.
 
-`v0.1.0` is published and immutable. Do not republish it. `v0.1.1` is prepared
-locally and requires a clean approved commit, explicit authorization, and the
-preflight, per-package verification, and post-publish checks in the v0.1.1 plan.
-Do not create the `v0.1.1` tag until those checks pass.
+`v0.1.0` and `v0.1.1` are published and immutable. Do not republish either. A
+future release requires a clean approved commit, explicit authorization, and the
+preflight, per-package verification, and post-publish checks in its plan. Do not
+create the release tag until those checks pass.
 
 ## Runtime requirements
 
@@ -102,16 +107,20 @@ and [PROJECT_STATE.md](../PROJECT_STATE.md) §15. Highlights: claim-level accept
 is not semantic proof; strict mode needs a toolchain image and was not exercised
 end-to-end in a container here; Windows keychain retrieval is not implemented; disk
 caches are opt-in and unencrypted; reverse test translation (vitest→pytest) is
-deferred; number-mode `0 ** -1` still yields `Infinity` instead of Python's
-`ZeroDivisionError`; and runtime/indirect integer values are not value-tracked for
-precision warnings.
+deferred; runtime/indirect integer values are not value-tracked for precision
+warnings (v0.1.2 discloses them with `CTW-NUM-INT-RUNTIME-UNCERTAIN`), and
+number-mode `0 ** -1` now raises `ZeroDivisionError` via the v0.1.2 reliability
+fixes in the working tree (the published `0.1.1` tarballs retain the old
+behavior).
 
-**v0.1.1 patch correction (prepared locally, not published):** the published
-`v0.1.0` artifacts have a silent number-mode integer-precision warning gap for
-constant exponentiation and arithmetic. The repository and packed `0.1.1`
-artifacts contain the exact-constant analysis and regression suite; they do not
-repair the immutable `0.1.0` tarballs. The patch also corrects integral-float and
-hex-token handling and discloses the remaining number-mode `0 ** -1` gap. See
+**v0.1.1 patch correction (published 2026-10-23):** the immutable `v0.1.0`
+tarballs have a silent number-mode integer-precision warning gap for constant
+exponentiation and arithmetic. The published `0.1.1` artifacts contain the
+exact-constant analysis and regression suite; they do not repair `0.1.0`. The
+patch also corrected integral-float and hex-token handling. The remaining
+number-mode `0 ** -1` gap and runtime-integer precision uncertainty disclosed at
+that release are addressed by the v0.1.2 reliability work recorded in
+`PROJECT_STATE.md` §8/§19. See
 [release-notes-v0.1.1.md](release-notes-v0.1.1.md),
 [release-report-v0.1.0.md](release-report-v0.1.0.md), and
 [../research/post-release-product-audit.md](../research/post-release-product-audit.md).

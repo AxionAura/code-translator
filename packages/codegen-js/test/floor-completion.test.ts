@@ -65,9 +65,9 @@ describe("floor completion: JS→Py", () => {
     await translator.translateUnit(unit, graph);
     const shared = await translator.finalizeUnits!();
     const output = shared.files.find((file) => file.targetPath === "mod.py")!.content;
-    expect(output).toContain("__ctrans_js_array_from_keys(xs)");
-    expect(output).toContain('f"a{{b}}c{__ctrans_str_js(flag)}"');
-    expect(output).toContain("if __ctrans_truthy");
+    expect(output).toContain("_ctrans_js_array_from_keys(xs)");
+    expect(output).toContain('f"a{{b}}c{_ctrans_str_js(flag)}"');
+    expect(output).toContain("if _ctrans_truthy");
     expect(output).toContain("== 1");
     expect(output).toContain("_ctrans_tmp");
     const { createPythonBridgeParser } = await import("@axion-ct/parser-py");

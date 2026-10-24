@@ -20,20 +20,26 @@ Status: **implemented V1** (M4–M11). Semantic facts are source-verified (see [
 | `is` / `===` | deterministic (`is` → `===` on primitives; object identity → helper note) | deterministic (`is` on None → `is None` stays) |
 | `==` overloading vs `===` | `==` between primitives → `===`; when either operand has `__eq__` (user class) → `semantic`: `.equals()` method emitted + call-site rewrite | `==` → `==` (Python semantics superset); `===` → `==` with class note |
 
-**Integer precision amendment (2026-10-22).** In default `number` mode, constant
-integer expressions using `+`, `-`, `*`, `**`, `//`, `%`, and unary `+`/`-` are
-evaluated exactly with integer arithmetic during analysis. If the exact result or
-an intermediate value cannot be preserved by float64, the operation is classified
-`semantic` and emits `CTW-NUM-INT-ARBITRARY-PRECISION`; it is never presented as
-deterministic equivalence. Exact boundary cases such as `2 ** 53 - 1` remain
-warning-free; `2 ** 53`, `2 ** 53 + 1`, and `2 ** 100` warn. `intMode=bigint`
-remains exact and warning-free. NUMBER-token detection keeps integral float
-literals (`2.0`) as JS numbers in both modes and preserves hex integers containing
-`e` (`0x1e2`) as integers. Indirect/runtime integer values are handled by the
-existing annotation/semantic-helper policy rather than value tracking; exceptional
-exponentiation such as `0 ** -1` remains a separate pre-existing gap: number mode
-returns JavaScript `Infinity` where Python raises `ZeroDivisionError`. It is not
-fixed in v0.1.1 and must not be described as equivalent.
+**Integer precision amendment (2026-10-22, updated 2026-10-24).** In default
+`number` mode, constant integer expressions using `+`, `-`, `*`, `**`, `//`, `%`,
+and unary `+`/`-` are evaluated exactly with integer arithmetic during analysis.
+If the exact result or an intermediate value cannot be preserved by float64, the
+operation is classified `semantic` and emits `CTW-NUM-INT-ARBITRARY-PRECISION`;
+it is never presented as deterministic equivalence. Exact boundary cases such as
+`2 ** 53 - 1` remain warning-free; `2 ** 53`, `2 ** 53 + 1`, and `2 ** 100` warn.
+`intMode=bigint` remains exact and warning-free. NUMBER-token detection keeps
+integral float literals (`2.0`) as JS numbers in both modes and preserves hex
+integers containing `e` (`0x1e2`) as integers.
+
+Indirect/runtime integer values are not value-tracked. For exponentiation whose
+operands carry int evidence but whose exact value is unknown, the operation is
+classified `semantic` and emits `CTW-NUM-INT-RUNTIME-UNCERTAIN` — a disclosure
+that number mode may exceed float64 precision, not a claim that any particular
+result is wrong. Provable float operands, safe constants, and `intMode=bigint`
+do not receive the warning. Exceptional exponentiation is fixed: zero (0, 0.0,
+-0.0) raised to a negative or statically unknown exponent routes through
+`__ctrans_pow` and raises Python's `ZeroDivisionError` instead of JavaScript's
+`Infinity` in number mode; bigint mode already did.
 
 ### 2.2 Truthiness — always explicit
 
@@ -148,10 +154,64 @@ Each entry here lists: detection span, warning code (`CTW-UNSUPPORTED-*`), comme
 
 - **TypeScript → JavaScript (`TsToJsTranslator`, `@axion-ct/codegen-js`):** type-only syntax erased per construct with `deterministic` ledger provenance (interfaces, type aliases, annotations, `as`/`satisfies`/non-null assertions, type-only imports/exports, generics, `implements`, ambient declarations); runtime code printed verbatim with module-path rewriting (`helper.ts` → `helper.js`), optional chaining and optional calls preserved; runtime TS constructs (`enum`, `namespace`, decorators, parameter properties, abstract classes/members) are `unsupported`-loud. Output finalized through prettier and validated by S1 (oxc).
 - **JavaScript → TypeScript (`JsToTsTranslator`):** honest types only — unannotated parameters/returns/fields are `unknown` (never implicit `any`, never blanket `any`); initializer evidence annotates `number`/`string`/`boolean`/`null`/`RegExp`/`Array<unknown>`/`Record<string, unknown>` and constructed classes; strict TS rejects operators on `unknown`, so runtime-neutral `as` assertions (erased at runtime, recorded per site) appear at operator/member/call/spread positions; known globals and callable bindings are never asserted. Output passes the strict S2 oracle.
-- **JavaScript/TypeScript → Python (`@axion-ct/codegen-py`):** deliberate mappings per §2 (TS/JS→Py column): template literals → f-strings with `__ctrans_str_js` interpolation (JS `true`/`null` spellings), JS `%` truncation → `__ctrans_js_mod`, JS truthiness (NaN falsy) → `__ctrans_truthy` where unprovable, `in` → `__ctrans_js_in` (index membership on arrays), `typeof` → helper, optional chaining → `__ctrans_opt_attr`, dynamic property reads → `__ctrans_js_get` (undefined-for-missing), property writes → dict-style, `null`/`undefined` → `None` (tri-state collapse recorded), function expressions with block bodies → named `def`s, arrow expression bodies → `lambda`, generators → yield-bearing defs, classes → `class`/`__init__`/methods with `self`, getters/setters → `@property`, private fields → `_name`, static members → class attributes/`@staticmethod`, counting `for` loops → `range()` (all bound/update variants), no-fallthrough `switch` → if/elif chain (fallthrough is unsupported-loud), `try/catch/finally` → `except Exception`/`finally`, non-Error `throw` → `RuntimeError` wrap, imports → relative `from .mod import …` with barrel/alias/default/namespace/star forms, exports → `__all__` (default exports → `default` binding), JS string/array/dict methods mapped natively where types prove it or through `__ctrans_js_*` helpers otherwise. Output is finalized through the pinned ruff formatter (D-024) and S1-validated by re-parsing through the CPython bridge.
-  **Known console gap (observed 2026-10-23, pre-existing):** a JS/TS source that calls `console.log(...)` lowers to a bare `console` reference in Python; pyright S2 reports `"console" is not defined` and the file remains at claim 1. No mapping or warning is emitted for this call. This is not introduced by v0.1.1 and is not a validated Python translation.
+- **JavaScript/TypeScript → Python (`@axion-ct/codegen-py`):** deliberate mappings per §2 (TS/JS→Py column): template literals → f-strings with `__ctrans_str_js` interpolation (JS `true`/`null` spellings), JS `%` truncation → `__ctrans_js_mod`, JS truthiness (NaN falsy) → `__ctrans_truthy` where unprovable, `in` → `__ctrans_js_in` (index membership on arrays), `typeof` → helper, optional chaining → `__ctrans_opt_attr`, dynamic property reads → `__ctrans_js_get` (undefined-for-missing), property writes → dict-style, `null`/`undefined` → `None` (tri-state collapse recorded), function expressions with block bodies → named `def`s, arrow expression bodies → `lambda`, generators → yield-bearing defs, classes → `class`/`__init__`/methods with `self`, getters/setters → `@property`, private fields → `_name`, static members → class attributes/`@staticmethod`, counting `for` loops → `range()` (all bound/update variants), no-fallthrough `switch` → if/elif chain (fallthrough is unsupported-loud), `try/catch/finally` → `except Exception`/`finally`, non-Error `throw` → `RuntimeError` wrap, imports → relative `from .mod import …` with barrel/alias/default/namespace/star forms, exports → `__all__` (default exports → `default` binding), JS string/array/dict methods mapped natively where types prove it or through `__ctrans_js_*` helpers otherwise — every helper-emitted array/dict method call records its own `semantic` ledger entry (`js.array-method(…)→py.<helper>`); string methods already recorded per call. `super(...args)` in a constructor forwards its arguments to `super().__init__(...)` (`semantic`, single-inheritance subset); method calls and field reads/writes on receivers provably constructed from a class declared earlier in the same unit (`new KnownClass()` bindings and `this`) use direct attribute dispatch — a missing method/field raises AttributeError where JS raises TypeError or yields undefined (source-order limitation: later-declared classes keep the honest unknown-receiver mappings). Output is finalized through the pinned ruff formatter (D-024) and S1-validated by re-parsing through the CPython bridge.
+  **Reverse numeric amendment (2026-10-24).** Mapped JS scalar semantics now match
+  JavaScript on the tested boundary cases instead of Python's operator semantics:
+  `/` routes through `__ctrans_js_div` (signed `Infinity` for ±div-by-zero, `NaN`
+  for 0/0), `%` through `__ctrans_js_mod` (`NaN` for a zero divisor, `math.fmod`
+  truncation), `==`/`!=` through `__ctrans_js_loose_eq` for the tested
+  null/boolean/number/string scalar subset (containers use Python identity;
+  full JS coercion is NOT reproduced), `Number()` through `__ctrans_js_number`
+  (null/booleans/numbers, decimal/exponent strings, and the radix prefixes
+  `0x`/`0X`, `0b`/`0B`, `0o`/`0O` case-insensitively with signs; JS-only
+  spellings accepted, Python-only spellings (`inf`, `infinity`, digit
+  underscores) and malformed digits → NaN like JS), and
+  the `NaN`/`Infinity` identifiers to `__ctrans_nan()`/`__ctrans_infinity()`.
+  The `%` integer path is exact arbitrary precision (an int-int remainder is an
+  int, not `2.0`): for integer operands beyond float64 the result is exact,
+  which is BROADER than JavaScript's double arithmetic — a documented
+  beyond-JS divergence, not a JS-semantics violation; float operands use IEEE
+  `fmod` truncation. `/` also preserves the divisor's signed zero
+  (`1 / -0` → `-Infinity`).
+  `===`/`!==` keep Python `==`/`!=` for the documented primitive cases. The
+  `Math.*` entry is now import-consistent (`__ctrans_math_entry` defined once)
+  and pins JS edge behavior for `pow` (0**negative → +Infinity with sign),
+  `log(0)` → -Infinity, `sqrt(negative)` → NaN, and `sign(NaN)` → NaN rather
+  than Python exceptions. The old `Math.pow(0,-1)`-to-`ZeroDivisionError`
+  divergence is fixed. Finite-domain Math entries still map to `math`; the full
+  JS Math coercion surface is not claimed.
+  **Known console gap (updated 2026-10-24):** the previously emitted bare
+  `console` reference is fixed in the working tree for the narrow mapped subset:
+  `console.log`/`console.info` route to stdout and `console.warn`/`console.error`
+  to stderr through `__ctrans_console_log`/`__ctrans_console_error`, with
+  space-separated JS `String()` conversion. One `semantic` ledger entry
+  (`js.console.<method>`) is recorded per call; `%`-style format directives are
+  NOT interpreted and warn (`CTW-CONSOLE-FORMAT-DIRECTIVE`) — the directive scan
+  covers EVERY string-literal argument, matching JS `console.*` (which scans all
+  arguments, not just the first). The published
+  `0.1.1` tarballs retain the old behavior. Other console methods remain
+  unsupported; Node/browser console formatting compatibility is not claimed.
+  **Runtime import strategy (D-029, 2026-10-24).** Generated Python output
+  imports `__ctrans_runtime` through a dual-resolving `try: from …` /
+  `except ImportError: from __ctrans_runtime import …` shape, so the same tree
+  runs both as a package and as a flat output directory; a round-tripped module
+  that imports the runtime causes the runtime file to be emitted with
+  Python-semantic bridge definitions for the imported codegen-js helper names.
+  Translated code references helpers through single-underscore aliases
+  (`__ctrans_x as _ctrans_x`) because Python's class-body mangling would rewrite
+  every `__x` identifier inside a method; array-method callbacks receive the
+  full JS arity — map/filter/find/forEach pass `(item, index, array)` and reduce
+  passes `(accumulator, item, index, array)` — with shorter translated callbacks
+  binding `*_ctrans_extra` exactly as JS tolerates. The bridge defines ALL
+  importable codegen-js runtime helper names (enforced by
+  `tests/runtime-bridge-consistency.test.ts`); `__ctrans_truthy` is bridged as
+  Python `bool()` (NaN is truthy in Python but falsy in JS; empty containers are falsy in Python but truthy in JS), and if one module both
+  imports it and lowers its own JS truthiness sites, the module's own
+  JS-semantics definition wins (round-tripped truthiness in such a mixed module
+  evaluates with JS truthiness — documented divergence; the pure round-trip is
+  exact).
 - **Validation:** direction-aware S1 (oxc for JS/TS targets, the CPython bridge for Python targets), S2 for Python output through the pinned pyright CLI (`--outputjson`, honest `skipped(reason)` when it cannot run; D-005/D-024), S3 specifier normalization for JS/TS and Python sources. Reverse test translation (vitest→pytest) remains deferred per roadmap M7; the M6 mapper/sandbox/S5/S6 interfaces are the documented integration point.
-- **Evidence:** reverse ConstructMatrix (50 entries JS/TS→Py), unsupported-arm sweeps both ways, three sandboxed behavior differentials (JS→Py, TS→JS, JS→TS execute source and target under identical conditions and compare JSON output), a Python→TS→Python round-trip behavior test, a pinned reverse golden project (`tests/fixtures/reverse-js-project/`, claim level 3: S1+S2+S3), and pyright adapter tests (pass/fail/skip paths).
+- **Evidence:** reverse ConstructMatrix (50 entries JS/TS→Py), unsupported-arm sweeps both ways, three sandboxed behavior differentials (JS→Py, TS→JS, JS→TS execute source and target under identical conditions and compare JSON output — each side must exit 0 with non-empty stdout, so a both-sides-crash cannot pass), a Python→TS→Python round-trip behavior test with the same exit/non-empty gates, a pinned reverse golden project (`tests/fixtures/reverse-js-project/`, claim level 3: S1+S2+S3), and pyright adapter tests (pass/fail/skip paths). The helper-level numeric boundary cases have their own sandbox-executed tests (`packages/codegen-py/test/runtime-behavior.test.ts`, repr-based so int-vs-float and NaN/Infinity spellings are distinguished); the differentials prove whole-program agreement, not helper semantics.
 
 ## 5d. M8 implementation status (match lowering + AI escalation host)
 

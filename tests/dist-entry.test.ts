@@ -36,7 +36,7 @@ describe("compiled distribution", () => {
       exports: { ".": { default: string } };
       files: string[];
     };
-    expect(core.version).toBe("0.1.1");
+    expect(core.version).toBe("0.1.2");
     expect(core.exports["."].default).toBe("./dist/index.js");
     expect(core.files).toContain("dist");
     const parserPy = JSON.parse(
@@ -65,7 +65,7 @@ describe("compiled distribution", () => {
 
   it("reports the release version and translates via the dist entry", async () => {
     const version = await exec(process.execPath, [DIST_ENTRY, "--version"], { cwd: ROOT });
-    expect(version.stdout.trim()).toBe("0.1.1");
+    expect(version.stdout.trim()).toBe("0.1.2");
     const source = join(workspace, "calc.py");
     writeFileSync(source, "def add(a: int, b: int) -> int:\n    return a + b\n", "utf8");
     const checked = await exec(process.execPath, [DIST_ENTRY, "check", source, "--to", "ts"], {
