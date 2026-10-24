@@ -1,144 +1,160 @@
 # Code Translator
 
-A behavior-preserving source-code translator for **Python ↔ JavaScript ↔ TypeScript**, designed to translate whole projects — not just snippets — with explicit, honest reporting of what was translated deterministically, what was adapted semantically, what was ambiguous, and what was not supported.
+[![npm](https://img.shields.io/npm/v/@axion-ct/cli.svg)](https://www.npmjs.com/package/@axion-ct/cli)
+[![CI](https://github.com/AxionAura/code-translator/actions/workflows/ci.yml/badge.svg)](https://github.com/AxionAura/code-translator/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**Status: v0.1.1 published on npm (2026-10-23) and verified; a v0.1.2 reliability patch (numeric/console semantics, runnable generated Python, executed differentials, provenance) is fully prepared in the working tree at 0.1.2 — NOT committed or published.** Six translation directions (M7), whole-project validation S1–S7 (M6/M10), the provider-agnostic AI layer (M8), bounded repair (M9), and the M11 CLI: config schema, `validate`/`benchmark` commands, `--json` machine output with stderr-only progress, keychain/0600-file credentials, opt-in disk cache, a compiled `dist` entry, benchmark suites/corpus, and a security review checklist. See [docs/release-report-v0.1.1.md](docs/release-report-v0.1.1.md) for the published release evidence and [PROJECT_STATE.md](PROJECT_STATE.md) for current state. See [docs/roadmap.md](docs/roadmap.md), [docs/release.md](docs/release.md), and [PROJECT_STATE.md](PROJECT_STATE.md).
+A deterministic source-code translator for **Python ↔ JavaScript ↔ TypeScript** that works on whole projects and reports honestly what it did: every translated construct carries provenance, and every validation claim reflects evidence that was actually obtained.
 
-## Quickstart
+Most translators promise fidelity and deliver silence. Code Translator is built on the opposite premise — a compiler pipeline (parse → semantic analysis → module graph → lowering → code generation → validation) with a **decision ledger** that classifies each construct as `deterministic`, `semantic`, `ambiguous`, or `unsupported`, and a **claim ladder** that reports exactly which validation stages ran and passed. AI is available, off by default, and only ever chooses among options the engine itself offered.
+
+> **Release status:** v0.1.2 is published on npm (all eleven `@axion-ct/*` packages, `latest` = `0.1.2`; verified by CI against the public registry — [run 40119673859](https://github.com/AxionAura/code-translator/actions/runs/40119673859)). The `v0.1.2` tag points at release commit `742f3ee`. See [docs/release-notes-v0.1.2.md](docs/release-notes-v0.1.2.md) for what shipped.
+
+## Language directions
+
+| Direction | Support | Notes |
+| --- | --- | --- |
+| Python → TypeScript | Implemented | Full pipeline; project mode validates up to claim level 5 |
+| Python → JavaScript | Implemented | Same pipeline; JS targets have no type oracle (see ladder below) |
+| TypeScript → JavaScript | Implemented | Per-construct type erasure with ledger provenance |
+| JavaScript → TypeScript | Implemented | Honest `unknown`-based types; output passes strict `tsc` |
+| JavaScript → Python | Implemented | JS runtime semantics via a generated zero-dependency runtime module |
+| TypeScript → Python | Implemented | Type erasure + the same Python runtime strategy |
+
+The supported language surface is deliberately scoped — see [docs/language-support.md](docs/language-support.md) for the full matrix, including what is unsupported and where Python/JS/TS semantics genuinely diverge (integer precision, truthiness, division by zero, string formatting, and more).
+
+## Quick start
+
+Requires Node.js ≥ 22.18 and Python 3 (the Python parser uses a small CPython bridge; sandboxed execution stages additionally want `bubblewrap`).
 
 ```bash
-corepack enable && pnpm install
-pnpm build                      # compiled packages + CLI (dist)
+npm install -g @axion-ct/cli
 
-# Compiled entry (release path):
-node apps/cli/bin/ctrans-dist.mjs check sample.py --to ts
-node apps/cli/bin/ctrans-dist.mjs translate sample.py --to ts -o out/
-node apps/cli/bin/ctrans-dist.mjs project my-project/ --to ts -o out/
-node apps/cli/bin/ctrans-dist.mjs doctor
-node apps/cli/bin/ctrans-dist.mjs benchmark --suite micro --iterations 3
-node apps/cli/bin/ctrans-dist.mjs validate out/          # validate an existing target project
+ctrans --version
+ctrans doctor          # report environment capabilities; exit 1 if a required one is missing
 ```
 
-Development/test commands use the source-mode launcher (Node type stripping):
+Or from a checkout (Node with Corepack, pnpm pinned via `packageManager`):
 
 ```bash
-# Analyze + validate a Python file without writing output (exit 0 = translated)
-node apps/cli/bin/ctrans.mjs check sample.py --to ts
-
-# Translate a file or a whole project directory (writes target files + .ctrans/ artifacts)
-node apps/cli/bin/ctrans.mjs translate sample.py --to ts -o out/
-node apps/cli/bin/ctrans.mjs translate my-project/ --to js -o out-js/
-
-# Translate a whole project INCLUDING its pytest test modules (→ vitest) and validate
-# S1-S7 in the sandbox: build, translated tests (S5), source-vs-target differential
-# (S6), optional smoke harness (S7), claim ladder + .ctrans/ evidence
-node apps/cli/bin/ctrans.mjs project my-project/ --to ts -o out/
-
-# Report observed environment capabilities (runtimes, validators, bwrap,
-# docker/podman, gVisor). Exit 1 only when a REQUIRED capability is missing.
-node apps/cli/bin/ctrans.mjs doctor
-
-# Strict execution: every executed stage runs in a Docker/Podman container with no
-# network, read-only rootfs, dropped capabilities, and no host fallback. Requires a
-# usable runtime and an image that provides the validation toolchain; pulls disabled.
-CTRANS_SANDBOX_IMAGE=my-ctrans-toolchain:1 \
-  node apps/cli/bin/ctrans.mjs project my-project/ --to ts -o out/ --strict
-
-# Opt-in S7 smoke: run a harness against the translated project in the sandbox
-node apps/cli/bin/ctrans.mjs project my-project/ --to ts -o out/ --smoke smoke.json
-
-# Reverse directions: JS/TS → Python, TS → JS, JS → TS (direction from the source)
-node apps/cli/bin/ctrans.mjs translate web-src/ --to py -o out-py/   # S1 bridge + S2 pyright + S3
-node apps/cli/bin/ctrans.mjs translate legacy.ts --to js -o out-js/  # type erasure
-node apps/cli/bin/ctrans.mjs translate app.js --to ts -o out-ts/     # honest unknown types
-
-# Configuration is optional and strictly validated (ctrans.config.json beside the
-# input or via --config). CLI flags win; unknown/secret-bearing keys are rejected.
-node apps/cli/bin/ctrans.mjs check mod.py --config ctrans.config.json
-
-# Machine-readable output: JSON on stdout, progress/errors on stderr.
-node apps/cli/bin/ctrans.mjs check mod.py --to ts --json --progress json
-
-# Optional AI escalation (OFF by default): let a model choose among the options the
-# engine already offers for AMBIGUOUS constructs (never anything else). A secretlint
-# scan gates every request; caps + cache + journal are enforced; the heuristic default
-# applies when the provider is unavailable or the answer is not an offered option.
-# Keys: CTRANS_AI_KEY, OS keychain, or a 0600 ~/.config/ctrans/keys.json file.
-CTRANS_AI_KEY=... node apps/cli/bin/ctrans.mjs check mod.py --to ts \
-  --ai-provider openai --ai-model gpt-4o-mini   # or --ai-provider anthropic
-
-# M9/M10: bounded repair after translation. translate re-validates S1-S3; project
-# re-validates the REAL S1-S6 path and refuses when behavioral validation cannot run.
-# The model may propose ONE unit-scoped unified diff per attempt (3/unit, 8/run); the
-# engine accepts only a strictly higher claim with no passing stage regressed.
-CTRANS_AI_KEY=... node apps/cli/bin/ctrans.mjs translate mod.py --to ts -o out/ \
-  --ai-provider openai --repair
-CTRANS_AI_KEY=... node apps/cli/bin/ctrans.mjs project my-project/ --to ts -o out/ \
-  --ai-provider openai --repair
-
-# Benchmarks: micro runs in verify; corpus/perf/mini are explicit, nightly script.
-pnpm benchmark
-pnpm benchmark:mini
-pnpm benchmark:perf
-pnpm benchmark:nightly
+corepack enable && pnpm install && pnpm build
+node apps/cli/bin/ctrans-dist.mjs --version
 ```
 
-The CLI prints the claim-ladder level (what validation actually proved), per-file status, and decision counts. Translated output is finalized through Prettier; runtime helpers land in a generated `__ctrans_runtime.ts|js` that carries **zero** dependencies. v0.1.1 is published and verified; see [docs/release-report-v0.1.1.md](docs/release-report-v0.1.1.md) and [docs/release-report-v0.1.0.md](docs/release-report-v0.1.0.md). Execution isolation is explicit: bwrap enforces network/PID isolation plus a least-privilege filesystem allowlist (no host-root bind), and policy-only mode is never used for S5/S6/S7.
+## CLI examples
 
-## Documentation index
+```bash
+# Analyze + validate without writing anything (exit 0 = translatable at the reported claim)
+ctrans check sample.py --to ts
 
-| Document | Purpose |
-| --- | --- |
-| [PROJECT_STATE.md](PROJECT_STATE.md) | **Canonical handoff state** — current status, milestone, what works/doesn't; read this first for progress |
-| [research/v1-final-acceptance-audit.md](research/v1-final-acceptance-audit.md) | V1 acceptance audit: independent verification, evidence matrix, unverified environments |
-| [research/post-release-product-audit.md](research/post-release-product-audit.md) | Post-release audit of v0.1.0: evidence, findings, limitations, unresolved questions |
-| [docs/research.md](docs/research.md) | Verified technology survey: parsers, prior art, semantics, security (researched 2026-10-06) |
-| [docs/architecture.md](docs/architecture.md) | System architecture, package layout, core data model |
-| [docs/translation-pipeline.md](docs/translation-pipeline.md) | Stage-by-stage pipeline, artifacts, decision ledger |
-| [docs/language-support.md](docs/language-support.md) | Semantic differences between the three languages; support matrix |
-| [docs/dependency-mapping.md](docs/dependency-mapping.md) | Stdlib/third-party/test-framework mapping architecture |
-| [docs/ai-architecture.md](docs/ai-architecture.md) | Where AI is used, provider-independent model layer |
-| [docs/validation.md](docs/validation.md) | Validation pipeline, capability reporting, differential testing |
-| [docs/security.md](docs/security.md) | Threat model, sandboxing, secret handling |
-| [docs/security-review-checklist.md](docs/security-review-checklist.md) | Executed security review with per-threat evidence and residual risks |
-| [docs/configuration.md](docs/configuration.md) | `ctrans.config.json` schema, discovery, precedence |
-| [docs/release.md](docs/release.md) | v0.1.1 build/packaging/publishing instructions and limits |
-| [docs/release-notes-v0.1.1.md](docs/release-notes-v0.1.1.md) | Prepared v0.1.1 patch notes, fixes, verification, and remaining limitations |
-| [docs/publication-plan-v0.1.1.md](docs/publication-plan-v0.1.1.md) | Prepared v0.1.1 release checklist and exact dependency-ordered publication commands |
-| [docs/release-notes-v0.1.2.md](docs/release-notes-v0.1.2.md) | Prepared (UNPUBLISHED) v0.1.2 patch notes, fixes, verification, and remaining limitations |
-| [docs/release-report-v0.1.0.md](docs/release-report-v0.1.0.md) | Published v0.1.0 registry, verification, and CLI smoke-test report |
-| [docs/publication-plan.md](docs/publication-plan.md) | Historical v0.1.0 publication order, preflight evidence, and authorization boundary |
-| [docs/v1-roadmap.md](docs/v1-roadmap.md) | Prioritized P0–P3 work and measurable v1.0 release gate |
-| [docs/testing.md](docs/testing.md) | Test strategy and fixture system (`input/` vs `expected/`) |
-| [docs/benchmarks.md](docs/benchmarks.md) | Benchmark framework and metrics |
-| [docs/decisions.md](docs/decisions.md) | Architecture decision records (ADR log) |
-| [docs/roadmap.md](docs/roadmap.md) | Milestone plan M0–M11 with completion criteria |
-| [AGENTS.md](AGENTS.md) | Engineering rules — read before modifying this repository |
+# Translate a single file (writes target file + .ctrans/ ledger and report artifacts)
+ctrans translate sample.py --to ts -o out/
 
-## Core principles
+# Translate a directory of sources
+ctrans translate web-src/ --to py -o out-py/
 
-1. **Deterministic first.** AI is an optional resolver for ambiguous cases, never the translation engine.
-2. **Never claim correctness that was not validated.** Every validation stage reports `pass / fail / skipped(reason)`.
-3. **Every emitted construct carries provenance** via a decision ledger: deterministic, semantic, ambiguous, or unsupported.
-4. **Local-first.** Source code never leaves the machine unless the user explicitly enables an AI provider.
-5. **Zero runtime dependencies in generated output.** Translated projects are self-contained.
+# Translate a whole Python project INCLUDING its pytest suite (mapped to vitest),
+# then validate S1–S7 in the sandbox: build, translated tests, source-vs-target
+# differential, optional smoke — claim ladder + evidence in .ctrans/
+ctrans project my-project/ --to ts -o out/
+
+# Validate an existing translated project (S1–S5/S7 where inputs exist)
+ctrans validate out/
+
+# Reverse directions: JS/TS → Python (S1 bridge + S2 pyright + S3), TS → JS, JS → TS
+ctrans translate legacy.ts --to js -o out-js/
+ctrans translate app.js --to ts -o out-ts/
+
+# Strict execution: every executed stage runs in a Docker/Podman container —
+# no network, read-only rootfs, dropped capabilities, no host fallback.
+ctrans project my-project/ --to ts -o out/ --strict --sandbox-image my-toolchain:1
+
+# Machine-readable output: JSON on stdout, progress/diagnostics on stderr
+ctrans check mod.py --to ts --json --progress json
+
+# Reproducible benchmark suites (micro/corpus/perf/mini-projects)
+ctrans benchmark --suite micro --iterations 3
+```
+
+AI is opt-in and narrowly scoped (details under [Security and privacy](#security-and-privacy)):
+
+```bash
+# Resolve AMBIGUOUS constructs among the engine's offered options (AI off by default)
+ctrans check mod.py --to ts --ai-provider openai --ai-model gpt-4o-mini
+
+# Bounded repair loop: one unit-scoped diff per attempt, 3/unit and 8/run caps,
+# accepted only if the claim strictly improves with no passing stage regressed
+ctrans translate mod.py --to ts -o out/ --ai-provider openai --repair
+```
+
+## How translation is validated
+
+Two mechanisms keep the tool honest:
+
+- **Decision ledger** — every emitted construct records its classification and rationale (with source spans). `deterministic` means provable correspondence; `semantic` means a documented adaptation; `ambiguous` offers engine-vetted options (heuristic by default, model-assisted only if you enable AI); `unsupported` constructs are never silently dropped — they produce loud markers and warnings.
+- **Validation claim ladder** — reports what was actually proven: S1 syntax re-parse, S2 type check (tsc/pyright), S3 dependency resolution, S4 build, S5 translated tests, S6 source-vs-target differential, S7 optional smoke. A claim level of 5 means those stages *ran and passed* — it is evidence of validation, not a universal correctness guarantee. Stages that cannot run are reported `skipped(reason)`, never counted as passing. (JS targets have no type oracle, so JS-bound translations cap lower on the ladder — by design.)
+
+Generated projects are self-contained: runtime helpers are emitted into the output with **zero runtime dependencies** on this tool.
+
+## Core capabilities
+
+- Six translation directions across Python, JavaScript, and TypeScript, at file and project scope.
+- Project mode: pytest→vitest test mapping, sandboxed S1–S7 validation, `.ctrans/` evidence artifacts (ledger, report, test results, differential).
+- A provider-agnostic, optional AI layer (OpenAI-compatible, Anthropic, or custom endpoints) restricted to ambiguity resolution and bounded, policy-guarded repair.
+- Sandboxed execution (bwrap network/PID/filesystem isolation; optional strict Docker/Podman mode) for every stage that runs translated or source code.
+- Strictly-validated optional configuration (`ctrans.config.json`), JSON machine output, reproducible benchmark suites.
+
+## Limitations and honest semantics
+
+- Behavior preservation is **not guaranteed**. The ledger tells you which constructs are exact, which are adapted (and how), and which were not translated at all.
+- Real semantic gaps are documented, not hidden: Python arbitrary-precision integers vs. JS numbers (exact in `--int-mode bigint`, warned in number mode), truthiness differences, division-by-zero and `%` semantics, string formatting, dict ordering, and more — see [docs/language-support.md](docs/language-support.md).
+- Reverse (JS/TS → Python) validation currently caps at claim level 3; translating test suites in reverse directions is not yet supported.
+- Executed differentials compare observed behavior on supported subsets; they do not prove universal equivalence.
+
+## Security and privacy
+
+- **Local-first:** source code never leaves the machine unless you explicitly enable an AI provider. When enabled, every request passes a fail-closed `secretlint` scan, and calls are capped, journaled (hash-only), and cacheable only by explicit opt-in.
+- **Credentials:** API keys come from `CTRANS_AI_KEY`, the OS keychain, or a `0600` permission-checked file — never from logs, reports, or the repository.
+- **Sandboxing:** user source and translated code are treated as untrusted. Executed stages run under bwrap (network/PID isolation plus a least-privilege filesystem allowlist — the host root is never mounted), or in `--strict` containers with no network and a read-only root filesystem. Policy-only mode is never used for execution stages.
+
+Details: [docs/security.md](docs/security.md) and the executed [security review checklist](docs/security-review-checklist.md).
+
+## Documentation
+
+**Using the tool**
+
+- [Language support and semantic differences](docs/language-support.md)
+- [Configuration reference](docs/configuration.md)
+- [Validation and the claim ladder](docs/validation.md)
+- [Benchmarks](docs/benchmarks.md)
+
+**Architecture**
+
+- [System architecture](docs/architecture.md) · [Translation pipeline](docs/translation-pipeline.md) · [AI architecture](docs/ai-architecture.md)
+- [Decision records (ADR log)](docs/decisions.md) · [Dependency mapping](docs/dependency-mapping.md) · [Technology research](docs/research.md)
+
+**Quality and security**
+
+- [Testing strategy](docs/testing.md) · [Security model](docs/security.md) · [Security review checklist](docs/security-review-checklist.md)
+
+**Development and releases**
+
+- [PROJECT_STATE.md](PROJECT_STATE.md) — canonical current state; read this first for progress
+- [Contributing rules (AGENTS.md)](AGENTS.md) · [Milestone roadmap](docs/roadmap.md) · [v1 roadmap](docs/v1-roadmap.md)
+- Releases: [v0.1.2 notes](docs/release-notes-v0.1.2.md) · [release guide](docs/release.md) · [release-plan-v0.1.2](docs/release-plan-v0.1.2.md) · historical reports for [v0.1.1](docs/release-report-v0.1.1.md) and [v0.1.0](docs/release-report-v0.1.0.md)
 
 ## Development
 
-Prerequisites: Node.js ≥ 22.18 with Corepack (the pnpm version is pinned via the `packageManager` field).
-
 ```bash
-corepack enable        # first use of pnpm may ask to download the pinned version
+corepack enable        # pnpm is pinned via the packageManager field
 pnpm install
-pnpm build             # compiled dist/ for all packages (release path)
-pnpm verify            # build → typecheck → lint → format check → tests → documentation links
-pnpm test:coverage
+pnpm build             # compiled dist/ for all packages
+pnpm verify            # build → typecheck → lint → format check → tests → doc links
+pnpm test:coverage     # coverage with enforced per-package floors
 ```
 
-Release status: **v0.1.1 published on npm (2026-10-23) and verified; v0.1.2 fully prepared in the working tree (versions bumped to 0.1.2, release notes written) but NOT committed, tagged, or published.**
-reliability work is in the working tree, not published.** The eleven packages use
-the `@axion-ct/*` scope, are MIT-licensed, and ship compiled `dist` entries. See
-[docs/release-report-v0.1.1.md](docs/release-report-v0.1.1.md),
-[docs/publication-plan-v0.1.1.md](docs/publication-plan-v0.1.1.md),
-[docs/release-report-v0.1.0.md](docs/release-report-v0.1.0.md), and
-[docs/release.md](docs/release.md).
+Read [AGENTS.md](AGENTS.md) before changing anything — it defines the binding engineering rules for this repository (ledger completeness, testing gates, security boundaries, documentation requirements).
+
+## License
+
+[MIT](LICENSE). Generated translation output carries no dependency on this tool.

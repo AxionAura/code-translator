@@ -1,12 +1,10 @@
-# Code Translator v0.1.2 — release notes (prepared, NOT published)
+# Code Translator v0.1.2 — release notes (historical preparation record)
 
-> **Preparation record.** As of **2026-10-24** these notes describe the
-> v0.1.2 candidate in the working tree only. All twelve workspace manifests
-> are bumped to `0.1.2` (the private root and the eleven `@axion-ct/*`
-> release packages); **nothing has been committed, tagged, packed, or
-> published**, npm `latest` remains `0.1.0`→`0.1.1` history
-> (`v0.1.1` published 2026-10-23), and no tarball or clean-install check has
-> run yet — those belong to the separately approved packaging stage.
+> **Published release.** v0.1.2 was published and verified on npm on
+> **2026-10-24**; see [release-report-v0.1.2.md](release-report-v0.1.2.md). This
+> file is retained as the preparation record of what the patch contains. The
+> "not published" statements below describe the moment of preparation and are
+> superseded by the release report.
 
 Release prepared: **2026-10-24**. Previous release:
 [v0.1.1](release-notes-v0.1.1.md) (published 2026-10-23, immutable).
