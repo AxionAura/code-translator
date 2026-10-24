@@ -20,6 +20,9 @@ coverage/
 .DS_Store
 Thumbs.db
 
+# Internal local-only coding guide (untracked by design; kept for agent sessions)
+/human-style-code.md
+
 # Python (parse bridge dev / test venvs)
 __pycache__/
 .venv/

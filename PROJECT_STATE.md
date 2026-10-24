@@ -105,7 +105,7 @@ packages/sandbox/             # M6/M10 execution boundary: src/{runner,capabilit
 packages/registry/            # registry v1 (M5)
 apps/cli/                     # CLI: check/translate/project/validate/benchmark/doctor; project-run (S1-S7 + repair), repair-run, doctor, config, output, keys, benchmark, toolchain, validate; bin/ctrans.mjs (source) + bin/ctrans-dist.mjs (compiled)
 .gitignore
-human-style-code.md           # engineering-judgment style guide (provided by human; AGENTS.md defers to it where compatible)
+human-style-code.md           # INTERNAL local-only style guide (untracked; read if present — see AGENTS.md preamble)
 docs/                         # research, architecture, translation-pipeline, language-support,
                               # dependency-mapping, ai-architecture, validation, security,
                               # security-review-checklist, configuration, release, testing,
@@ -462,7 +462,7 @@ Per AGENTS.md §12 and the pre-release gate prompt — verified 2026-10-22:
 
 ## 23. Handoff Notes
 
-- **Read `AGENTS.md` first** — its rules are binding (forbidden shortcuts incl. regex-based "parsing", emitting code without ledger provenance, claiming unrun validation, weakening sandbox/tests, copying GPL code). `human-style-code.md` is the judgment baseline; AGENTS.md wins on overlap.
+- **Read `AGENTS.md` first** — its rules are binding (forbidden shortcuts incl. regex-based "parsing", emitting code without ledger provenance, claiming unrun validation, weakening sandbox/tests, copying GPL code). `human-style-code.md` is an internal, untracked local-only judgment baseline — read it if present in the working directory; AGENTS.md wins on overlap.
 - **Deviations from the original prompt, all documented and reasoned:** (1) "Intermediate Representation" → Semantic Layer without a universal AST IR (D-002); (2) "Basic GUI" moved out of V1 (D-013); (3) translation directions framed as a *graded support matrix* with explicit `unsupported` classes (product principle: never silently pretend correctness). If the human wants these reversed, they are deliberate change requests, not omissions.
 - **Verified facts that must not drift:** TypeScript 7.0 has no JS API (pin typescript@6); TC39 decorators are Stage 2.7; Temporal is Stage 4 (Node ≥26 ships it); `fetch` has no sync variant; the semantic divergences are source-verified in `docs/research.md` §3. Re-verify pinned versions when installing dependencies (research date: 2026-10-06).
 - **Honesty invariant:** every emitted construct needs a ledger entry; validation reports `skipped(reason)` rather than assuming capabilities; the claim ladder caps what a run may assert — "Generated ≠ Validated". `CommonType` never invents concrete types for dynamic values (`unknown` + confidence).

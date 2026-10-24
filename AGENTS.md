@@ -2,7 +2,13 @@
 
 **Read this file before making any change to this repository.** These rules are binding for human and autonomous contributors alike. Architectural context lives in `docs/`; this file defines how we work.
 
-Companion guidance: [`human-style-code.md`](human-style-code.md) defines the engineering-judgment baseline (repository-first, no speculative abstraction, honest verification, focused changes). Where that document and this file overlap, this file wins; where it adds judgment detail, follow both.
+Companion guidance: `human-style-code.md` (repository root) is an INTERNAL, LOCAL-ONLY
+engineering-judgment baseline — it is intentionally untracked and must not be published.
+If the file exists in the working directory, read it and follow it (where it overlaps this
+file, this file wins; where it adds judgment detail, follow both). Do not recreate, commit,
+publish, or otherwise track it. In a fresh clone the file is absent by design: do not claim
+to have read it — continue under this file alone and note the missing local guide when that
+matters for a handoff.
 
 ## 1. Project snapshot
 
