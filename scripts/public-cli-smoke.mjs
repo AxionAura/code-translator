@@ -19,7 +19,7 @@ import { promisify } from "node:util";
 
 const execFileAsync = promisify(execFile);
 
-const expectedVersion = process.argv[2] ?? "0.1.1";
+const expectedVersion = process.argv[2] ?? "0.1.2";
 const root = fileURLToPath(new URL("..", import.meta.url));
 const temp = mkdtempSync(join(tmpdir(), "ctrans-public-cli-"));
 const cli = join(temp, "node_modules/.bin/ctrans");

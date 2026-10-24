@@ -177,4 +177,4 @@ jobs:
           apt-get install -y --no-install-recommends bubblewrap util-linux
 
       - name: Verify the published npm CLI outside the workspace
-        run: node scripts/public-cli-smoke.mjs 0.1.1
+        run: node scripts/public-cli-smoke.mjs 0.1.2
